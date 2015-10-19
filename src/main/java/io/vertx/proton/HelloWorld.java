@@ -15,7 +15,7 @@ public class HelloWorld {
     // Create the Vert.x AMQP client instance
     VertxAMQPClient client  = new VertxAMQPClient(vertx, "localhost", 5672);
 
-    // Runt the example
+    // Run the example
     helloWorldSendAndConsumeExample(client);
 
     // Just stop main() from exiting
