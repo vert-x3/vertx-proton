@@ -37,27 +37,30 @@ public class VertxAMQPConnection {
     transport.bind(connection);
 
     Collector collector = Proton.collector();
-
+    connection.collect(collector);
 
     socket.handler(buff -> {
-      transport.getInputBuffer().put(buff.getBytes());
+      pumpInbound(ByteBuffer.wrap(buff.getBytes()));
 
       Event protonEvent = null;
       while ((protonEvent = collector.peek()) != null) {
         protonEvent.dispatch(internalHandler);
         collector.pop();
       }
+
+      pumpOutbound();
     });
   }
 
   public void sendMessage(String address, String body) {
     Session session = connection.session();
     session.open();
+    Sender sender = session.sender("sender-link-1"); // Is this just an arbitrary string?
     Target target = new Target();
     target.setAddress(address);
-    Sender sender = session.sender("link1"); // Is this just an arbitrary string?
     sender.setTarget(target);
-    sender.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+    sender.setSource(new Source());
+    sender.setSenderSettleMode(SenderSettleMode.SETTLED);
     sender.setReceiverSettleMode(ReceiverSettleMode.FIRST);
     sender.open();
     int BUFFER_SIZE = 1024;
@@ -70,14 +73,36 @@ public class VertxAMQPConnection {
     Delivery serverDelivery = sender.delivery(tag); // Not sure why this is necessary
     sender.send(encodedMessage, 0, len);
     sender.advance();
-    ByteBuffer outputBuffer = transport.getOutputBuffer();
-    while (outputBuffer.hasRemaining() ) {
-      byte buffer[] = new byte[outputBuffer.remaining()];
-      outputBuffer.get(buffer);
-      socket.write(Buffer.buffer(buffer));
-      transport.outputConsumed();
-    }
 
+    // we want to send the messages pre-settled
+    serverDelivery.settle();
+
+    pumpOutbound();
+
+  }
+
+  private void pumpInbound(ByteBuffer bytes) {
+    // Lets push bytes from vert.x to proton engine.
+    ByteBuffer inputBuffer = transport.getInputBuffer();
+    while (bytes.hasRemaining() && inputBuffer.hasRemaining()) {
+      inputBuffer.put(bytes.get());
+      transport.processInput().checkIsOk();
+    }
+  }
+
+  void pumpOutbound() {
+    boolean done = false;
+    while (!done) {
+      ByteBuffer outputBuffer = transport.getOutputBuffer();
+      if (outputBuffer != null && outputBuffer.hasRemaining()) {
+        byte buffer[] = new byte[outputBuffer.remaining()];
+        outputBuffer.get(buffer);
+        socket.write(Buffer.buffer(buffer));
+        transport.outputConsumed();
+      } else {
+        done = true;
+      }
+    }
   }
 
   public void setHandler(String address, Handler<String> handler) {
@@ -101,7 +126,7 @@ public class VertxAMQPConnection {
     int credits = 50;
     receiver.flow(credits);
   }
-  
+
   private static class InternalHandler extends BaseHandler {
 
     private final Handler<String> handler;
