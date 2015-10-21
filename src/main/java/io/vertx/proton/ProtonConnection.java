@@ -2,7 +2,9 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.proton.impl.ProtonDeliveryImpl;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.message.Message;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -33,6 +35,12 @@ public interface ProtonConnection {
   ProtonConnection close();
 
   ProtonSession session();
+
+  ProtonDeliveryImpl send(byte[] tag, Message message);
+
+  ProtonReceiver receiver(String name);
+
+  ProtonReceiver receiver(String name, String address);
 
   void disconnect();
 

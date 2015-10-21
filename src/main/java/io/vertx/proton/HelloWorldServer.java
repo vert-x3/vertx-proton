@@ -57,15 +57,19 @@ public class HelloWorldServer {
         connection.sessionOpenHandler(session -> session.open());
 
         connection.receiverOpenHandler(receiver -> {
-            System.out.println("Receiving from client to: " + receiver.getRemoteTarget().getAddress());
             receiver
                 .setTarget(receiver.getRemoteTarget())
                 .handler((r, delivery, msg) -> {
 
+                    String address = msg.getAddress();
+                    if( address == null ) {
+                        address = receiver.getRemoteTarget().getAddress();
+                    }
+
                     Section body = msg.getBody();
                     if (body instanceof AmqpValue) {
                         String content = (String) ((AmqpValue) body).getValue();
-                        System.out.println("Received message with content: " + content);
+                        System.out.println("message to:"+address+", body: " + content);
                     }
 
                     // We could nack if we need to.

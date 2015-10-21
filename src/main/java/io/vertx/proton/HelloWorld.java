@@ -43,10 +43,9 @@ public class HelloWorld {
     private static void helloWorldSendAndConsumeExample(ProtonConnection connection) {
 
         connection.setContainer("client-id:1").open();
-        ProtonSession session = connection.session().open();
 
         // Receive messages from a queue
-        session.receiver("receiver-link-1", "queue://foo")
+        connection.receiver("receiver-link-1", "queue://foo")
             .handler((receiver, delivery, msg) -> {
 
                 Section body = msg.getBody();
@@ -66,10 +65,9 @@ public class HelloWorld {
 
 
         // Send messages to a queue..
-        ProtonSender sender = session.sender("sender-link-1", "queue://foo").open();
-
         Message message = message("Hello World from client");
-        sender.send(tag("m1"),message).handler(delivery -> {
+        message.setAddress("queue://foo");
+        connection.send(tag("m1"),message).handler(delivery -> {
             if (delivery.remotelySettled()) {
                 System.out.println("The message was sent");
             }

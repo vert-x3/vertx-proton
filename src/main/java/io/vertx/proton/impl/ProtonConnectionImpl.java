@@ -12,6 +12,7 @@ import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.*;
+import org.apache.qpid.proton.message.Message;
 
 import java.util.Map;
 
@@ -39,6 +40,8 @@ public class ProtonConnectionImpl implements ProtonConnection {
     private Handler<ProtonReceiver> receiverOpenHandler = (receiver) -> {
         receiver.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
+    private ProtonSession defaultSession;
+    private ProtonSender defaultSender;
 
     ProtonConnectionImpl() {
         this.connection.setContext(this);
@@ -157,6 +160,37 @@ public class ProtonConnectionImpl implements ProtonConnection {
     @Override
     public ProtonSessionImpl session() {
         return new ProtonSessionImpl(connection.session());
+    }
+
+    public ProtonSession getDefaultSession() {
+        if( defaultSession == null ) {
+            defaultSession = new ProtonSessionImpl(connection.session());
+            defaultSession.open();
+        }
+        return defaultSession;
+    }
+
+    public ProtonSender getDefaultSender() {
+        if( defaultSender == null ) {
+            defaultSender = getDefaultSession().sender("");
+            defaultSender.open();
+        }
+        return defaultSender;
+    }
+
+    @Override
+    public ProtonDeliveryImpl send(byte[] tag, Message message) {
+        return getDefaultSender().send(tag, message);
+    }
+
+    @Override
+    public ProtonReceiver receiver(String name) {
+        return getDefaultSession().receiver(name);
+    }
+
+    @Override
+    public ProtonReceiver receiver(String name, String address) {
+        return getDefaultSession().receiver(name, address);
     }
 
     public void flush() {
