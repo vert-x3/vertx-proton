@@ -3,98 +3,123 @@
  */
 package io.vertx.proton;
 
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.concurrent.ExecutionException;
 
 import static io.vertx.proton.ProtonHelper.message;
 import static io.vertx.proton.ProtonHelper.tag;
 
 @RunWith(VertxUnitRunner.class)
-public class ProtonBenchmark {
+public class ProtonBenchmark extends MockServerTestBase {
 
-    private Vertx vertx;
-    private ProtonServer server;
-
-    @Before
-    public void setup() throws ExecutionException, InterruptedException {
-        // Create the Vert.x instance
-        vertx = Vertx.vertx();
-        server = MockServer.start(vertx);
-    }
-
-    @After
-    public void tearDown() {
-        server.close();
-        vertx.close();
-    }
+    static final long BENCHMARK_DURATION = 5000;
 
     @Test
-    public void testClientIdentification(TestContext context) {
+    public void benchmarkAtLeastOnceSendThroughput(TestContext context) {
         Async async = context.async();
-        connect(context, connection -> {
-            connection
-                .setContainer("foo")
-                .openHandler(x -> {
-                    context.assertEquals("foo", connection.getContainer());
-                    // Our mock server responds with a pong container id
-                    context.assertEquals("pong: foo", connection.getRemoteContainer());
-                    connection.disconnect();
-                    async.complete();
-                })
-                .open();
-        });
-    }
+        connect(context, connection ->
+        {
+            ProtonSender sender =
+                connection.session().open().sender("")
+                    .setSenderSettleMode(SenderSettleMode.UNSETTLED)
+                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                    .open();
 
-    @Test
-    public void testRemoteDisconnectHandling(TestContext context) {
-        Async async = context.async();
-        connect(context, connection->{
-            context.assertFalse(connection.isDisconnected());
-            connection.disconnectHandler(x ->{
-                context.assertTrue(connection.isDisconnected());
+            String name = "At Least Once Send Throughput";
+            byte[] tag = tag("m1");
+            Message message = message("drop", "Hello World");
+
+            benchmark(BENCHMARK_DURATION, name, counter -> {
+                sender.sendQueueDrainHandler(s -> {
+                    while (!sender.sendQueueFull()) {
+                        sender.send(tag, message).handler(d -> {
+                            if (d.remotelySettled()) {
+                                counter.incrementAndGet();
+                            }
+                        });
+                    }
+                });
+            }, () -> {
+                connection.disconnect();
                 async.complete();
             });
-            // Send a reqeust to the sever for him to disconnect us
-            connection.send(tag(""), command("disconnect"));
         });
     }
 
     @Test
-    public void testLocalDisconnectHandling(TestContext context) {
+    public void benchmarkAtMostOnceSendThroughput(TestContext context) {
         Async async = context.async();
-        connect(context, connection->{
-            context.assertFalse(connection.isDisconnected());
-            connection.disconnectHandler(x ->{
-                context.assertTrue(connection.isDisconnected());
+        connect(context, connection ->
+        {
+            ProtonSender sender =
+                connection.session().open().sender("")
+                    .setSenderSettleMode(SenderSettleMode.SETTLED)
+                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                    .open();
+
+            String name = "At Most Once Send Throughput";
+            byte[] tag = tag("m1");
+            Message message = message("drop", "Hello World");
+
+            benchmark(BENCHMARK_DURATION, name, counter -> {
+                sender.sendQueueDrainHandler(s -> {
+                    while (!sender.sendQueueFull()) {
+                        sender.send(tag, message);
+                        counter.incrementAndGet();
+                    }
+                });
+            }, () -> {
+                connection.disconnect();
                 async.complete();
             });
-            // We will force the disconnection to the server
-            connection.disconnect();
         });
     }
 
-    private void connect(TestContext context, Handler<ProtonConnection> handler) {
-        ProtonClient client = ProtonClient.create(vertx);
-        client.connect("localhost", server.actualPort(), res->{
-            context.assertTrue(res.succeeded());
-            handler.handle(res.result());
+    @Test
+    public void benchmarkRequestResponse(TestContext context) {
+        Async async = context.async();
+        connect(context, connection ->
+        {
+            ProtonSession session = connection.session().open();
+            ProtonSender sender =
+                session.sender("")
+                    .setSenderSettleMode(SenderSettleMode.SETTLED)
+                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                    .open();
+
+            byte[] tag = tag("m1");
+            Message message = message("echo", "Hello World");
+
+            benchmark(BENCHMARK_DURATION, "Request Response Throughput", counter -> {
+
+                session.receiver("echo")
+                    .setSenderSettleMode(SenderSettleMode.SETTLED)
+                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                    .handler((r,d,m)->{
+                        counter.incrementAndGet();
+                        d.settle();
+                        r.flow(1);
+                    })
+                    .flow(10)
+                    .open();
+
+                sender.sendQueueDrainHandler(s -> {
+                    while (!sender.sendQueueFull()) {
+                        sender.send(tag, message);
+                    }
+                });
+            }, () -> {
+                connection.disconnect();
+                async.complete();
+            });
         });
     }
 
-    private Message command(String kind) {
-        Message res = message(kind);
-        res.setAddress("command");
-        return res;
-    }
 
 }

@@ -7,8 +7,6 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonLink;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -34,7 +32,8 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
 
     protected abstract T self();
 
-    public ProtonSessionImpl getSessionImpl() {
+    @Override
+    public ProtonSessionImpl getSession() {
         return (ProtonSessionImpl) this.link.getSession().getContext();
     }
 
@@ -178,7 +177,7 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     @Override
     public T open() {
         link.open();
-        getSessionImpl().getConnectionImpl().flush();
+        getSession().getConnectionImpl().flush();
         return self();
     }
 
@@ -186,13 +185,13 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     @Override
     public T close() {
         link.close();
-        getSessionImpl().getConnectionImpl().flush();
+        getSession().getConnectionImpl().flush();
         return self();
     }
 
     public T detach() {
         link.detach();
-        getSessionImpl().getConnectionImpl().flush();
+        getSession().getConnectionImpl().flush();
         return self();
     }
 
@@ -206,6 +205,11 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     public T closeHandler(Handler<AsyncResult<T>> closeHandler) {
         this.closeHandler = closeHandler;
         return self();
+    }
+
+    @Override
+    public boolean isOpen() {
+        return getLocalState() == EndpointState.ACTIVE;
     }
 
     /////////////////////////////////////////////////////////////////////////////

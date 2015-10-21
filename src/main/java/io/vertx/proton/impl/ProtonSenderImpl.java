@@ -6,10 +6,14 @@ package io.vertx.proton.impl;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
-import org.apache.qpid.proton.amqp.transport.Target;
+import org.apache.qpid.proton.codec.WritableBuffer;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.ProtonJMessage;
+import org.apache.qpid.proton.message.impl.MessageImpl;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -27,16 +31,28 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
 
 
     public ProtonDeliveryImpl send(byte[] tag, Message message) {
+        Delivery delivery = sender().delivery(tag); // start a new delivery..
         int BUFFER_SIZE = 1024;
         byte[] encodedMessage = new byte[BUFFER_SIZE];
-        int len = message.encode(encodedMessage, 0, BUFFER_SIZE);
-        Delivery delivery = sender().delivery(tag); // start a new delivery..
+
+        // protonj has a nice encode2 method which tells us what
+        // encoded message length would be even if our buffer is too small.
+
+        MessageImpl msg = (MessageImpl) message;
+        int len = msg.encode2(encodedMessage, 0, BUFFER_SIZE);
+
+        // looks like the message is bigger than our initial buffer, lets resize and try again.
+        if( len > encodedMessage.length ) {
+            encodedMessage = new byte[len];
+            msg.encode(encodedMessage, 0, len);
+        }
         sender().send(encodedMessage, 0, len);
+
         if( link.getSenderSettleMode()== SenderSettleMode.SETTLED ) {
             delivery.settle();
         }
         sender().advance(); // ends the delivery.
-        getSessionImpl().getConnectionImpl().flush();
+        getSession().getConnectionImpl().flush();
 
         return new ProtonDeliveryImpl(delivery);
     }

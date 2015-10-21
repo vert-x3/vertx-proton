@@ -17,5 +17,52 @@
 
 package io.vertx.proton;
 
-public class MockServerTestBase {
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.ext.unit.TestContext;
+import org.junit.After;
+import org.junit.Before;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
+
+abstract public class MockServerTestBase {
+
+    private Vertx vertx;
+    private MockServer server;
+
+    @Before
+    public void setup() throws ExecutionException, InterruptedException {
+        // Create the Vert.x instance
+        vertx = Vertx.vertx();
+        server = new MockServer(vertx);
+    }
+
+    @After
+    public void tearDown() {
+        server.close();
+        vertx.close();
+    }
+
+    protected void benchmark(long timeout, String name, Handler<AtomicLong> work, Runnable done) {
+        AtomicLong counter = new AtomicLong();
+        AtomicLong startTime = new AtomicLong();
+        System.out.println("Benchmarking " + name + " rate ...");
+        vertx.setTimer(timeout, t -> {
+            double duration = (System.currentTimeMillis() - startTime.get()) / 1000.0d;
+            long sent = counter.get();
+            System.out.println(String.format(name + " rate: %.2f", (sent / duration)));
+            done.run();
+        });
+        startTime.set(System.currentTimeMillis());
+        work.handle(counter);
+    }
+
+    protected void connect(TestContext context, Handler<ProtonConnection> handler) {
+        ProtonClient client = ProtonClient.create(vertx);
+        client.connect("localhost", server.actualPort(), res -> {
+            context.assertTrue(res.succeeded());
+            handler.handle(res.result());
+        });
+    }
 }

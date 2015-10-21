@@ -2,6 +2,7 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.proton.impl.ProtonSessionImpl;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -26,6 +27,8 @@ public interface ProtonLink<T extends ProtonLink> {
 
     Source getRemoteSource();
 
+
+    ProtonSession getSession();
 
     ErrorCondition getCondition();
 
@@ -53,4 +56,5 @@ public interface ProtonLink<T extends ProtonLink> {
 
     T closeHandler(Handler<AsyncResult<T>> closeHandler);
 
+    boolean isOpen();
 }

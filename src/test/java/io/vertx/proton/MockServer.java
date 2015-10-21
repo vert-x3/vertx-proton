@@ -6,19 +6,17 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Section;
+import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
+import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
-import sun.security.tools.keytool.Main;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class MockServer {
 
-    public AtomicLong dropped = new AtomicLong();
     private ProtonServer server;
 
     public MockServer(Vertx vertx) throws ExecutionException, InterruptedException {
@@ -31,9 +29,6 @@ public class MockServer {
 
     private void processConnection(Vertx vertx, ProtonConnection connection) {
         connection.sessionOpenHandler(session -> session.open());
-//        connection.senderOpenHandler(sender -> {
-//
-//        });
         connection.receiverOpenHandler(receiver -> {
 
             receiver.handler((r, delivery, msg) -> {
@@ -41,7 +36,7 @@ public class MockServer {
                 if (address == null) {
                     address = receiver.getRemoteTarget().getAddress();
                 }
-                processMessage(connection, address, msg);
+                processMessage(connection, receiver, delivery, msg, address);
                 delivery.settle();
                 receiver.flow(1);
             }).flow(10).open();
@@ -54,6 +49,7 @@ public class MockServer {
 
     }
 
+
     public void close() {
         server.close();
     }
@@ -64,17 +60,28 @@ public class MockServer {
 
     enum Addresses {
         command,
-        drop
+        drop,
+        echo,
     }
     enum Commands {
         disconnect
     }
 
-    private void processMessage(ProtonConnection connection, String to, Message msg) {
+    private void processMessage(ProtonConnection connection, ProtonReceiver receiver, ProtonDelivery delivery, Message msg, String to) {
         switch (Addresses.valueOf(to)) {
 
             case drop: {
-                dropped.incrementAndGet();
+                break;
+            }
+
+            case echo: {
+                ProtonSender sender = receiver.getSession().sender("echo");
+                if( !sender.isOpen() ) {
+                    sender.setSenderSettleMode(SenderSettleMode.SETTLED)
+                        .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                        .open();
+                }
+                sender.send(delivery.getTag(), msg);
                 break;
             }
 

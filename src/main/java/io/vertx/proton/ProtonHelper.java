@@ -29,7 +29,7 @@ public interface ProtonHelper {
     }
 
     static Message message(String address, String body) {
-        Message message = message();
+        Message message = message(body);
         message.setAddress(address);
         return message;
     }

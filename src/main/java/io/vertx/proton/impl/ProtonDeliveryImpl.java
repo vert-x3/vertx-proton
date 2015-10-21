@@ -93,7 +93,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
     public ProtonDelivery settle() {
         delivery.settle();
-        getLinkImpl().getSessionImpl().getConnectionImpl().flush();
+        getLinkImpl().getSession().getConnectionImpl().flush();
         return this;
     }
 
