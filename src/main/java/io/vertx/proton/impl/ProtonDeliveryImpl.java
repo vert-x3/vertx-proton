@@ -93,6 +93,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
     public ProtonDelivery settle() {
         delivery.settle();
+        getLinkImpl().getSessionImpl().getConnectionImpl().flush();
         return this;
     }
 
@@ -105,5 +106,9 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         if( this.handler!=null ) {
             this.handler.handle(this);
         }
+    }
+
+    public ProtonLink getLinkImpl() {
+        return (ProtonLink) delivery.getLink().getContext();
     }
 }

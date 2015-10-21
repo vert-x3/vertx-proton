@@ -47,28 +47,35 @@ public class ProtonConnectionImpl implements ProtonConnection {
     // Delegated state tracking
     //
     /////////////////////////////////////////////////////////////////////////////
-    public void setProperties(Map<Symbol, Object> properties) {
+    public ProtonConnectionImpl setProperties(Map<Symbol, Object> properties) {
         connection.setProperties(properties);
+        return this;
     }
 
-    public void setOfferedCapabilities(Symbol[] capabilities) {
+    public ProtonConnectionImpl setOfferedCapabilities(Symbol[] capabilities) {
         connection.setOfferedCapabilities(capabilities);
+        return this;
     }
 
-    public void setHostname(String hostname) {
+    public ProtonConnectionImpl setHostname(String hostname) {
         connection.setHostname(hostname);
+        return this;
     }
 
-    public void setDesiredCapabilities(Symbol[] capabilities) {
+    public ProtonConnectionImpl setDesiredCapabilities(Symbol[] capabilities) {
         connection.setDesiredCapabilities(capabilities);
+        return this;
     }
 
-    public void setContainer(String container) {
+    @Override
+    public ProtonConnectionImpl setContainer(String container) {
         connection.setContainer(container);
+        return this;
     }
 
-    public void setCondition(ErrorCondition condition) {
+    public ProtonConnectionImpl setCondition(ErrorCondition condition) {
         connection.setCondition(condition);
+        return this;
     }
 
     public ErrorCondition getCondition() {
@@ -77,10 +84,6 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     public String getContainer() {
         return connection.getContainer();
-    }
-
-    public Object getContext() {
-        return connection.getContext();
     }
 
     public String getHostname() {
@@ -128,12 +131,14 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     public ProtonConnection open() {
         connection.open();
+        flush();
         return this;
     }
 
 
     public ProtonConnection close() {
         connection.close();
+        flush();
         return this;
     }
 

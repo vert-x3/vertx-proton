@@ -3,40 +3,42 @@
  */
 package io.vertx.proton;
 
+import io.vertx.core.Vertx;
+
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class HelloWorldServer {
 
-//    public static void main(String[] args) {
-//
-//        // Create the Vert.x instance
-//        Vertx vertx = Vertx.vertx();
-//
-//        // Create the Vert.x AMQP client instance
-//        ProtonServerImpl server = new ProtonServerImpl(vertx)
-//                .connectHandler((connection) -> {
-//                    connection.setContainer("hello-world-server");
-//                    helloProcessConnection(vertx, connection);
-//                })
-//                .listen(5672, (res) -> {
-//                    if (res.succeeded()) {
-//                        System.out.println("Listening on: " + res.result().actualPort());
-//                    } else {
-//                        res.cause().printStackTrace();
-//                    }
-//                });
-//
-//
-//        // Just stop main() from exiting
-//        try {
-//            System.in.read();
-//        } catch (Exception ignore) {
-//        }
-//    }
-//
-//    private static void helloProcessConnection(Vertx vertx, ProtonConnection connection) {
-//
+    public static void main(String[] args) {
+
+        // Create the Vert.x instance
+        Vertx vertx = Vertx.vertx();
+
+        // Create the Vert.x AMQP client instance
+        ProtonServer server = ProtonServer.create(vertx)
+                .connectHandler((connection) -> {
+                    connection.setContainer("hello-world-server");
+                    helloProcessConnection(vertx, connection);
+                })
+                .listen(5672, (res) -> {
+                    if (res.succeeded()) {
+                        System.out.println("Listening on: " + res.result().actualPort());
+                    } else {
+                        res.cause().printStackTrace();
+                    }
+                });
+
+
+        // Just stop main() from exiting
+        try {
+            System.in.read();
+        } catch (Exception ignore) {
+        }
+    }
+
+    private static void helloProcessConnection(Vertx vertx, ProtonConnection connection) {
+
 //        // Lets wait for the client to open first..
 //        connection.openHandler(res -> {
 //            System.out.println("Client connecting: " + connection.getRemoteContainer());
@@ -82,8 +84,8 @@ public class HelloWorldServer {
 //                connection.flush();
 //            });
 //        });
-//
-//
-//    }
+
+
+    }
 
 }

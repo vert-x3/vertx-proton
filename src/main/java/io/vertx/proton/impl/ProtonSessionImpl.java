@@ -30,7 +30,7 @@ public class ProtonSessionImpl implements ProtonSession {
         this.session.setContext(this);
     }
 
-    public ProtonConnectionImpl getLink() {
+    public ProtonConnectionImpl getConnectionImpl() {
                 return (ProtonConnectionImpl) this.session.getConnection().getContext();
             }
 
@@ -81,11 +81,13 @@ public class ProtonSessionImpl implements ProtonSession {
 
     public ProtonSessionImpl open() {
         session.open();
+        getConnectionImpl().flush();
         return this;
     }
 
     public ProtonSessionImpl close() {
         session.close();
+        getConnectionImpl().flush();
         return this;
     }
 

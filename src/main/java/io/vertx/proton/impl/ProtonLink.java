@@ -31,7 +31,7 @@ abstract class ProtonLink<T extends ProtonLink> {
 
     protected abstract T self();
 
-    public ProtonSessionImpl getSession() {
+    public ProtonSessionImpl getSessionImpl() {
         return (ProtonSessionImpl) this.link.getSession().getContext();
     }
 
@@ -159,17 +159,20 @@ abstract class ProtonLink<T extends ProtonLink> {
 
     public T open() {
         link.open();
+        getSessionImpl().getConnectionImpl().flush();
         return self();
     }
 
 
     public T close() {
         link.close();
+        getSessionImpl().getConnectionImpl().flush();
         return self();
     }
 
     public T detach() {
         link.detach();
+        getSessionImpl().getConnectionImpl().flush();
         return self();
     }
 

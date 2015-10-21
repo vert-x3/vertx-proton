@@ -31,6 +31,7 @@ public class ProtonSenderImpl extends ProtonLink<ProtonSenderImpl> implements Pr
         Delivery delivery = sender().delivery(tag);
         sender().send(encodedMessage, 0, len);
         sender().advance();
+        getSessionImpl().getConnectionImpl().flush();
         return new ProtonDeliveryImpl(delivery);
     }
 
