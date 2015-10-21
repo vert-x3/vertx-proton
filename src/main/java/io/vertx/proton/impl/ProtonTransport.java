@@ -1,7 +1,7 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.NetClient;
@@ -19,14 +19,14 @@ import java.nio.ByteBuffer;
  * @author <a href="http://tfox.org">Tim Fox</a>
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-class VertxAMQPTransport extends BaseHandler {
+class ProtonTransport extends BaseHandler {
 
     private final Connection connection;
     private final NetClient netClient;
     private final NetSocket socket;
     private final Transport transport = Proton.transport();
 
-    VertxAMQPTransport(Connection connection, NetClient netClient, NetSocket socket) {
+    ProtonTransport(Connection connection, NetClient netClient, NetSocket socket) {
         this.connection = connection;
         this.netClient = netClient;
         this.socket = socket;
@@ -40,7 +40,7 @@ class VertxAMQPTransport extends BaseHandler {
             pumpInbound(ByteBuffer.wrap(buff.getBytes()));
             Event protonEvent = null;
             while ((protonEvent = collector.peek()) != null) {
-                VertxAMQPConnnection connnection = (VertxAMQPConnnection) protonEvent.getConnection().getContext();
+                ProtonConnectionImpl connnection = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
                 switch (protonEvent.getType()) {
                     case CONNECTION_REMOTE_OPEN: {
                         connnection.fireRemoteOpen();
@@ -51,7 +51,7 @@ class VertxAMQPTransport extends BaseHandler {
                         break;
                     }
                     case SESSION_REMOTE_OPEN: {
-                        VertxAMQPSession session = (VertxAMQPSession) protonEvent.getSession().getContext();
+                        ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
                         if( session == null ) {
                             connnection.fireRemoteSessionOpen(protonEvent.getSession());
                         } else {
@@ -60,12 +60,12 @@ class VertxAMQPTransport extends BaseHandler {
                         break;
                     }
                     case SESSION_REMOTE_CLOSE: {
-                        VertxAMQPSession session = (VertxAMQPSession) protonEvent.getSession().getContext();
+                        ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
                         session.fireRemoteClose();
                         break;
                     }
                     case LINK_REMOTE_OPEN: {
-                        VertxAMQPLink link = (VertxAMQPLink) protonEvent.getLink().getContext();
+                        ProtonLink link = (ProtonLink) protonEvent.getLink().getContext();
                         if( link == null ) {
                             connnection.fireRemoteLinkOpen(protonEvent.getLink());
                         } else {
@@ -74,16 +74,16 @@ class VertxAMQPTransport extends BaseHandler {
                         break;
                     }
                     case LINK_REMOTE_CLOSE: {
-                        VertxAMQPLink link = (VertxAMQPLink) protonEvent.getLink().getContext();
+                        ProtonLink link = (ProtonLink) protonEvent.getLink().getContext();
                         link.fireRemoteClose();
                         break;
                     }
                     case DELIVERY: {
-                        VertxAMQPDelivery delivery = (VertxAMQPDelivery) protonEvent.getDelivery().getContext();
+                        ProtonDeliveryImpl delivery = (ProtonDeliveryImpl) protonEvent.getDelivery().getContext();
                         if (delivery != null) {
                             delivery.fireUpdate();
                         } else {
-                            VertxAMQPReceiver receiver = (VertxAMQPReceiver) protonEvent.getLink().getContext();
+                            ProtonReceiverImpl receiver = (ProtonReceiverImpl) protonEvent.getLink().getContext();
                             receiver.onDelivery();
                         }
                         break;

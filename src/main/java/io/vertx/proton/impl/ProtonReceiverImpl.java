@@ -1,8 +1,10 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.engine.Delivery;
@@ -12,15 +14,15 @@ import org.apache.qpid.proton.message.Message;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class VertxAMQPReceiver extends VertxAMQPLink<VertxAMQPReceiver> {
-    private VertxAMQPMessageHandler handler;
+public class ProtonReceiverImpl extends ProtonLink<ProtonReceiverImpl> implements ProtonReceiver {
+    private ProtonMessageHandler handler;
 
-    VertxAMQPReceiver(Receiver receiver) {
+    ProtonReceiverImpl(Receiver receiver) {
         super(receiver);
     }
 
     @Override
-    protected VertxAMQPReceiver self() {
+    protected ProtonReceiverImpl self() {
         return this;
     }
 
@@ -32,12 +34,12 @@ public class VertxAMQPReceiver extends VertxAMQPLink<VertxAMQPReceiver> {
         return getReceiver().recv(bytes, offset, size);
     }
 
-    public VertxAMQPReceiver drain(int credit) {
+    public ProtonReceiver drain(int credit) {
         getReceiver().drain(credit);
         return this;
     }
 
-    public VertxAMQPReceiver flow(int credits) {
+    public ProtonReceiver flow(int credits) {
         getReceiver().flow(credits);
         return this;
     }
@@ -46,12 +48,12 @@ public class VertxAMQPReceiver extends VertxAMQPLink<VertxAMQPReceiver> {
         return getReceiver().draining();
     }
 
-    public VertxAMQPReceiver setDrain(boolean drain) {
+    public ProtonReceiver setDrain(boolean drain) {
         getReceiver().setDrain(drain);
         return this;
     }
 
-    public VertxAMQPReceiver handler(VertxAMQPMessageHandler handler) {
+    public ProtonReceiver handler(ProtonMessageHandler handler) {
         this.handler = handler;
         onDelivery();
         return this;
@@ -79,7 +81,7 @@ public class VertxAMQPReceiver extends VertxAMQPLink<VertxAMQPReceiver> {
             Message msg = Proton.message();
             msg.decode(encodedMessage, 0, count);
             delivery.disposition(new Accepted());
-            handler.handle(this, new VertxAMQPDelivery(delivery), msg);
+            handler.handle(this, new ProtonDeliveryImpl(delivery), msg);
         }
     }
 }

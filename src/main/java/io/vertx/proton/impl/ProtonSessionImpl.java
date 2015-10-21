@@ -2,36 +2,36 @@
  * Copyright 2015 Red Hat, Inc.
  */
 
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.proton.ProtonSession;
+import io.vertx.proton.ProtonHelper;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Session;
 
-import static io.vertx.proton.VertxAMQPSupport.future;
-import static io.vertx.proton.VertxAMQPSupport.source;
-import static io.vertx.proton.VertxAMQPSupport.target;
-
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class VertxAMQPSession {
+public class ProtonSessionImpl implements ProtonSession {
 
     private final Session session;
-    private Handler<AsyncResult<VertxAMQPSession>> openHandler;
-    private Handler<AsyncResult<VertxAMQPSession>> closeHandler;
+    private Handler<AsyncResult<ProtonSessionImpl>> openHandler;
+    private Handler<AsyncResult<ProtonSessionImpl>> closeHandler;
 
-    VertxAMQPSession(Session session) {
+    ProtonSessionImpl(Session session) {
         this.session = session;
         this.session.setContext(this);
     }
 
-    public VertxAMQPConnnection getLink() {
-                return (VertxAMQPConnnection) this.session.getConnection().getContext();
+    public ProtonConnectionImpl getLink() {
+                return (ProtonConnectionImpl) this.session.getConnection().getContext();
             }
 
     public long getOutgoingWindow() {
@@ -79,46 +79,50 @@ public class VertxAMQPSession {
     }
 
 
-    public VertxAMQPSession open() {
+    public ProtonSessionImpl open() {
         session.open();
         return this;
     }
 
-    public VertxAMQPSession close() {
+    public ProtonSessionImpl close() {
         session.close();
         return this;
     }
 
-    public VertxAMQPSession openHandler(Handler<AsyncResult<VertxAMQPSession>> openHandler) {
+    public ProtonSessionImpl openHandler(Handler<AsyncResult<ProtonSessionImpl>> openHandler) {
         this.openHandler = openHandler;
         return this;
     }
 
-    public VertxAMQPSession closeHandler(Handler<AsyncResult<VertxAMQPSession>> closeHandler) {
+    public ProtonSessionImpl closeHandler(Handler<AsyncResult<ProtonSessionImpl>> closeHandler) {
         this.closeHandler = closeHandler;
         return this;
     }
 
-    public VertxAMQPSender sender(String name) {
-        return new VertxAMQPSender(session.sender(name))
+    public ProtonSenderImpl sender(String name) {
+        return new ProtonSenderImpl(session.sender(name))
                 .setSenderSettleMode(SenderSettleMode.UNSETTLED)
                 .setReceiverSettleMode(ReceiverSettleMode.FIRST);
 
     }
 
-    public VertxAMQPSender sender(String name, String address) {
-        return sender(name).setTarget(target(address));
+    public ProtonSenderImpl sender(String name, String address) {
+        Target target = new Target();
+        target.setAddress(address);
+        return sender(name).setTarget(target);
     }
 
-    public VertxAMQPReceiver receiver(String name) {
-        return new VertxAMQPReceiver(session.receiver(name))
+    public ProtonReceiverImpl receiver(String name) {
+        return new ProtonReceiverImpl(session.receiver(name))
                 .setSenderSettleMode(SenderSettleMode.UNSETTLED)
                 .setReceiverSettleMode(ReceiverSettleMode.FIRST);
 
     }
 
-    public VertxAMQPReceiver receiver(String name, String address) {
-        return receiver(name).setSource(source(address));
+    public ProtonReceiverImpl receiver(String name, String address) {
+        Source source = new Source();
+        source.setAddress(address);
+        return receiver(name).setSource(source);
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -128,13 +132,13 @@ public class VertxAMQPSession {
     /////////////////////////////////////////////////////////////////////////////
     void fireRemoteOpen() {
         if (openHandler != null) {
-            openHandler.handle(future(this, getRemoteCondition()));
+            openHandler.handle(ProtonHelper.future(this, getRemoteCondition()));
         }
     }
 
     void fireRemoteClose() {
         if (closeHandler != null) {
-            closeHandler.handle(future(this, getRemoteCondition()));
+            closeHandler.handle(ProtonHelper.future(this, getRemoteCondition()));
         }
     }
 

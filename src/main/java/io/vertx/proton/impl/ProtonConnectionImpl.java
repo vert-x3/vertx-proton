@@ -1,49 +1,44 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.net.NetSocket;
+import io.vertx.proton.*;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.engine.Connection;
-import org.apache.qpid.proton.engine.EndpointState;
-import org.apache.qpid.proton.engine.Link;
-import org.apache.qpid.proton.engine.Receiver;
-import org.apache.qpid.proton.engine.Sender;
-import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.*;
 
-import java.util.ArrayList;
 import java.util.Map;
 
-import static io.vertx.proton.VertxAMQPSupport.future;
+import static io.vertx.proton.ProtonHelper.future;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class VertxAMQPConnnection {
+public class ProtonConnectionImpl implements ProtonConnection {
 
     final Connection connection = Proton.connection();
-    VertxAMQPTransport transport;
+    ProtonTransport transport;
 
-    private Handler<AsyncResult<VertxAMQPConnnection>> openHandler;
-    private Handler<AsyncResult<VertxAMQPConnnection>> closeHandler;
+    private Handler<AsyncResult<ProtonConnection>> openHandler;
+    private Handler<AsyncResult<ProtonConnection>> closeHandler;
 
-    private Handler<VertxAMQPSession> sessionOpenHandler = (session) -> {
+    private Handler<ProtonSessionImpl> sessionOpenHandler = (session) -> {
         session.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
-    private Handler<VertxAMQPSender> senderOpenHandler = (sender) -> {
+    private Handler<ProtonSenderImpl> senderOpenHandler = (sender) -> {
         sender.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
-    private Handler<VertxAMQPReceiver> receiverOpenHandler = (receiver) -> {
+    private Handler<ProtonReceiverImpl> receiverOpenHandler = (receiver) -> {
         receiver.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
 
-    VertxAMQPConnnection() {
+    ProtonConnectionImpl() {
         this.connection.setContext(this);
     }
 
@@ -131,19 +126,19 @@ public class VertxAMQPConnnection {
     /////////////////////////////////////////////////////////////////////////////
 
 
-    public VertxAMQPConnnection open() {
+    public ProtonConnection open() {
         connection.open();
         return this;
     }
 
 
-    public VertxAMQPConnnection close() {
+    public ProtonConnection close() {
         connection.close();
         return this;
     }
 
-    public VertxAMQPSession session() {
-        return new VertxAMQPSession(connection.session());
+    public ProtonSessionImpl session() {
+        return new ProtonSessionImpl(connection.session());
     }
 
     public void flush() {
@@ -158,26 +153,26 @@ public class VertxAMQPConnnection {
         }
     }
 
-    public VertxAMQPConnnection openHandler(Handler<AsyncResult<VertxAMQPConnnection>> openHandler) {
+    public ProtonConnection openHandler(Handler<AsyncResult<ProtonConnection>> openHandler) {
         this.openHandler = openHandler;
         return this;
     }
-    public VertxAMQPConnnection closeHandler(Handler<AsyncResult<VertxAMQPConnnection>> closeHandler) {
+    public ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> closeHandler) {
         this.closeHandler = closeHandler;
         return this;
     }
 
-    public VertxAMQPConnnection sessionOpenHandler(Handler<VertxAMQPSession> remoteSessionOpenHandler) {
+    public ProtonConnection sessionOpenHandler(Handler<ProtonSessionImpl> remoteSessionOpenHandler) {
         this.sessionOpenHandler = remoteSessionOpenHandler;
         return this;
     }
 
-    public VertxAMQPConnnection senderOpenHandler(Handler<VertxAMQPSender> remoteSenderOpenHandler) {
+    public ProtonConnection senderOpenHandler(Handler<ProtonSenderImpl> remoteSenderOpenHandler) {
         this.senderOpenHandler = remoteSenderOpenHandler;
         return this;
     }
 
-    public VertxAMQPConnnection receiverOpenHandler(Handler<VertxAMQPReceiver> remoteReceiverOpenHandler) {
+    public ProtonConnection receiverOpenHandler(Handler<ProtonReceiverImpl> remoteReceiverOpenHandler) {
         this.receiverOpenHandler = remoteReceiverOpenHandler;
         return this;
     }
@@ -200,23 +195,23 @@ public class VertxAMQPConnnection {
     }
 
     void bind(NetSocket socket) {
-        transport = new VertxAMQPTransport(connection, null, socket);
+        transport = new ProtonTransport(connection, null, socket);
     }
 
     void fireRemoteSessionOpen(Session session) {
         if( sessionOpenHandler !=null ) {
-            sessionOpenHandler.handle(new VertxAMQPSession(session));
+            sessionOpenHandler.handle(new ProtonSessionImpl(session));
         }
     }
 
     void fireRemoteLinkOpen(Link link) {
         if( link instanceof Sender ) {
             if( senderOpenHandler !=null ) {
-                senderOpenHandler.handle(new VertxAMQPSender((Sender) link));
+                senderOpenHandler.handle(new ProtonSenderImpl((Sender) link));
             }
         } else {
             if( receiverOpenHandler !=null ) {
-                receiverOpenHandler.handle(new VertxAMQPReceiver((Receiver) link));
+                receiverOpenHandler.handle(new ProtonReceiverImpl((Receiver) link));
             }
         }
     }

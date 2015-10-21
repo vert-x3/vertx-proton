@@ -8,6 +8,6 @@ import org.apache.qpid.proton.message.Message;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public interface VertxAMQPMessageHandler {
-    void handle(VertxAMQPReceiver receiver, VertxAMQPDelivery deliver, Message message);
+public interface ProtonMessageHandler {
+    void handle(ProtonReceiver receiver, ProtonDelivery delivery, Message message);
 }

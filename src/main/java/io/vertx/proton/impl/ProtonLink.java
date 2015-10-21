@@ -1,10 +1,11 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -13,28 +14,25 @@ import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
-import org.apache.qpid.proton.engine.Session;
-
-import static io.vertx.proton.VertxAMQPSupport.future;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-abstract public class VertxAMQPLink<T extends VertxAMQPLink> {
+abstract class ProtonLink<T extends ProtonLink> {
 
     protected final Link link;
     private Handler<AsyncResult<T>> openHandler;
     private Handler<AsyncResult<T>> closeHandler;
 
-    VertxAMQPLink(Link link) {
+    ProtonLink(Link link) {
         this.link = link;
         this.link.setContext(this);
     }
 
     protected abstract T self();
 
-    public VertxAMQPSession getSession() {
-        return (VertxAMQPSession) this.link.getSession().getContext();
+    public ProtonSessionImpl getSession() {
+        return (ProtonSessionImpl) this.link.getSession().getContext();
     }
 
     public ErrorCondition getCondition() {
@@ -192,13 +190,13 @@ abstract public class VertxAMQPLink<T extends VertxAMQPLink> {
     /////////////////////////////////////////////////////////////////////////////
     void fireRemoteOpen() {
         if (openHandler != null) {
-            openHandler.handle(future(self(), getRemoteCondition()));
+            openHandler.handle(ProtonHelper.future(self(), getRemoteCondition()));
         }
     }
 
     void fireRemoteClose() {
         if (closeHandler != null) {
-            closeHandler.handle(future(self(), getRemoteCondition()));
+            closeHandler.handle(ProtonHelper.future(self(), getRemoteCondition()));
         }
     }
 

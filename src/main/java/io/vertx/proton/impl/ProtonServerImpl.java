@@ -2,7 +2,7 @@
  * Copyright 2015 Red Hat, Inc.
  */
 
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -10,17 +10,19 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonServer;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class VertxAMQPServer {
+public class ProtonServerImpl implements ProtonServer {
 
     private final Vertx vertx;
     private final NetServer server;
-    private Handler<VertxAMQPConnnection> handler;
+    private Handler<ProtonConnection> handler;
 
-    public VertxAMQPServer(Vertx vertx) {
+    public ProtonServerImpl(Vertx vertx) {
         this.vertx = vertx;
         this.server = vertx.createNetServer();
     }
@@ -29,12 +31,12 @@ public class VertxAMQPServer {
         return server.actualPort();
     }
 
-    public VertxAMQPServer listen(int i) {
+    public ProtonServerImpl listen(int i) {
         server.listen(i);
         return this;
     }
 
-    public VertxAMQPServer listen() {
+    public ProtonServerImpl listen() {
         server.listen();
         return this;
     }
@@ -43,36 +45,33 @@ public class VertxAMQPServer {
         return server.isMetricsEnabled();
     }
 
-    public VertxAMQPServer listen(int i, String s, Handler<AsyncResult<VertxAMQPServer>> handler) {
-        server.listen(i, s, convertHandler(handler));
+    public ProtonServerImpl listen(int port, String host, Handler<AsyncResult<ProtonServer>> handler) {
+        server.listen(port, host, convertHandler(handler));
         return this;
     }
 
 
-    public VertxAMQPServer listen(Handler<AsyncResult<VertxAMQPServer>> handler) {
+    public ProtonServerImpl listen(Handler<AsyncResult<ProtonServer>> handler) {
         server.listen(convertHandler(handler));
         return this;
     }
 
-    private Handler<AsyncResult<NetServer>> convertHandler(final Handler<AsyncResult<VertxAMQPServer>> handler) {
-        return new Handler<AsyncResult<NetServer>>() {
-            @Override
-            public void handle(AsyncResult<NetServer> result) {
-                if( result.succeeded() ) {
-                    handler.handle(Future.succeededFuture(VertxAMQPServer.this));
-                } else {
-                    handler.handle(Future.failedFuture(result.cause()));
-                }
+    private Handler<AsyncResult<NetServer>> convertHandler(final Handler<AsyncResult<ProtonServer>> handler) {
+        return result -> {
+            if( result.succeeded() ) {
+                handler.handle(Future.succeededFuture(ProtonServerImpl.this));
+            } else {
+                handler.handle(Future.failedFuture(result.cause()));
             }
         };
     }
 
-    public VertxAMQPServer listen(int i, String s) {
+    public ProtonServerImpl listen(int i, String s) {
         server.listen(i, s);
         return this;
     }
 
-    public VertxAMQPServer listen(int i, Handler<AsyncResult<VertxAMQPServer>> handler) {
+    public ProtonServerImpl listen(int i, Handler<AsyncResult<ProtonServer>> handler) {
         server.listen(i, convertHandler(handler));
         return this;
     }
@@ -85,16 +84,16 @@ public class VertxAMQPServer {
         server.close(handler);
     }
 
-    public Handler<VertxAMQPConnnection> connectHandler() {
+    public Handler<ProtonConnection> connectHandler() {
         return handler;
     }
 
-    public VertxAMQPServer connectHandler(Handler<VertxAMQPConnnection> handler) {
+    public ProtonServerImpl connectHandler(Handler<ProtonConnection> handler) {
         this.handler = handler;
         server.connectHandler(new Handler<NetSocket>() {
             @Override
             public void handle(NetSocket netSocket) {
-                VertxAMQPConnnection connection = new VertxAMQPConnnection();
+                ProtonConnectionImpl connection = new ProtonConnectionImpl();
                 connection.bind(netSocket);
                 handler.handle(connection);
             }

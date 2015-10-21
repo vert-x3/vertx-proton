@@ -1,27 +1,28 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.impl;
 
 import io.vertx.core.Handler;
+import io.vertx.proton.ProtonDelivery;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.engine.Delivery;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class VertxAMQPDelivery {
+public class ProtonDeliveryImpl implements ProtonDelivery {
 
     private final Delivery delivery;
-    private Handler<VertxAMQPDelivery> handler;
+    private Handler<ProtonDelivery> handler;
 
-    VertxAMQPDelivery(Delivery delivery) {
+    ProtonDeliveryImpl(Delivery delivery) {
         this.delivery = delivery;
         delivery.setContext(this);
     }
 
-    public VertxAMQPLink getLink() {
-            return (VertxAMQPLink) this.delivery.getLink().getContext();
+    public ProtonLink getLink() {
+            return (ProtonLink) this.delivery.getLink().getContext();
         }
 
     public void clear() {
@@ -85,17 +86,17 @@ public class VertxAMQPDelivery {
         return delivery.isBuffered();
     }
 
-    public VertxAMQPDelivery disposition(DeliveryState state) {
+    public ProtonDelivery disposition(DeliveryState state) {
         delivery.disposition(state);
         return this;
     }
 
-    public VertxAMQPDelivery settle() {
+    public ProtonDelivery settle() {
         delivery.settle();
         return this;
     }
 
-    public VertxAMQPDelivery handler(Handler<VertxAMQPDelivery> handler) {
+    public ProtonDelivery handler(Handler<ProtonDelivery> handler) {
         this.handler = handler;
         return this;
     }

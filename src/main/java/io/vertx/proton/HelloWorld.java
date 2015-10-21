@@ -3,15 +3,12 @@
  */
 package io.vertx.proton;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
-import static io.vertx.proton.VertxAMQPSupport.message;
-import static io.vertx.proton.VertxAMQPSupport.tag;
+import static io.vertx.proton.ProtonHelper.message;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -24,13 +21,12 @@ public class HelloWorld {
         Vertx vertx = Vertx.vertx();
 
         // Create the Vert.x AMQP client instance
-        VertxAMQPClient client = new VertxAMQPClient();
-        client.setContainer("hello-world-client");
+        ProtonClient client = ProtonClient.create(vertx);
 
-        client.connect(vertx, "localhost", 5672, res -> {
+        client.connect("localhost", 5672, res -> {
             if (res.succeeded()) {
                 System.out.println("We're connected");
-                helloWorldSendAndConsumeExample(client);
+                helloWorldSendAndConsumeExample(res.result());
             } else {
                 res.cause().printStackTrace();
             }
@@ -43,16 +39,12 @@ public class HelloWorld {
         }
     }
 
-    private static void helloWorldSendAndConsumeExample(VertxAMQPConnnection connection) {
+    private static void helloWorldSendAndConsumeExample(ProtonConnection connection) {
 
-        connection.open().openHandler(errorHandler("AMQP connection opened"));
-
-        VertxAMQPSession session = connection.session();
-        session.openHandler(errorHandler("AMQP session opened")).open();
+        ProtonSession session = connection.session();
 
         // Receive messages from a queue
         session.receiver("receiver-link-1", "queue://foo")
-                .openHandler(errorHandler("AMQP receiver opened")).open()
                 .handler((receiver, delivery, msg) -> {
 
                     Section body = msg.getBody();
@@ -70,11 +62,10 @@ public class HelloWorld {
 
 
         // Send messages to a queue..
-        VertxAMQPSender sender = session.sender("sender-link-1", "queue://foo");
-        sender.openHandler(errorHandler("AMQP sender opened")).open();
+        ProtonSender sender = session.sender("sender-link-1", "queue://foo");
 
         Message message = message("Hello World from client");
-        sender.send(tag("msg:1"), message).handler(delivery -> {
+        sender.send(message).handler(delivery -> {
             if (delivery.remotelySettled()) {
                 System.out.println("The message was sent");
             }
@@ -82,13 +73,4 @@ public class HelloWorld {
 
     }
 
-    private  static <T> Handler<AsyncResult<T>> errorHandler(String msg) {
-        return res -> {
-            if (res.succeeded()) {
-                System.out.println(msg);
-            } else {
-                res.cause().printStackTrace();
-            }
-        };
-    }
 }
