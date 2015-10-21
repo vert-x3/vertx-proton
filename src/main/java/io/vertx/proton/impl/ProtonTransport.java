@@ -65,7 +65,7 @@ class ProtonTransport extends BaseHandler {
                         break;
                     }
                     case LINK_REMOTE_OPEN: {
-                        ProtonLink link = (ProtonLink) protonEvent.getLink().getContext();
+                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
                         if( link == null ) {
                             connnection.fireRemoteLinkOpen(protonEvent.getLink());
                         } else {
@@ -74,7 +74,7 @@ class ProtonTransport extends BaseHandler {
                         break;
                     }
                     case LINK_REMOTE_CLOSE: {
-                        ProtonLink link = (ProtonLink) protonEvent.getLink().getContext();
+                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
                         link.fireRemoteClose();
                         break;
                     }

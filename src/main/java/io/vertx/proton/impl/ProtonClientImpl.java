@@ -28,10 +28,8 @@ public class ProtonClientImpl implements ProtonClient {
         netClient.connect(port, host, res -> {
             if (res.succeeded()) {
                 ProtonConnectionImpl amqpConnnection = new ProtonConnectionImpl();
-                amqpConnnection.setContainer("hello-world-client");
-                ProtonTransport transport = new ProtonTransport(amqpConnnection.connection, netClient, res.result());
-                amqpConnnection.flush();
-                handler.handle(Future.succeededFuture(null));
+                amqpConnnection.bind(netClient, res.result());
+                handler.handle(Future.succeededFuture(amqpConnnection));
             } else {
                 handler.handle(Future.failedFuture(res.cause()));
             }

@@ -7,6 +7,7 @@ import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonMessageHandler;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.message.Message;
@@ -14,7 +15,7 @@ import org.apache.qpid.proton.message.Message;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class ProtonReceiverImpl extends ProtonLink<ProtonReceiverImpl> implements ProtonReceiver {
+public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implements ProtonReceiver {
     private ProtonMessageHandler handler;
 
     ProtonReceiverImpl(Receiver receiver) {
@@ -58,7 +59,6 @@ public class ProtonReceiverImpl extends ProtonLink<ProtonReceiverImpl> implement
         onDelivery();
         return this;
     }
-
 
     /////////////////////////////////////////////////////////////////////////////
     //

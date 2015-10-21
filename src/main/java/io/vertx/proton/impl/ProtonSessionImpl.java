@@ -6,6 +6,8 @@ package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonHelper;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -22,8 +24,8 @@ import org.apache.qpid.proton.engine.Session;
 public class ProtonSessionImpl implements ProtonSession {
 
     private final Session session;
-    private Handler<AsyncResult<ProtonSessionImpl>> openHandler;
-    private Handler<AsyncResult<ProtonSessionImpl>> closeHandler;
+    private Handler<AsyncResult<ProtonSession>> openHandler;
+    private Handler<AsyncResult<ProtonSession>> closeHandler;
 
     ProtonSessionImpl(Session session) {
         this.session = session;
@@ -38,6 +40,7 @@ public class ProtonSessionImpl implements ProtonSession {
         return session.getOutgoingWindow();
     }
 
+    @Override
     public void setIncomingCapacity(int bytes) {
         session.setIncomingCapacity(bytes);
     }
@@ -54,10 +57,12 @@ public class ProtonSessionImpl implements ProtonSession {
         return session.getIncomingBytes();
     }
 
+    @Override
     public ErrorCondition getRemoteCondition() {
         return session.getRemoteCondition();
     }
 
+    @Override
     public int getIncomingCapacity() {
         return session.getIncomingCapacity();
     }
@@ -66,10 +71,12 @@ public class ProtonSessionImpl implements ProtonSession {
         return session.getLocalState();
     }
 
+    @Override
     public void setCondition(ErrorCondition condition) {
         session.setCondition(condition);
     }
 
+    @Override
     public ErrorCondition getCondition() {
         return session.getCondition();
     }
@@ -79,49 +86,57 @@ public class ProtonSessionImpl implements ProtonSession {
     }
 
 
+    @Override
     public ProtonSessionImpl open() {
         session.open();
         getConnectionImpl().flush();
         return this;
     }
 
+    @Override
     public ProtonSessionImpl close() {
         session.close();
         getConnectionImpl().flush();
         return this;
     }
 
-    public ProtonSessionImpl openHandler(Handler<AsyncResult<ProtonSessionImpl>> openHandler) {
+    @Override
+    public ProtonSessionImpl openHandler(Handler<AsyncResult<ProtonSession>> openHandler) {
         this.openHandler = openHandler;
         return this;
     }
 
-    public ProtonSessionImpl closeHandler(Handler<AsyncResult<ProtonSessionImpl>> closeHandler) {
+    @Override
+    public ProtonSessionImpl closeHandler(Handler<AsyncResult<ProtonSession>> closeHandler) {
         this.closeHandler = closeHandler;
         return this;
     }
 
-    public ProtonSenderImpl sender(String name) {
+    @Override
+    public ProtonSender sender(String name) {
         return new ProtonSenderImpl(session.sender(name))
                 .setSenderSettleMode(SenderSettleMode.UNSETTLED)
                 .setReceiverSettleMode(ReceiverSettleMode.FIRST);
 
     }
 
-    public ProtonSenderImpl sender(String name, String address) {
+    @Override
+    public ProtonSender sender(String name, String address) {
         Target target = new Target();
         target.setAddress(address);
         return sender(name).setTarget(target);
     }
 
-    public ProtonReceiverImpl receiver(String name) {
+    @Override
+    public ProtonReceiver receiver(String name) {
         return new ProtonReceiverImpl(session.receiver(name))
                 .setSenderSettleMode(SenderSettleMode.UNSETTLED)
                 .setReceiverSettleMode(ReceiverSettleMode.FIRST);
 
     }
 
-    public ProtonReceiverImpl receiver(String name, String address) {
+    @Override
+    public ProtonReceiver receiver(String name, String address) {
         Source source = new Source();
         source.setAddress(address);
         return receiver(name).setSource(source);

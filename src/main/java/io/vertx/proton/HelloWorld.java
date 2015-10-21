@@ -9,6 +9,7 @@ import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
 import static io.vertx.proton.ProtonHelper.message;
+import static io.vertx.proton.ProtonHelper.tag;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -41,31 +42,34 @@ public class HelloWorld {
 
     private static void helloWorldSendAndConsumeExample(ProtonConnection connection) {
 
-        ProtonSession session = connection.session();
+        connection.setContainer("client-id:1").open();
+        ProtonSession session = connection.session().open();
 
         // Receive messages from a queue
         session.receiver("receiver-link-1", "queue://foo")
-                .handler((receiver, delivery, msg) -> {
+            .handler((receiver, delivery, msg) -> {
 
-                    Section body = msg.getBody();
-                    if (body instanceof AmqpValue) {
-                        String content = (String) ((AmqpValue) body).getValue();
-                        System.out.println("Received message with content: " + content);
-                    }
+                Section body = msg.getBody();
+                if (body instanceof AmqpValue) {
+                    String content = (String) ((AmqpValue) body).getValue();
+                    System.out.println("Received message with content: " + content);
+                }
 
-                    // We could nack if we need to.
-                    // delivery.disposition(new Rejected());
-                    delivery.settle(); // This acks the message
-                    receiver.flow(1);
+                // We could nack if we need to.
+                // delivery.disposition(new Rejected());
+                delivery.settle(); // This acks the message
+                receiver.flow(1);
 
-                }).flow(10); // Prefetch up to 10 messages
+            })
+            .flow(10)  // Prefetch up to 10 messages
+            .open();
 
 
         // Send messages to a queue..
-        ProtonSender sender = session.sender("sender-link-1", "queue://foo");
+        ProtonSender sender = session.sender("sender-link-1", "queue://foo").open();
 
         Message message = message("Hello World from client");
-        sender.send(message).handler(delivery -> {
+        sender.send(tag("m1"),message).handler(delivery -> {
             if (delivery.remotelySettled()) {
                 System.out.println("The message was sent");
             }

@@ -4,6 +4,7 @@
 package io.vertx.proton.impl;
 
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
@@ -11,7 +12,7 @@ import org.apache.qpid.proton.message.Message;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public class ProtonSenderImpl extends ProtonLink<ProtonSenderImpl> implements ProtonSender {
+public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements ProtonSender {
 
     ProtonSenderImpl(Sender sender) {
         super(sender);
@@ -20,9 +21,6 @@ public class ProtonSenderImpl extends ProtonLink<ProtonSenderImpl> implements Pr
         return (Sender)link;
     }
 
-    public ProtonDeliveryImpl send( Message message) {
-        return this.send(null, message);
-    }
 
     public ProtonDeliveryImpl send(byte[] tag, Message message) {
         int BUFFER_SIZE = 1024;

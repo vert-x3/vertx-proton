@@ -5,6 +5,7 @@ package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.Proton;
@@ -28,13 +29,13 @@ public class ProtonConnectionImpl implements ProtonConnection {
     private Handler<AsyncResult<ProtonConnection>> openHandler;
     private Handler<AsyncResult<ProtonConnection>> closeHandler;
 
-    private Handler<ProtonSessionImpl> sessionOpenHandler = (session) -> {
+    private Handler<ProtonSession> sessionOpenHandler = (session) -> {
         session.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
-    private Handler<ProtonSenderImpl> senderOpenHandler = (sender) -> {
+    private Handler<ProtonSender> senderOpenHandler = (sender) -> {
         sender.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
-    private Handler<ProtonReceiverImpl> receiverOpenHandler = (receiver) -> {
+    private Handler<ProtonReceiver> receiverOpenHandler = (receiver) -> {
         receiver.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
 
@@ -57,6 +58,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
         return this;
     }
 
+    @Override
     public ProtonConnectionImpl setHostname(String hostname) {
         connection.setHostname(hostname);
         return this;
@@ -73,19 +75,23 @@ public class ProtonConnectionImpl implements ProtonConnection {
         return this;
     }
 
+    @Override
     public ProtonConnectionImpl setCondition(ErrorCondition condition) {
         connection.setCondition(condition);
         return this;
     }
 
+    @Override
     public ErrorCondition getCondition() {
         return connection.getCondition();
     }
 
+    @Override
     public String getContainer() {
         return connection.getContainer();
     }
 
+    @Override
     public String getHostname() {
         return connection.getHostname();
     }
@@ -94,10 +100,12 @@ public class ProtonConnectionImpl implements ProtonConnection {
         return connection.getLocalState();
     }
 
+    @Override
     public ErrorCondition getRemoteCondition() {
         return connection.getRemoteCondition();
     }
 
+    @Override
     public String getRemoteContainer() {
         return connection.getRemoteContainer();
     }
@@ -106,6 +114,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
         return connection.getRemoteDesiredCapabilities();
     }
 
+    @Override
     public String getRemoteHostname() {
         return connection.getRemoteHostname();
     }
@@ -129,6 +138,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     /////////////////////////////////////////////////////////////////////////////
 
 
+    @Override
     public ProtonConnection open() {
         connection.open();
         flush();
@@ -136,12 +146,14 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
 
+    @Override
     public ProtonConnection close() {
         connection.close();
         flush();
         return this;
     }
 
+    @Override
     public ProtonSessionImpl session() {
         return new ProtonSessionImpl(connection.session());
     }
@@ -158,26 +170,31 @@ public class ProtonConnectionImpl implements ProtonConnection {
         }
     }
 
+    @Override
     public ProtonConnection openHandler(Handler<AsyncResult<ProtonConnection>> openHandler) {
         this.openHandler = openHandler;
         return this;
     }
+    @Override
     public ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> closeHandler) {
         this.closeHandler = closeHandler;
         return this;
     }
 
-    public ProtonConnection sessionOpenHandler(Handler<ProtonSessionImpl> remoteSessionOpenHandler) {
+    @Override
+    public ProtonConnection sessionOpenHandler(Handler<ProtonSession> remoteSessionOpenHandler) {
         this.sessionOpenHandler = remoteSessionOpenHandler;
         return this;
     }
 
-    public ProtonConnection senderOpenHandler(Handler<ProtonSenderImpl> remoteSenderOpenHandler) {
+    @Override
+    public ProtonConnection senderOpenHandler(Handler<ProtonSender> remoteSenderOpenHandler) {
         this.senderOpenHandler = remoteSenderOpenHandler;
         return this;
     }
 
-    public ProtonConnection receiverOpenHandler(Handler<ProtonReceiverImpl> remoteReceiverOpenHandler) {
+    @Override
+    public ProtonConnection receiverOpenHandler(Handler<ProtonReceiver> remoteReceiverOpenHandler) {
         this.receiverOpenHandler = remoteReceiverOpenHandler;
         return this;
     }
@@ -199,8 +216,12 @@ public class ProtonConnectionImpl implements ProtonConnection {
         }
     }
 
+    void bind(NetClient client, NetSocket socket) {
+        transport = new ProtonTransport(connection, client, socket);
+    }
+
     void bind(NetSocket socket) {
-        transport = new ProtonTransport(connection, null, socket);
+        bind(null, socket);
     }
 
     void fireRemoteSessionOpen(Session session) {
