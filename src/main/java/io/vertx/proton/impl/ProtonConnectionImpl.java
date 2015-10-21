@@ -28,6 +28,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     private Handler<AsyncResult<ProtonConnection>> openHandler;
     private Handler<AsyncResult<ProtonConnection>> closeHandler;
+    private Handler<ProtonConnection> disconnectHandler;
 
     private Handler<ProtonSession> sessionOpenHandler = (session) -> {
         session.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
@@ -164,10 +165,16 @@ public class ProtonConnectionImpl implements ProtonConnection {
         }
     }
 
+    @Override
     public void disconnect() {
         if (transport != null) {
-            transport.close();
+            transport.disconnect();
         }
+    }
+
+    @Override
+    public boolean isDisconnected() {
+        return transport==null;
     }
 
     @Override
@@ -178,6 +185,12 @@ public class ProtonConnectionImpl implements ProtonConnection {
     @Override
     public ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> closeHandler) {
         this.closeHandler = closeHandler;
+        return this;
+    }
+
+    @Override
+    public ProtonConnection disconnectHandler(Handler<ProtonConnection> disconnectHandler) {
+        this.disconnectHandler = disconnectHandler;
         return this;
     }
 
@@ -216,6 +229,13 @@ public class ProtonConnectionImpl implements ProtonConnection {
         }
     }
 
+    public void fireDisconnect() {
+        transport = null;
+        if( disconnectHandler !=null ) {
+            disconnectHandler.handle(this);
+        }
+    }
+
     void bind(NetClient client, NetSocket socket) {
         transport = new ProtonTransport(connection, client, socket);
     }
@@ -241,4 +261,5 @@ public class ProtonConnectionImpl implements ProtonConnection {
             }
         }
     }
+
 }

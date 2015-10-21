@@ -36,6 +36,17 @@ class ProtonTransport extends BaseHandler {
         Collector collector = Proton.collector();
         connection.collect(collector);
 
+        socket.endHandler(res->{
+            transport.unbind();
+            transport.close();
+            if( netClient!=null ) {
+                netClient.close();
+            } else {
+                socket.close();
+            }
+            ((ProtonConnectionImpl) connection.getContext()).fireDisconnect();
+        });
+
         socket.handler(buff -> {
             pumpInbound(ByteBuffer.wrap(buff.getBytes()));
             Event protonEvent = null;
@@ -140,7 +151,7 @@ class ProtonTransport extends BaseHandler {
     }
 
 
-    public void close() {
+    public void disconnect() {
         if (netClient != null) {
             netClient.close();
         } else {

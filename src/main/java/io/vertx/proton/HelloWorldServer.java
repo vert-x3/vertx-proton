@@ -44,7 +44,16 @@ public class HelloWorldServer {
     }
 
     private static void helloProcessConnection(Vertx vertx, ProtonConnection connection) {
-        connection.open();
+        connection.openHandler(res ->{
+            System.out.println("Client connected: "+connection.getRemoteContainer());
+        }).closeHandler(c -> {
+            System.out.println("Client closing amqp connection: " + connection.getRemoteContainer());
+            connection.close();
+            connection.disconnect();
+        }).disconnectHandler(c->{
+            System.out.println("Client socket disconnected: "+connection.getRemoteContainer());
+            connection.disconnect();
+        }).open();
         connection.sessionOpenHandler(session -> session.open());
 
         connection.receiverOpenHandler(receiver -> {
@@ -69,18 +78,21 @@ public class HelloWorldServer {
                 .open();
         });
 
-
         connection.senderOpenHandler(sender -> {
             System.out.println("Sending to client from: " + sender.getRemoteSource().getAddress());
             sender.setSource(sender.getRemoteSource()).open();
             vertx.setPeriodic(1000, timer -> {
-                System.out.println("Sending message to client");
-                Message m = message("Hello World from Server!");
-                sender.send(tag("m1"), m).handler(delivery -> {
-                    if (delivery.remotelySettled()) {
-                        System.out.println("The message was sent");
-                    }
-                });
+                if (connection.isDisconnected()) {
+                    vertx.cancelTimer(timer);
+                } else {
+                    System.out.println("Sending message to client");
+                    Message m = message("Hello World from Server!");
+                    sender.send(tag("m1"), m).handler(delivery -> {
+                        if (delivery.remotelySettled()) {
+                            System.out.println("The message was sent");
+                        }
+                    });
+                }
             });
         });
 

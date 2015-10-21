@@ -34,9 +34,15 @@ public interface ProtonConnection {
 
   ProtonSession session();
 
+  void disconnect();
+
+  boolean isDisconnected();
+
   ProtonConnection openHandler(Handler<AsyncResult<ProtonConnection>> openHandler);
 
   ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> closeHandler);
+
+  ProtonConnection disconnectHandler(Handler<ProtonConnection> disconnectHandler);
 
   ProtonConnection sessionOpenHandler(Handler<ProtonSession> remoteSessionOpenHandler);
 
