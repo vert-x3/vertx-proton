@@ -21,8 +21,8 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         delivery.setContext(this);
     }
 
-    public ProtonLink getLink() {
-            return (ProtonLink) this.delivery.getLink().getContext();
+    public ProtonLinkImpl getLink() {
+            return (ProtonLinkImpl) this.delivery.getLink().getContext();
         }
 
     public void clear() {
@@ -93,6 +93,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
     public ProtonDelivery settle() {
         delivery.settle();
+        getLinkImpl().getSessionImpl().getConnectionImpl().flush();
         return this;
     }
 
@@ -105,5 +106,9 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         if( this.handler!=null ) {
             this.handler.handle(this);
         }
+    }
+
+    public ProtonLinkImpl getLinkImpl() {
+        return (ProtonLinkImpl) delivery.getLink().getContext();
     }
 }

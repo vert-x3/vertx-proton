@@ -6,6 +6,9 @@ package io.vertx.proton.impl;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonHelper;
+import io.vertx.proton.ProtonLink;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -18,23 +21,24 @@ import org.apache.qpid.proton.engine.Link;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-abstract class ProtonLink<T extends ProtonLink> {
+abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
 
     protected final Link link;
     private Handler<AsyncResult<T>> openHandler;
     private Handler<AsyncResult<T>> closeHandler;
 
-    ProtonLink(Link link) {
+    ProtonLinkImpl(Link link) {
         this.link = link;
         this.link.setContext(this);
     }
 
     protected abstract T self();
 
-    public ProtonSessionImpl getSession() {
+    public ProtonSessionImpl getSessionImpl() {
         return (ProtonSessionImpl) this.link.getSession().getContext();
     }
 
+    @Override
     public ErrorCondition getCondition() {
         return link.getCondition();
     }
@@ -55,10 +59,12 @@ abstract class ProtonLink<T extends ProtonLink> {
         return link.getName();
     }
 
+    @Override
     public ReceiverSettleMode getReceiverSettleMode() {
         return link.getReceiverSettleMode();
     }
 
+    @Override
     public ErrorCondition getRemoteCondition() {
         return link.getRemoteCondition();
     }
@@ -67,36 +73,56 @@ abstract class ProtonLink<T extends ProtonLink> {
         return link.getRemoteCredit();
     }
 
+    @Override
     public ReceiverSettleMode getRemoteReceiverSettleMode() {
         return link.getRemoteReceiverSettleMode();
     }
 
+    @Override
     public SenderSettleMode getRemoteSenderSettleMode() {
         return link.getRemoteSenderSettleMode();
     }
 
-    public Source getRemoteSource() {
-        return link.getRemoteSource();
-    }
 
     public EndpointState getRemoteState() {
         return link.getRemoteState();
-    }
-
-    public Target getRemoteTarget() {
-        return link.getRemoteTarget();
     }
 
     public SenderSettleMode getSenderSettleMode() {
         return link.getSenderSettleMode();
     }
 
+
+    @Override
+    public Target getRemoteTarget() {
+        return link.getRemoteTarget();
+    }
+
+    @Override
+    public Target getTarget() {
+        return link.getTarget();
+    }
+
+    @Override
+    public T setTarget(Target address) {
+        link.setTarget(address);
+        return self();
+    }
+
+    @Override
+    public Source getRemoteSource() {
+        return link.getRemoteSource();
+    }
+
+    @Override
     public Source getSource() {
         return link.getSource();
     }
 
-    public Target getTarget() {
-        return link.getTarget();
+    @Override
+    public T setSource(Source address) {
+        link.setSource(address);
+        return self();
     }
 
     public int getUnsettled() {
@@ -127,27 +153,19 @@ abstract class ProtonLink<T extends ProtonLink> {
         return link.current();
     }
 
-    public T setTarget(Target address) {
-        link.setTarget(address);
-        return self();
-    }
-
-    public T setSource(Source address) {
-        link.setSource(address);
-        return self();
-
-    }
-
+    @Override
     public T setReceiverSettleMode(ReceiverSettleMode receiverSettleMode) {
         link.setReceiverSettleMode(receiverSettleMode);
         return self();
     }
 
+    @Override
     public T setSenderSettleMode(SenderSettleMode senderSettleMode) {
         link.setSenderSettleMode(senderSettleMode);
         return self();
     }
 
+    @Override
     public T setCondition(ErrorCondition condition) {
         link.setCondition(condition);
         return self();
@@ -157,27 +175,34 @@ abstract class ProtonLink<T extends ProtonLink> {
         return link.delivery(tag);
     }
 
+    @Override
     public T open() {
         link.open();
+        getSessionImpl().getConnectionImpl().flush();
         return self();
     }
 
 
+    @Override
     public T close() {
         link.close();
+        getSessionImpl().getConnectionImpl().flush();
         return self();
     }
 
     public T detach() {
         link.detach();
+        getSessionImpl().getConnectionImpl().flush();
         return self();
     }
 
+    @Override
     public T openHandler(Handler<AsyncResult<T>> openHandler) {
         this.openHandler = openHandler;
         return self();
     }
 
+    @Override
     public T closeHandler(Handler<AsyncResult<T>> closeHandler) {
         this.closeHandler = closeHandler;
         return self();

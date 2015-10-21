@@ -36,6 +36,17 @@ class ProtonTransport extends BaseHandler {
         Collector collector = Proton.collector();
         connection.collect(collector);
 
+        socket.endHandler(res->{
+            transport.unbind();
+            transport.close();
+            if( netClient!=null ) {
+                netClient.close();
+            } else {
+                socket.close();
+            }
+            ((ProtonConnectionImpl) connection.getContext()).fireDisconnect();
+        });
+
         socket.handler(buff -> {
             pumpInbound(ByteBuffer.wrap(buff.getBytes()));
             Event protonEvent = null;
@@ -65,7 +76,7 @@ class ProtonTransport extends BaseHandler {
                         break;
                     }
                     case LINK_REMOTE_OPEN: {
-                        ProtonLink link = (ProtonLink) protonEvent.getLink().getContext();
+                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
                         if( link == null ) {
                             connnection.fireRemoteLinkOpen(protonEvent.getLink());
                         } else {
@@ -74,7 +85,7 @@ class ProtonTransport extends BaseHandler {
                         break;
                     }
                     case LINK_REMOTE_CLOSE: {
-                        ProtonLink link = (ProtonLink) protonEvent.getLink().getContext();
+                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
                         link.fireRemoteClose();
                         break;
                     }
@@ -140,7 +151,7 @@ class ProtonTransport extends BaseHandler {
     }
 
 
-    public void close() {
+    public void disconnect() {
         if (netClient != null) {
             netClient.close();
         } else {
