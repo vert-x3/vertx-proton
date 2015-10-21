@@ -28,6 +28,12 @@ public interface ProtonHelper {
         return message;
     }
 
+    static Message message(String address, String body) {
+        Message message = message();
+        message.setAddress(address);
+        return message;
+    }
+
     static byte[] tag(String tag) {
         return tag.getBytes(StandardCharsets.UTF_8);
     }

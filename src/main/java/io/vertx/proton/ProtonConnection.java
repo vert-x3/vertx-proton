@@ -2,7 +2,6 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.proton.impl.ProtonDeliveryImpl;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 
@@ -36,7 +35,7 @@ public interface ProtonConnection {
 
   ProtonSession session();
 
-  ProtonDeliveryImpl send(byte[] tag, Message message);
+  ProtonDelivery send(byte[] tag, Message message);
 
   ProtonReceiver receiver(String name);
 

@@ -39,6 +39,8 @@ public interface ProtonLink<T extends ProtonLink> {
 
     T setReceiverSettleMode(ReceiverSettleMode receiverSettleMode);
 
+    SenderSettleMode getSenderSettleMode();
+
     T setSenderSettleMode(SenderSettleMode senderSettleMode);
 
     T setCondition(ErrorCondition condition);

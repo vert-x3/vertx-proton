@@ -1,6 +1,7 @@
 package io.vertx.proton;
 
-import io.vertx.proton.impl.ProtonDeliveryImpl;
+import io.vertx.core.Handler;
+import io.vertx.proton.impl.ProtonSenderImpl;
 import org.apache.qpid.proton.message.Message;
 
 /**
@@ -8,6 +9,9 @@ import org.apache.qpid.proton.message.Message;
  */
 public interface ProtonSender extends ProtonLink<ProtonSender> {
 
-  ProtonDeliveryImpl send(byte[] tag, Message message);
+  ProtonDelivery send(byte[] tag, Message message);
 
+  boolean sendQueueFull();
+
+  void sendQueueDrainHandler(Handler<ProtonSender> drainHandler);
 }

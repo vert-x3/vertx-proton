@@ -8,37 +8,37 @@ import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
+import sun.security.tools.keytool.Main;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class MockServer {
 
-    public static ProtonServer start(Vertx vertx) throws ExecutionException, InterruptedException {
-        ProtonServer server = ProtonServer.create(vertx);
+    public AtomicLong dropped = new AtomicLong();
+    private ProtonServer server;
+
+    public MockServer(Vertx vertx) throws ExecutionException, InterruptedException {
+        server = ProtonServer.create(vertx);
         server.connectHandler((connection) -> processConnection(vertx, connection));
         FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
         server.listen(0, handler);
         handler.get();
-        return server;
     }
 
-    private static void processConnection(Vertx vertx, ProtonConnection connection) {
-        connection.openHandler(result -> {
-            connection
-                .setContainer("pong: " + connection.getRemoteContainer())
-                .open();
-        });
+    private void processConnection(Vertx vertx, ProtonConnection connection) {
         connection.sessionOpenHandler(session -> session.open());
-        connection.senderOpenHandler(sender -> {
+//        connection.senderOpenHandler(sender -> {
+//
+//        });
+        connection.receiverOpenHandler(receiver -> {
 
-        });
-        connection.receiverOpenHandler(receiver-> {
-            receiver.handler((r, delivery, msg)->{
+            receiver.handler((r, delivery, msg) -> {
                 String address = msg.getAddress();
-                if( address == null ) {
+                if (address == null) {
                     address = receiver.getRemoteTarget().getAddress();
                 }
                 processMessage(connection, address, msg);
@@ -46,14 +46,46 @@ public class MockServer {
                 receiver.flow(1);
             }).flow(10).open();
         });
+        connection.openHandler(result -> {
+            connection
+                .setContainer("pong: " + connection.getRemoteContainer())
+                .open();
+        });
 
     }
 
-    private static void processMessage(ProtonConnection connection, String address, Message msg) {
-        if("command".equals(address)) {
-            String command = (String) ((AmqpValue) msg.getBody()).getValue();
-            if( "disconnect".equals(command) ) {
-                connection.disconnect();
+    public void close() {
+        server.close();
+    }
+
+    public int actualPort() {
+        return server.actualPort();
+    }
+
+    enum Addresses {
+        command,
+        drop
+    }
+    enum Commands {
+        disconnect
+    }
+
+    private void processMessage(ProtonConnection connection, String to, Message msg) {
+        switch (Addresses.valueOf(to)) {
+
+            case drop: {
+                dropped.incrementAndGet();
+                break;
+            }
+
+            case command: {
+                String command = (String) ((AmqpValue) msg.getBody()).getValue();
+                switch (Commands.valueOf(command)) {
+                    case disconnect:
+                        connection.disconnect();
+                        break;
+                }
+                break;
             }
         }
     }

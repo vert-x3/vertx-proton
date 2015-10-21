@@ -99,6 +99,9 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
     public ProtonDelivery handler(Handler<ProtonDelivery> handler) {
         this.handler = handler;
+        if( delivery.isSettled() ) {
+            fireUpdate();
+        }
         return this;
     }
 

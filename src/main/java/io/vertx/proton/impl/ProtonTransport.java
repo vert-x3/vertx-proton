@@ -89,6 +89,11 @@ class ProtonTransport extends BaseHandler {
                         link.fireRemoteClose();
                         break;
                     }
+                    case LINK_FLOW:{
+                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                        link.fireLinkFlow();
+                        break;
+                    }
                     case DELIVERY: {
                         ProtonDeliveryImpl delivery = (ProtonDeliveryImpl) protonEvent.getDelivery().getContext();
                         if (delivery != null) {
@@ -117,7 +122,6 @@ class ProtonTransport extends BaseHandler {
                     case LINK_LOCAL_DETACH:
                     case LINK_REMOTE_DETACH:
                     case LINK_LOCAL_CLOSE:
-                    case LINK_FLOW:
                     case LINK_FINAL:
                 }
                 collector.pop();

@@ -179,9 +179,11 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
     @Override
-    public ProtonDeliveryImpl send(byte[] tag, Message message) {
+    public ProtonDelivery send(byte[] tag, Message message) {
         return getDefaultSender().send(tag, message);
     }
+
+
 
     @Override
     public ProtonReceiver receiver(String name) {
