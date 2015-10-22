@@ -39,7 +39,7 @@ public interface ProtonConnection {
 
   ProtonReceiver receiver(String name);
 
-  ProtonReceiver receiver(String name, String address);
+  ProtonReceiver receiver();
 
   void disconnect();
 

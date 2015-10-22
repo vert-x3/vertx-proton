@@ -95,7 +95,7 @@ public class ProtonClientTest extends MockServerTestBase {
                 .flow(10)
                 .open();
 
-            session.sender("")
+            session.sender()
                 .setSenderSettleMode(SenderSettleMode.SETTLED)
                 .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                 .open()

@@ -10,12 +10,12 @@ import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonHelper;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.EndpointState;
+import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 /**
@@ -24,6 +24,7 @@ import org.apache.qpid.proton.engine.Session;
 public class ProtonSessionImpl implements ProtonSession {
 
     private final Session session;
+    private int autoLinkCounter =0;
     private Handler<AsyncResult<ProtonSession>> openHandler;
     private Handler<AsyncResult<ProtonSession>> closeHandler;
 
@@ -33,8 +34,8 @@ public class ProtonSessionImpl implements ProtonSession {
     }
 
     public ProtonConnectionImpl getConnectionImpl() {
-                return (ProtonConnectionImpl) this.session.getConnection().getContext();
-            }
+        return (ProtonConnectionImpl) this.session.getConnection().getContext();
+    }
 
     public long getOutgoingWindow() {
         return session.getOutgoingWindow();
@@ -113,33 +114,37 @@ public class ProtonSessionImpl implements ProtonSession {
     }
 
     @Override
-    public ProtonSender sender(String name) {
-        return new ProtonSenderImpl(session.sender(name))
-                .setSenderSettleMode(SenderSettleMode.UNSETTLED)
-                .setReceiverSettleMode(ReceiverSettleMode.FIRST);
-
+    public ProtonSender sender() {
+        return sender("auto-"+(autoLinkCounter++));
     }
 
     @Override
-    public ProtonSender sender(String name, String address) {
-        Target target = new Target();
-        target.setAddress(address);
-        return sender(name).setTarget(target);
+    public ProtonSender sender(String name) {
+        Sender sender = session.sender(name);
+        if (sender.getContext() != null) {
+            return (ProtonSender) sender.getContext();
+        } else {
+            return new ProtonSenderImpl(sender)
+                .setSenderSettleMode(SenderSettleMode.UNSETTLED)
+                .setReceiverSettleMode(ReceiverSettleMode.FIRST);
+        }
+    }
+
+    @Override
+    public ProtonReceiver receiver() {
+        return receiver("auto-" + (autoLinkCounter++));
     }
 
     @Override
     public ProtonReceiver receiver(String name) {
-        return new ProtonReceiverImpl(session.receiver(name))
+        Receiver receiver = session.receiver(name);
+        if (receiver.getContext() != null) {
+            return (ProtonReceiver) receiver.getContext();
+        } else {
+            return new ProtonReceiverImpl(receiver)
                 .setSenderSettleMode(SenderSettleMode.UNSETTLED)
                 .setReceiverSettleMode(ReceiverSettleMode.FIRST);
-
-    }
-
-    @Override
-    public ProtonReceiver receiver(String name, String address) {
-        Source source = new Source();
-        source.setAddress(address);
-        return receiver(name).setSource(source);
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////

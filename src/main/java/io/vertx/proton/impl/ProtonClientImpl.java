@@ -11,6 +11,9 @@ import io.vertx.core.net.NetClient;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>

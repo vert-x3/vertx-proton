@@ -8,6 +8,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 
@@ -18,23 +20,23 @@ import java.nio.charset.StandardCharsets;
  */
 public interface ProtonHelper {
 
-    static Message message() {
+    public static Message message() {
         return Proton.message();
     }
 
-    static Message message(String body) {
-        Message message = message();
-        message.setBody(new AmqpValue(body));
-        return message;
+    public  static Message message(String body) {
+        Message value = message();
+        value.setBody(new AmqpValue(body));
+        return value;
     }
 
-    static Message message(String address, String body) {
-        Message message = message(body);
-        message.setAddress(address);
-        return message;
+    public  static Message message(String address, String body) {
+        Message value = message(body);
+        value.setAddress(address);
+        return value;
     }
 
-    static byte[] tag(String tag) {
+    public static byte[] tag(String tag) {
         return tag.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -45,6 +47,18 @@ public interface ProtonHelper {
         } else {
             return Future.succeededFuture(null);
         }
+    }
+
+    public static Target target(String address) {
+        Target value = new Target();
+        value.setAddress(address);
+        return value;
+    }
+
+    public static Source source(String address) {
+        Source value = new Source();
+        value.setAddress(address);
+        return value;
     }
 
 }

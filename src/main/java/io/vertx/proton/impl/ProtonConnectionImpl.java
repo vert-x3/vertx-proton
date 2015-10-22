@@ -14,7 +14,10 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Map;
+import java.util.UUID;
 
 import static io.vertx.proton.ProtonHelper.future;
 
@@ -42,9 +45,15 @@ public class ProtonConnectionImpl implements ProtonConnection {
     };
     private ProtonSession defaultSession;
     private ProtonSender defaultSender;
+    private ProtonReceiver defaultReceiver;
 
     ProtonConnectionImpl() {
         this.connection.setContext(this);
+        this.connection.setContainer("vert.x-"+UUID.randomUUID());
+        try {
+            this.connection.setHostname(InetAddress.getLocalHost().getHostName());
+        } catch (UnknownHostException e) {
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -172,7 +181,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     public ProtonSender getDefaultSender() {
         if( defaultSender == null ) {
-            defaultSender = getDefaultSession().sender("");
+            defaultSender = getDefaultSession().sender();
             defaultSender.open();
         }
         return defaultSender;
@@ -183,16 +192,14 @@ public class ProtonConnectionImpl implements ProtonConnection {
         return getDefaultSender().send(tag, message);
     }
 
-
-
     @Override
     public ProtonReceiver receiver(String name) {
         return getDefaultSession().receiver(name);
     }
 
     @Override
-    public ProtonReceiver receiver(String name, String address) {
-        return getDefaultSession().receiver(name, address);
+    public ProtonReceiver receiver() {
+        return getDefaultSession().receiver();
     }
 
     public void flush() {

@@ -1,9 +1,11 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.example;
 
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -42,10 +44,10 @@ public class HelloWorld {
 
     private static void helloWorldSendAndConsumeExample(ProtonConnection connection) {
 
-        connection.setContainer("client-id:1").open();
+        connection.open();
 
         // Receive messages from a queue
-        connection.receiver("receiver-link-1", "queue://foo")
+        connection.receiver().setSource("queue://foo")
             .handler((receiver, delivery, msg) -> {
 
                 Section body = msg.getBody();

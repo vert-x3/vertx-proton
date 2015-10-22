@@ -18,12 +18,16 @@ public interface ProtonLink<T extends ProtonLink> {
 
     T setTarget(Target address);
 
+    T setTarget(String address);
+
     Target getRemoteTarget();
 
 
     Source getSource();
 
     T setSource(Source address);
+
+    T setSource(String address);
 
     Source getRemoteSource();
 

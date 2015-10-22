@@ -1,9 +1,11 @@
 /**
  * Copyright 2015 Red Hat, Inc.
  */
-package io.vertx.proton;
+package io.vertx.proton.example;
 
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonServer;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -24,7 +26,6 @@ public class HelloWorldServer {
         // Create the Vert.x AMQP client instance
         ProtonServer server = ProtonServer.create(vertx)
                 .connectHandler((connection) -> {
-                    connection.setContainer("hello-world-server");
                     helloProcessConnection(vertx, connection);
                 })
                 .listen(5672, (res) -> {

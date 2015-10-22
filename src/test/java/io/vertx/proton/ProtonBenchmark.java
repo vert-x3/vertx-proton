@@ -26,7 +26,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         connect(context, connection ->
         {
             ProtonSender sender =
-                connection.session().open().sender("")
+                connection.session().open().sender()
                     .setSenderSettleMode(SenderSettleMode.UNSETTLED)
                     .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                     .open();
@@ -58,7 +58,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         connect(context, connection ->
         {
             ProtonSender sender =
-                connection.session().open().sender("")
+                connection.session().open().sender()
                     .setSenderSettleMode(SenderSettleMode.SETTLED)
                     .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                     .open();
@@ -88,7 +88,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         {
             ProtonSession session = connection.session().open();
             ProtonSender sender =
-                session.sender("")
+                session.sender()
                     .setSenderSettleMode(SenderSettleMode.SETTLED)
                     .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                     .open();
