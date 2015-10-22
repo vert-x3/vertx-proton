@@ -7,6 +7,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonLink;
+import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -31,6 +32,8 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     ProtonLinkImpl(Link link) {
         this.link = link;
         this.link.setContext(this);
+        ProtonQoS remoteQoS = getRemoteQoS();
+        setQoS(remoteQoS == null ? ProtonQoS.AT_MOST_ONCE : remoteQoS);
     }
 
     protected abstract T self();
@@ -62,11 +65,6 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     }
 
     @Override
-    public ReceiverSettleMode getReceiverSettleMode() {
-        return link.getReceiverSettleMode();
-    }
-
-    @Override
     public ErrorCondition getRemoteCondition() {
         return link.getRemoteCondition();
     }
@@ -75,25 +73,9 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
         return link.getRemoteCredit();
     }
 
-    @Override
-    public ReceiverSettleMode getRemoteReceiverSettleMode() {
-        return link.getRemoteReceiverSettleMode();
-    }
-
-    @Override
-    public SenderSettleMode getRemoteSenderSettleMode() {
-        return link.getRemoteSenderSettleMode();
-    }
-
-
     public EndpointState getRemoteState() {
         return link.getRemoteState();
     }
-
-    public SenderSettleMode getSenderSettleMode() {
-        return link.getSenderSettleMode();
-    }
-
 
     @Override
     public Target getRemoteTarget() {
@@ -167,18 +149,6 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     }
 
     @Override
-    public T setReceiverSettleMode(ReceiverSettleMode receiverSettleMode) {
-        link.setReceiverSettleMode(receiverSettleMode);
-        return self();
-    }
-
-    @Override
-    public T setSenderSettleMode(SenderSettleMode senderSettleMode) {
-        link.setSenderSettleMode(senderSettleMode);
-        return self();
-    }
-
-    @Override
     public T setCondition(ErrorCondition condition) {
         link.setCondition(condition);
         return self();
@@ -224,6 +194,58 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     @Override
     public boolean isOpen() {
         return getLocalState() == EndpointState.ACTIVE;
+    }
+
+    @Override
+    public ProtonQoS getQoS() {
+        if( link.getSenderSettleMode()==null || link.getReceiverSettleMode()==null ) {
+            return null;
+        }
+        if( link.getSenderSettleMode() == SenderSettleMode.SETTLED ) {
+            return ProtonQoS.AT_MOST_ONCE;
+        }
+        if( link.getReceiverSettleMode() == ReceiverSettleMode.SECOND ) {
+            return ProtonQoS.ONCE_AND_ONLY_ONCE;
+        }
+        return ProtonQoS.AT_LEAST_ONCE;
+    }
+
+    @Override
+    public ProtonQoS getRemoteQoS() {
+        if( link.getRemoteSenderSettleMode()==null || link.getRemoteReceiverSettleMode()==null ) {
+            return null;
+        }
+        if( link.getRemoteSenderSettleMode() == SenderSettleMode.SETTLED ) {
+            return ProtonQoS.AT_MOST_ONCE;
+        }
+        if( link.getRemoteReceiverSettleMode() == ReceiverSettleMode.SECOND ) {
+            return ProtonQoS.ONCE_AND_ONLY_ONCE;
+        }
+        return ProtonQoS.AT_LEAST_ONCE;
+    }
+
+    @Override
+    public T setQoS(ProtonQoS qos) {
+        if( qos == null ) {
+            link.setSenderSettleMode(null);
+            link.setReceiverSettleMode(null);
+            return self();
+        }
+        switch (qos) {
+            case AT_MOST_ONCE:
+                link.setSenderSettleMode(SenderSettleMode.SETTLED);
+                link.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+                break;
+            case AT_LEAST_ONCE:
+                link.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+                link.setReceiverSettleMode(ReceiverSettleMode.FIRST);
+                break;
+            case ONCE_AND_ONLY_ONCE:
+                link.setSenderSettleMode(SenderSettleMode.UNSETTLED);
+                link.setReceiverSettleMode(ReceiverSettleMode.SECOND);
+                break;
+        }
+        return self();
     }
 
     /////////////////////////////////////////////////////////////////////////////

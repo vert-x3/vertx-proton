@@ -36,19 +36,12 @@ public interface ProtonLink<T extends ProtonLink> {
 
     ErrorCondition getCondition();
 
-    ReceiverSettleMode getReceiverSettleMode();
 
     ErrorCondition getRemoteCondition();
 
-    ReceiverSettleMode getRemoteReceiverSettleMode();
-
-    SenderSettleMode getRemoteSenderSettleMode();
-
-    T setReceiverSettleMode(ReceiverSettleMode receiverSettleMode);
-
-    SenderSettleMode getSenderSettleMode();
-
-    T setSenderSettleMode(SenderSettleMode senderSettleMode);
+    ProtonQoS getQoS();
+    T setQoS(ProtonQoS qos);
+    ProtonQoS getRemoteQoS();
 
     T setCondition(ErrorCondition condition);
 

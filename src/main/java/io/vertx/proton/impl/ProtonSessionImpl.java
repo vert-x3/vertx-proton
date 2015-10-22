@@ -6,6 +6,7 @@ package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
@@ -124,9 +125,7 @@ public class ProtonSessionImpl implements ProtonSession {
         if (sender.getContext() != null) {
             return (ProtonSender) sender.getContext();
         } else {
-            return new ProtonSenderImpl(sender)
-                .setSenderSettleMode(SenderSettleMode.UNSETTLED)
-                .setReceiverSettleMode(ReceiverSettleMode.FIRST);
+            return new ProtonSenderImpl(sender);
         }
     }
 
@@ -141,9 +140,7 @@ public class ProtonSessionImpl implements ProtonSession {
         if (receiver.getContext() != null) {
             return (ProtonReceiver) receiver.getContext();
         } else {
-            return new ProtonReceiverImpl(receiver)
-                .setSenderSettleMode(SenderSettleMode.UNSETTLED)
-                .setReceiverSettleMode(ReceiverSettleMode.FIRST);
+            return new ProtonReceiverImpl(receiver);
         }
     }
 

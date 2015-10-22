@@ -77,9 +77,7 @@ public class MockServer {
             case echo: {
                 ProtonSender sender = receiver.getSession().sender("echo");
                 if( !sender.isOpen() ) {
-                    sender.setSenderSettleMode(SenderSettleMode.SETTLED)
-                        .setReceiverSettleMode(ReceiverSettleMode.FIRST)
-                        .open();
+                    sender.open();
                 }
                 sender.send(delivery.getTag(), msg);
                 break;

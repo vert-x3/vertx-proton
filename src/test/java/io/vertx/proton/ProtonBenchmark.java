@@ -6,8 +6,6 @@ package io.vertx.proton;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
-import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,8 +25,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         {
             ProtonSender sender =
                 connection.session().open().sender()
-                    .setSenderSettleMode(SenderSettleMode.UNSETTLED)
-                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                    .setQoS(ProtonQoS.AT_LEAST_ONCE)
                     .open();
 
             String name = "At Least Once Send Throughput";
@@ -59,8 +56,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         {
             ProtonSender sender =
                 connection.session().open().sender()
-                    .setSenderSettleMode(SenderSettleMode.SETTLED)
-                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
+                    .setQoS(ProtonQoS.AT_MOST_ONCE)
                     .open();
 
             String name = "At Most Once Send Throughput";
@@ -87,11 +83,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         connect(context, connection ->
         {
             ProtonSession session = connection.session().open();
-            ProtonSender sender =
-                session.sender()
-                    .setSenderSettleMode(SenderSettleMode.SETTLED)
-                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
-                    .open();
+            ProtonSender sender = session.sender().open();
 
             byte[] tag = tag("m1");
             Message message = message("echo", "Hello World");
@@ -99,8 +91,6 @@ public class ProtonBenchmark extends MockServerTestBase {
             benchmark(BENCHMARK_DURATION, "Request Response Throughput", counter -> {
 
                 session.receiver("echo")
-                    .setSenderSettleMode(SenderSettleMode.SETTLED)
-                    .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                     .handler((r,d,m)->{
                         counter.incrementAndGet();
                         d.settle();

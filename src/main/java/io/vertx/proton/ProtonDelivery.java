@@ -8,8 +8,6 @@ import org.apache.qpid.proton.amqp.transport.DeliveryState;
  */
 public interface ProtonDelivery {
 
-  void clear();
-
   DeliveryState getLocalState();
 
   boolean isSettled();
@@ -28,15 +26,11 @@ public interface ProtonDelivery {
 
   boolean isWritable();
 
-  int pending();
-
   boolean isPartial();
 
   DeliveryState getRemoteState();
 
   int getMessageFormat();
-
-  boolean isBuffered();
 
   ProtonDelivery disposition(DeliveryState state);
 

@@ -84,8 +84,6 @@ public class ProtonClientTest extends MockServerTestBase {
 
             ProtonSession session = connection.session().open();
             session.receiver("echo")
-                .setSenderSettleMode(SenderSettleMode.SETTLED)
-                .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                 .handler((r, d, m) -> {
                     String actual = (String) ((AmqpValue) m.getBody()).getValue();
                     context.assertEquals(data, actual);
@@ -96,8 +94,6 @@ public class ProtonClientTest extends MockServerTestBase {
                 .open();
 
             session.sender()
-                .setSenderSettleMode(SenderSettleMode.SETTLED)
-                .setReceiverSettleMode(ReceiverSettleMode.FIRST)
                 .open()
                 .send(tag(""), message("echo", data));
 
