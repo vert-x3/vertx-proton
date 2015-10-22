@@ -48,31 +48,21 @@ public class HelloWorld {
 
         // Receive messages from a queue
         connection.receiver().setSource("queue://foo")
-            .handler((receiver, delivery, msg) -> {
-
+            .handler((delivery, msg) -> {
                 Section body = msg.getBody();
                 if (body instanceof AmqpValue) {
                     String content = (String) ((AmqpValue) body).getValue();
                     System.out.println("Received message with content: " + content);
                 }
-
-                // We could nack if we need to.
-                // delivery.disposition(new Rejected());
-                delivery.settle(); // This acks the message
-                receiver.flow(1);
-
             })
             .flow(10)  // Prefetch up to 10 messages
             .open();
 
 
         // Send messages to a queue..
-        Message message = message("Hello World from client");
-        message.setAddress("queue://foo");
-        connection.send(tag("m1"),message).handler(delivery -> {
-            if (delivery.remotelySettled()) {
-                System.out.println("The message was sent");
-            }
+        Message message = message("queue://foo", "Hello World from client");
+        connection.send(tag("m1"), message, delivery -> {
+            System.out.println("The message was sent");
         });
 
     }

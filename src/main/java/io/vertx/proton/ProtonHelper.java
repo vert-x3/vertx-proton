@@ -7,6 +7,7 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -22,6 +23,14 @@ public interface ProtonHelper {
 
     public static Message message() {
         return Proton.message();
+    }
+
+    public  static ErrorCondition condition(String name) {
+        return new ErrorCondition(Symbol.valueOf(name), null);
+    }
+
+    public  static ErrorCondition condition(String name, String description) {
+        return new ErrorCondition(Symbol.valueOf(name), description);
     }
 
     public  static Message message(String body) {

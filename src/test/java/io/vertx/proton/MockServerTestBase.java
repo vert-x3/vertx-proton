@@ -28,8 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 abstract public class MockServerTestBase {
 
-    private Vertx vertx;
-    private MockServer server;
+    protected Vertx vertx;
+    protected MockServer server;
 
     @Before
     public void setup() throws ExecutionException, InterruptedException {

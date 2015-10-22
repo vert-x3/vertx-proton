@@ -35,7 +35,9 @@ public interface ProtonConnection {
 
   ProtonSession session();
 
-  ProtonDelivery send(byte[] tag, Message message);
+  void send(byte[] tag, Message message);
+
+  void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived);
 
   ProtonReceiver receiver(String name);
 

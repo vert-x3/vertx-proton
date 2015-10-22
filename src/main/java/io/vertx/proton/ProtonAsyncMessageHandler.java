@@ -8,6 +8,6 @@ import org.apache.qpid.proton.message.Message;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-public interface ProtonMessageHandler {
-    void handle(ProtonDelivery delivery, Message message);
+public interface ProtonAsyncMessageHandler {
+    void handle(ProtonDelivery delivery, Message message, Runnable settle);
 }

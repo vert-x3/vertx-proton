@@ -4,6 +4,7 @@
 package io.vertx.proton.impl;
 
 import io.vertx.core.Handler;
+import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.codec.WritableBuffer;
@@ -29,8 +30,9 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         return (Sender)link;
     }
 
+    @Override
+    public void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived) {
 
-    public ProtonDeliveryImpl send(byte[] tag, Message message) {
         Delivery delivery = sender().delivery(tag); // start a new delivery..
         int BUFFER_SIZE = 1024;
         byte[] encodedMessage = new byte[BUFFER_SIZE];
@@ -48,13 +50,17 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         }
         sender().send(encodedMessage, 0, len);
 
-        if( link.getSenderSettleMode()== SenderSettleMode.SETTLED ) {
+        if( onReceived==null || link.getSenderSettleMode() == SenderSettleMode.SETTLED  ) {
             delivery.settle();
         }
         sender().advance(); // ends the delivery.
         getSession().getConnectionImpl().flush();
 
-        return new ProtonDeliveryImpl(delivery);
+        new ProtonDeliveryImpl(delivery).handler(onReceived);
+    }
+
+    public void send(byte[] tag, Message message) {
+        send(tag, message, null);
     }
 
     @Override

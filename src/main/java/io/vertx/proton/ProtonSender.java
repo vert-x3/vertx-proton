@@ -9,7 +9,9 @@ import org.apache.qpid.proton.message.Message;
  */
 public interface ProtonSender extends ProtonLink<ProtonSender> {
 
-  ProtonDelivery send(byte[] tag, Message message);
+  void send(byte[] tag, Message message);
+
+  void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived);
 
   boolean sendQueueFull();
 

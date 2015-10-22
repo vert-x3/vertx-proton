@@ -35,10 +35,8 @@ public class ProtonBenchmark extends MockServerTestBase {
             benchmark(BENCHMARK_DURATION, name, counter -> {
                 sender.sendQueueDrainHandler(s -> {
                     while (!sender.sendQueueFull()) {
-                        sender.send(tag, message).handler(d -> {
-                            if (d.remotelySettled()) {
-                                counter.incrementAndGet();
-                            }
+                        sender.send(tag, message, d -> {
+                            counter.incrementAndGet();
                         });
                     }
                 });
@@ -91,10 +89,8 @@ public class ProtonBenchmark extends MockServerTestBase {
             benchmark(BENCHMARK_DURATION, "Request Response Throughput", counter -> {
 
                 session.receiver("echo")
-                    .handler((r,d,m)->{
+                    .handler((d, m)->{
                         counter.incrementAndGet();
-                        d.settle();
-                        r.flow(1);
                     })
                     .flow(10)
                     .open();

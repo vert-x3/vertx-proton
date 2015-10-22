@@ -1,6 +1,5 @@
 package io.vertx.proton;
 
-import io.vertx.core.Handler;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 
 /**
@@ -8,33 +7,12 @@ import org.apache.qpid.proton.amqp.transport.DeliveryState;
  */
 public interface ProtonDelivery {
 
-  DeliveryState getLocalState();
-
-  boolean isSettled();
-
-  boolean remotelySettled();
-
   byte[] getTag();
-
-  void setDefaultDeliveryState(DeliveryState state);
-
-  DeliveryState getDefaultDeliveryState();
-
-  boolean isReadable();
-
-  boolean isUpdated();
-
-  boolean isWritable();
-
-  boolean isPartial();
-
-  DeliveryState getRemoteState();
 
   int getMessageFormat();
 
+  DeliveryState getLocalState();
   ProtonDelivery disposition(DeliveryState state);
+  DeliveryState getRemoteState();
 
-  ProtonDelivery settle();
-
-  ProtonDelivery handler(Handler<ProtonDelivery> handler);
 }

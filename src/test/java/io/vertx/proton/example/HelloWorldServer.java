@@ -60,7 +60,7 @@ public class HelloWorldServer {
         connection.receiverOpenHandler(receiver -> {
             receiver
                 .setTarget(receiver.getRemoteTarget())
-                .handler((r, delivery, msg) -> {
+                .handler((delivery, msg) -> {
 
                     String address = msg.getAddress();
                     if( address == null ) {
@@ -72,12 +72,6 @@ public class HelloWorldServer {
                         String content = (String) ((AmqpValue) body).getValue();
                         System.out.println("message to:"+address+", body: " + content);
                     }
-
-                    // We could nack if we need to.
-                    // delivery.disposition(new Rejected());
-                    delivery.settle(); // This acks the message
-                    receiver.flow(1);
-
                 })
                 .flow(10)
                 .open();
@@ -92,10 +86,8 @@ public class HelloWorldServer {
                 } else {
                     System.out.println("Sending message to client");
                     Message m = message("Hello World from Server!");
-                    sender.send(tag("m1"), m).handler(delivery -> {
-                        if (delivery.remotelySettled()) {
-                            System.out.println("The message was sent");
-                        }
+                    sender.send(tag("m1"), m, delivery -> {
+                        System.out.println("The message was sent");
                     });
                 }
             });

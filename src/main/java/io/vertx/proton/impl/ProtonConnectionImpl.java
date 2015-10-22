@@ -188,8 +188,13 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
     @Override
-    public ProtonDelivery send(byte[] tag, Message message) {
-        return getDefaultSender().send(tag, message);
+    public void send(byte[] tag, Message message) {
+        getDefaultSender().send(tag, message);
+    }
+
+    @Override
+    public void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived) {
+        getDefaultSender().send(tag, message, onReceived);
     }
 
     @Override
