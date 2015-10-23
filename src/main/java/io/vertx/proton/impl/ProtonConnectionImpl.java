@@ -14,8 +14,6 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -47,13 +45,10 @@ public class ProtonConnectionImpl implements ProtonConnection {
     private ProtonSender defaultSender;
     private ProtonReceiver defaultReceiver;
 
-    ProtonConnectionImpl() {
+    ProtonConnectionImpl(String hostname) {
         this.connection.setContext(this);
         this.connection.setContainer("vert.x-"+UUID.randomUUID());
-        try {
-            this.connection.setHostname(InetAddress.getLocalHost().getHostName());
-        } catch (UnknownHostException e) {
-        }
+        this.connection.setHostname(hostname);
     }
 
     /////////////////////////////////////////////////////////////////////////////
