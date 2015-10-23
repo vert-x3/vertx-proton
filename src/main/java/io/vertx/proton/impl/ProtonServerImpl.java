@@ -4,6 +4,9 @@
 
 package io.vertx.proton.impl;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -93,7 +96,13 @@ public class ProtonServerImpl implements ProtonServer {
         server.connectHandler(new Handler<NetSocket>() {
             @Override
             public void handle(NetSocket netSocket) {
-                ProtonConnectionImpl connection = new ProtonConnectionImpl();
+                String hostname = null;
+                try {
+                    hostname = InetAddress.getLocalHost().getHostName();
+                } catch (UnknownHostException e) {
+                }
+
+                ProtonConnectionImpl connection = new ProtonConnectionImpl(hostname);
                 connection.bind(netSocket);
                 handler.handle(connection);
             }

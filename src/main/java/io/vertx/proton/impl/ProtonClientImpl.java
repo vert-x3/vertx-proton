@@ -27,7 +27,7 @@ public class ProtonClientImpl implements ProtonClient {
         final NetClient netClient = vertx.createNetClient();
         netClient.connect(port, host, res -> {
             if (res.succeeded()) {
-                ProtonConnectionImpl amqpConnnection = new ProtonConnectionImpl();
+                ProtonConnectionImpl amqpConnnection = new ProtonConnectionImpl(host);
                 amqpConnnection.bind(netClient, res.result());
                 handler.handle(Future.succeededFuture(amqpConnnection));
             } else {
