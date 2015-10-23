@@ -7,14 +7,10 @@ import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
-import org.apache.qpid.proton.codec.WritableBuffer;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
-import org.apache.qpid.proton.message.ProtonJMessage;
 import org.apache.qpid.proton.message.impl.MessageImpl;
-
-import java.nio.ByteBuffer;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>

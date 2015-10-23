@@ -96,10 +96,6 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
             byte[] buffer = new byte[1024];
             while ((count = receiver.recv(buffer, 0, buffer.length)) > 0) {
                 current.write(buffer, 0, count);
-
-    //                if (current.size() > session.getMaxFrameSize()) {
-    //                    throw new AmqpProtocolException("Frame size of " + current.size() + " larger than max allowed " + session.getMaxFrameSize());
-    //                }
             }
 
             // Expecting more deliveries..

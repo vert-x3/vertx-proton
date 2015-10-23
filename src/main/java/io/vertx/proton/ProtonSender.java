@@ -1,7 +1,6 @@
 package io.vertx.proton;
 
 import io.vertx.core.Handler;
-import io.vertx.proton.impl.ProtonSenderImpl;
 import org.apache.qpid.proton.message.Message;
 
 /**
