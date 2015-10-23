@@ -6,9 +6,6 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
-import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.message.Message;
 
 import java.util.concurrent.ExecutionException;

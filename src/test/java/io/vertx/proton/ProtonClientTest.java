@@ -7,11 +7,8 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
-import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import sun.management.counter.LongCounter;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
