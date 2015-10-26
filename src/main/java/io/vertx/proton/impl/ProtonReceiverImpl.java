@@ -90,8 +90,8 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
         Receiver receiver = getReceiver();
         Delivery delivery = receiver.current();
-        if( delivery!=null ) {
 
+        if( delivery != null ) {
             int count;
             byte[] buffer = new byte[1024];
             while ((count = receiver.recv(buffer, 0, buffer.length)) > 0) {
@@ -108,8 +108,12 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
             Message msg = Proton.message();
             msg.decode(data, 0, data.length);
+
+            delivery.setContext(msg);
+
+            receiver.advance();
+
             delivery.disposition(new Accepted());
-            //receiver.advance();
 
             ProtonDeliveryImpl impl = new ProtonDeliveryImpl(delivery);
             handler.handle(impl, msg, ()->{
