@@ -25,7 +25,8 @@ public class MockServer {
         command,
         drop,
         echo,
-        two_messages
+        two_messages,
+        five_messages
     }
     enum Commands {
         disconnect
@@ -60,6 +61,17 @@ public class MockServer {
                         sender.open();
                         sender.send(tag("m1"), message("Hello"));
                         sender.send(tag("m2"), message("World"), d->{
+                            sender.close();
+                        });
+                        break;
+                    }
+                    case five_messages:{
+                        sender.open();
+                        sender.send(tag("m1"), message("1"));
+                        sender.send(tag("m2"), message("2"));
+                        sender.send(tag("m3"), message("3"));
+                        sender.send(tag("m4"), message("4"));
+                        sender.send(tag("m5"), message("5"), d->{
                             sender.close();
                         });
                         break;
