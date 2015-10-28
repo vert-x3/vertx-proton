@@ -25,109 +25,110 @@ class ProtonTransport extends BaseHandler {
     private final NetClient netClient;
     private final NetSocket socket;
     private final Transport transport = Proton.transport();
+    private final Collector collector = Proton.collector();
 
     ProtonTransport(Connection connection, NetClient netClient, NetSocket socket) {
         this.connection = connection;
         this.netClient = netClient;
         this.socket = socket;
-
         transport.bind(connection);
-
-        Collector collector = Proton.collector();
         connection.collect(collector);
+        socket.endHandler(this::handleSocketEnd);
+        socket.handler(this::handleSocketBuffer);
+    }
 
-        socket.endHandler(res->{
-            transport.unbind();
-            transport.close();
-            if( netClient!=null ) {
-                netClient.close();
-            } else {
-                socket.close();
-            }
-            ((ProtonConnectionImpl) connection.getContext()).fireDisconnect();
-        });
+    private void handleSocketEnd(Void arg) {
+        transport.unbind();
+        transport.close();
+        if( this.netClient!=null ) {
+            this.netClient.close();
+        } else {
+            this.socket.close();
+        }
+        ((ProtonConnectionImpl) this.connection.getContext()).fireDisconnect();
+    }
 
-        socket.handler(buff -> {
-            pumpInbound(ByteBuffer.wrap(buff.getBytes()));
-            Event protonEvent = null;
-            while ((protonEvent = collector.peek()) != null) {
-                ProtonConnectionImpl connnection = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
-                switch (protonEvent.getType()) {
-                    case CONNECTION_REMOTE_OPEN: {
-                        connnection.fireRemoteOpen();
-                        break;
-                    }
-                    case CONNECTION_REMOTE_CLOSE: {
-                        connnection.fireRemoteClose();
-                        break;
-                    }
-                    case SESSION_REMOTE_OPEN: {
-                        ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
-                        if( session == null ) {
-                            connnection.fireRemoteSessionOpen(protonEvent.getSession());
-                        } else {
-                            session.fireRemoteOpen();
-                        }
-                        break;
-                    }
-                    case SESSION_REMOTE_CLOSE: {
-                        ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
-                        session.fireRemoteClose();
-                        break;
-                    }
-                    case LINK_REMOTE_OPEN: {
-                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
-                        if( link == null ) {
-                            connnection.fireRemoteLinkOpen(protonEvent.getLink());
-                        } else {
-                            link.fireRemoteOpen();
-                        }
-                        break;
-                    }
-                    case LINK_REMOTE_CLOSE: {
-                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
-                        link.fireRemoteClose();
-                        break;
-                    }
-                    case LINK_FLOW:{
-                        ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
-                        link.fireLinkFlow();
-                        break;
-                    }
-                    case DELIVERY: {
-                        ProtonDeliveryImpl delivery = (ProtonDeliveryImpl) protonEvent.getDelivery().getContext();
-                        if (delivery != null) {
-                            delivery.fireUpdate();
-                        } else {
-                            ProtonReceiverImpl receiver = (ProtonReceiverImpl) protonEvent.getLink().getContext();
-                            receiver.onDelivery();
-                        }
-                        break;
-                    }
+    private void handleSocketBuffer(Buffer buff) {
 
-                    case CONNECTION_INIT:
-                    case CONNECTION_BOUND:
-                    case CONNECTION_UNBOUND:
-                    case CONNECTION_LOCAL_OPEN:
-                    case CONNECTION_LOCAL_CLOSE:
-                    case CONNECTION_FINAL:
-
-                    case SESSION_INIT:
-                    case SESSION_LOCAL_OPEN:
-                    case SESSION_LOCAL_CLOSE:
-                    case SESSION_FINAL:
-
-                    case LINK_INIT:
-                    case LINK_LOCAL_OPEN:
-                    case LINK_LOCAL_DETACH:
-                    case LINK_REMOTE_DETACH:
-                    case LINK_LOCAL_CLOSE:
-                    case LINK_FINAL:
+        pumpInbound(ByteBuffer.wrap(buff.getBytes()));
+        Event protonEvent = null;
+        while ((protonEvent = collector.peek()) != null) {
+            ProtonConnectionImpl connnection = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
+            switch (protonEvent.getType()) {
+                case CONNECTION_REMOTE_OPEN: {
+                    connnection.fireRemoteOpen();
+                    break;
                 }
-                collector.pop();
+                case CONNECTION_REMOTE_CLOSE: {
+                    connnection.fireRemoteClose();
+                    break;
+                }
+                case SESSION_REMOTE_OPEN: {
+                    ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
+                    if( session == null ) {
+                        connnection.fireRemoteSessionOpen(protonEvent.getSession());
+                    } else {
+                        session.fireRemoteOpen();
+                    }
+                    break;
+                }
+                case SESSION_REMOTE_CLOSE: {
+                    ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
+                    session.fireRemoteClose();
+                    break;
+                }
+                case LINK_REMOTE_OPEN: {
+                    ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                    if( link == null ) {
+                        connnection.fireRemoteLinkOpen(protonEvent.getLink());
+                    } else {
+                        link.fireRemoteOpen();
+                    }
+                    break;
+                }
+                case LINK_REMOTE_CLOSE: {
+                    ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                    link.fireRemoteClose();
+                    break;
+                }
+                case LINK_FLOW:{
+                    ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                    link.fireLinkFlow();
+                    break;
+                }
+                case DELIVERY: {
+                    ProtonDeliveryImpl delivery = (ProtonDeliveryImpl) protonEvent.getDelivery().getContext();
+                    if (delivery != null) {
+                        delivery.fireUpdate();
+                    } else {
+                        ProtonReceiverImpl receiver = (ProtonReceiverImpl) protonEvent.getLink().getContext();
+                        receiver.onDelivery();
+                    }
+                    break;
+                }
+
+                case CONNECTION_INIT:
+                case CONNECTION_BOUND:
+                case CONNECTION_UNBOUND:
+                case CONNECTION_LOCAL_OPEN:
+                case CONNECTION_LOCAL_CLOSE:
+                case CONNECTION_FINAL:
+
+                case SESSION_INIT:
+                case SESSION_LOCAL_OPEN:
+                case SESSION_LOCAL_CLOSE:
+                case SESSION_FINAL:
+
+                case LINK_INIT:
+                case LINK_LOCAL_OPEN:
+                case LINK_LOCAL_DETACH:
+                case LINK_REMOTE_DETACH:
+                case LINK_LOCAL_CLOSE:
+                case LINK_FINAL:
             }
-            flush();
-        });
+            collector.pop();
+        }
+        flush();
     }
 
     private void pumpInbound(ByteBuffer bytes) {
