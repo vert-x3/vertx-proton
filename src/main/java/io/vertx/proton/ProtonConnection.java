@@ -58,4 +58,6 @@ public interface ProtonConnection {
   ProtonConnection senderOpenHandler(Handler<ProtonSender> remoteSenderOpenHandler);
 
   ProtonConnection receiverOpenHandler(Handler<ProtonReceiver> remoteReceiverOpenHandler);
+
+  boolean isAnonymousRelaySupported();
 }

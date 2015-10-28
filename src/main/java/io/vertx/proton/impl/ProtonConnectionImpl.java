@@ -14,6 +14,8 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,6 +26,7 @@ import static io.vertx.proton.ProtonHelper.future;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ProtonConnectionImpl implements ProtonConnection {
+    public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
 
     final Connection connection = Proton.connection();
     ProtonTransport transport;
@@ -41,9 +44,9 @@ public class ProtonConnectionImpl implements ProtonConnection {
     private Handler<ProtonReceiver> receiverOpenHandler = (receiver) -> {
         receiver.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
     };
+    private boolean anonymousRelaySupported;
     private ProtonSession defaultSession;
     private ProtonSender defaultSender;
-    private ProtonReceiver defaultReceiver;
 
     ProtonConnectionImpl(String hostname) {
         this.connection.setContext(this);
@@ -138,6 +141,11 @@ public class ProtonConnectionImpl implements ProtonConnection {
     public EndpointState getRemoteState() {
         return connection.getRemoteState();
     }
+
+    @Override
+    public boolean isAnonymousRelaySupported() {
+        return anonymousRelaySupported;
+    };
 
     /////////////////////////////////////////////////////////////////////////////
     //
@@ -260,7 +268,20 @@ public class ProtonConnectionImpl implements ProtonConnection {
     // Implementation details hidden from public api.
     //
     /////////////////////////////////////////////////////////////////////////////
+
+    private void processCapabilities() {
+        Symbol[] capabilities = getRemoteOfferedCapabilities();
+        if (capabilities != null) {
+            List<Symbol> list = Arrays.asList(capabilities);
+            if (list.contains(ANONYMOUS_RELAY)) {
+                anonymousRelaySupported = true;
+            }
+        }
+    }
+
     void fireRemoteOpen() {
+        processCapabilities();
+
         if( openHandler !=null ) {
             openHandler.handle(future(this, getRemoteCondition()));
         }

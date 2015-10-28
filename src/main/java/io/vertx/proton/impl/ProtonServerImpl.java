@@ -7,6 +7,8 @@ package io.vertx.proton.impl;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.apache.qpid.proton.amqp.Symbol;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -24,10 +26,11 @@ public class ProtonServerImpl implements ProtonServer {
     private final Vertx vertx;
     private final NetServer server;
     private Handler<ProtonConnection> handler;
+    private boolean advertiseAnonymousRelayCapability = true;
 
     public ProtonServerImpl(Vertx vertx) {
         this.vertx = vertx;
-        this.server = vertx.createNetServer();
+        this.server = this.vertx.createNetServer();
     }
 
     public int actualPort() {
@@ -103,6 +106,10 @@ public class ProtonServerImpl implements ProtonServer {
                 }
 
                 ProtonConnectionImpl connection = new ProtonConnectionImpl(hostname);
+                if (advertiseAnonymousRelayCapability) {
+                    connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
+                }
+
                 connection.bind(netSocket);
                 handler.handle(connection);
             }
@@ -110,5 +117,8 @@ public class ProtonServerImpl implements ProtonServer {
         return this;
     }
 
+    public void setAdvertiseAnonymousRelayCapability(boolean advertiseAnonymousRelayCapability) {
+        this.advertiseAnonymousRelayCapability = advertiseAnonymousRelayCapability;
+    }
 
 }

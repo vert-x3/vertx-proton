@@ -8,6 +8,8 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.impl.ProtonServerImpl;
+
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -197,6 +199,41 @@ public class ProtonClientTest extends MockServerTestBase {
                 })
                 .flow(4)
                 .open();
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testIsAnonymousRelaySupported(TestContext context) {
+        Async async = context.async();
+        connect(context, connection -> {
+            context.assertFalse(connection.isAnonymousRelaySupported(),
+                    "Connection not yet open, so result should be false");
+            connection.openHandler(x -> {
+                context.assertTrue(connection.isAnonymousRelaySupported(),
+                        "Connection now open, server supports relay, should be true");
+
+                connection.disconnect();
+                async.complete();
+            })
+            .open();
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testAnonymousRelayIsNotSupported(TestContext context) {
+        ((ProtonServerImpl) server.getProtonServer()).setAdvertiseAnonymousRelayCapability(false);
+        Async async = context.async();
+        connect(context, connection -> {
+            context.assertFalse(connection.isAnonymousRelaySupported(),
+                    "Connection not yet open, so result should be false");
+            connection.openHandler(x -> {
+                context.assertFalse(connection.isAnonymousRelaySupported(),
+                        "Connection now open, server does not support relay, should be false");
+
+                connection.disconnect();
+                async.complete();
+            })
+            .open();
         });
     }
 
