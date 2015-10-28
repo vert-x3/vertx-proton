@@ -3,6 +3,7 @@
  */
 package io.vertx.proton;
 
+import io.vertx.core.AsyncResult;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
@@ -12,6 +13,7 @@ import io.vertx.proton.impl.ProtonServerImpl;
 
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
+import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -234,6 +236,64 @@ public class ProtonClientTest extends MockServerTestBase {
                 async.complete();
             })
             .open();
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testDefaultAnonymousSenderSpecifiesLinkTarget(TestContext context) throws Exception {
+        server.close();
+        Async async = context.async();
+
+        ProtonServer protonServer = null;
+        try {
+            protonServer = ProtonServer.create(vertx);
+            protonServer.connectHandler((serverConnection) -> processConnectionAnonymousSenderSpecifiesLinkTarget(context, async, serverConnection));
+            FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
+            protonServer.listen(0, handler);
+            handler.get();
+
+            ProtonClient client = ProtonClient.create(vertx);
+            client.connect("localhost", protonServer.actualPort(), res -> {
+                context.assertTrue(res.succeeded());
+
+                ProtonConnection connection =  res.result();
+                connection.openHandler(x -> {
+                    LOG.trace("Client connection opened");
+                    connection.send(tag("tag"), message("ignored", "content"));
+                })
+                .open();
+            });
+
+            async.awaitSuccess();
+        } finally {
+            if (protonServer != null) {
+                protonServer.close();
+            }
+        }
+    }
+
+    private void processConnectionAnonymousSenderSpecifiesLinkTarget(TestContext context, Async async, ProtonConnection serverConnection) {
+        serverConnection.sessionOpenHandler(session -> session.open());
+        serverConnection.receiverOpenHandler(receiver -> {
+            LOG.trace("Server receiver opened");
+            //TODO: set the local target on link before opening it
+            receiver.handler((delivery, msg) -> {
+                // We got the message that was sent, complete the test
+                LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+                serverConnection.disconnect();
+                async.complete();
+            });
+
+            // Verify that the remote link target (set by the client) matches
+            // up to the expected value to signal use of the anonymous relay
+            Target remoteTarget = receiver.getRemoteTarget();
+            context.assertNotNull(remoteTarget, "Client did not set a link target");
+            context.assertNull(remoteTarget.getAddress(), "Unexpected target address");
+
+            receiver.flow(10).open();
+        });
+        serverConnection.openHandler(result -> {
+            serverConnection.open();
         });
     }
 

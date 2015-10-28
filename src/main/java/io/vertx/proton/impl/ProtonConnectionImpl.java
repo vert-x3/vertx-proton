@@ -10,6 +10,8 @@ import io.vertx.core.net.NetSocket;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.*;
 import org.apache.qpid.proton.message.Message;
@@ -185,6 +187,8 @@ public class ProtonConnectionImpl implements ProtonConnection {
     public ProtonSender getDefaultSender() {
         if( defaultSender == null ) {
             defaultSender = getDefaultSession().sender();
+            defaultSender.setSource(new Source());
+            defaultSender.setTarget(new Target());
             defaultSender.open();
         }
         return defaultSender;
