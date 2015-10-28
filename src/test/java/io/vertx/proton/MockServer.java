@@ -50,7 +50,7 @@ public class MockServer {
                     address = receiver.getRemoteTarget().getAddress();
                 }
                 processMessage(connection, receiver, delivery, msg, address);
-            }).flow(10).open();
+            }).flow(100000).open();
         });
         connection.senderOpenHandler(sender->{
             Addresses address = null;

@@ -32,10 +32,14 @@ abstract public class MockServerTestBase {
     protected MockServer server;
 
     @Before
-    public void setup() throws ExecutionException, InterruptedException {
-        // Create the Vert.x instance
-        vertx = Vertx.vertx();
-        server = new MockServer(vertx);
+    public void setup() {
+        try {
+            // Create the Vert.x instance
+            vertx = Vertx.vertx();
+            server = new MockServer(vertx);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @After
@@ -47,14 +51,25 @@ abstract public class MockServerTestBase {
     protected void benchmark(long timeout, String name, Handler<AtomicLong> work, Runnable done) {
         AtomicLong counter = new AtomicLong();
         AtomicLong startTime = new AtomicLong();
+        AtomicLong intervalTime = new AtomicLong();
+        AtomicLong intervalCounter = new AtomicLong();
         System.out.println("Benchmarking " + name + " rate ...");
+        long periodic = vertx.setPeriodic(1000, t -> {
+            long now = System.currentTimeMillis();
+            double duration = (now - intervalTime.getAndSet(now)) / 1000.0d;
+            long sent = counter.get() - intervalCounter.get();
+            System.out.println(String.format("... %s rate: %,.2f", name, (sent / duration)));
+            intervalCounter.addAndGet(sent);
+        });
         vertx.setTimer(timeout, t -> {
+            vertx.cancelTimer(periodic);
             double duration = (System.currentTimeMillis() - startTime.get()) / 1000.0d;
             long sent = counter.get();
-            System.out.println(String.format(name + " rate: %.2f", (sent / duration)));
+            System.out.println(String.format("Final %s rate: %,.2f", name, (sent / duration)));
             done.run();
         });
         startTime.set(System.currentTimeMillis());
+        intervalTime.set(startTime.get());
         work.handle(counter);
     }
 

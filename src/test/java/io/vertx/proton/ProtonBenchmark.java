@@ -5,6 +5,8 @@ package io.vertx.proton;
 
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.TestOptions;
+import io.vertx.ext.unit.TestSuite;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
@@ -17,6 +19,15 @@ import static io.vertx.proton.ProtonHelper.tag;
 public class ProtonBenchmark extends MockServerTestBase {
 
     static final long BENCHMARK_DURATION = 5000;
+
+    public static void main(String[] args) {
+        ProtonBenchmark benchmark = new ProtonBenchmark();
+        TestSuite.create("benchmark")
+            .before(x->benchmark.setup())
+            .test("benchmark", x -> benchmark.benchmarkAtMostOnceSendThroughput(x))
+            .after(x -> benchmark.tearDown())
+            .run(new TestOptions().setTimeout(BENCHMARK_DURATION+10000));
+    }
 
     @Test
     public void benchmarkAtLeastOnceSendThroughput(TestContext context) {
