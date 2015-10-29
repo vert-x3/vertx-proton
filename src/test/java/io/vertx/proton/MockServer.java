@@ -41,6 +41,10 @@ public class MockServer {
         handler.get();
     }
 
+    ProtonServer getProtonServer() {
+        return server;
+    }
+
     private void processConnection(Vertx vertx, ProtonConnection connection) {
         connection.sessionOpenHandler(session -> session.open());
         connection.receiverOpenHandler(receiver -> {
