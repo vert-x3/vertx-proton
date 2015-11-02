@@ -3,32 +3,44 @@
  */
 package io.vertx.proton.impl;
 
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
+
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.engine.BaseHandler;
 import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Transport;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 class ProtonTransport extends BaseHandler {
+    private static Logger LOG = LoggerFactory.getLogger(ProtonTransport.class);
 
     private final Connection connection;
+    private final Vertx vertx;
     private final NetClient netClient;
     private final NetSocket socket;
     private final Transport transport = Proton.transport();
     private final Collector collector = Proton.collector();
 
-    ProtonTransport(Connection connection, NetClient netClient, NetSocket socket) {
+    private volatile Long idleTimeoutCheckTimerId; //TODO: cancel when closing etc?
+
+    ProtonTransport(Connection connection, Vertx vertx, NetClient netClient, NetSocket socket) {
         this.connection = connection;
+        this.vertx = vertx;
         this.netClient = netClient;
         this.socket = socket;
         transport.bind(connection);
@@ -57,6 +69,7 @@ class ProtonTransport extends BaseHandler {
             switch (protonEvent.getType()) {
                 case CONNECTION_REMOTE_OPEN: {
                     connnection.fireRemoteOpen();
+                    initiateIdleTimeoutChecks();
                     break;
                 }
                 case CONNECTION_REMOTE_CLOSE: {
@@ -131,6 +144,17 @@ class ProtonTransport extends BaseHandler {
         flush();
     }
 
+    private void initiateIdleTimeoutChecks() {
+        // Using nano time since it is not related to the wall clock, which may change
+        long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+        long deadline = transport.tick(now);
+        if (deadline > 0) {
+            long delay = deadline - now;
+            LOG.trace("IdleTimeoutCheck being initiated, initial delay: {0}", delay);
+            idleTimeoutCheckTimerId = vertx.setTimer(delay, new IdleTimeoutCheck());
+        }
+    }
+
     private void pumpInbound(ByteBuffer bytes) {
         // Lets push bytes from vert.x to proton engine.
         ByteBuffer inputBuffer = transport.getInputBuffer();
@@ -161,6 +185,40 @@ class ProtonTransport extends BaseHandler {
             netClient.close();
         } else {
             socket.close();
+        }
+    }
+
+    private final class IdleTimeoutCheck implements Handler<Long> {
+        @Override
+        public void handle(Long event) {
+            boolean checkScheduled = false;
+
+            if (connection.getLocalState() == EndpointState.ACTIVE) {
+                // Using nano time since it is not related to the wall clock, which may change
+                long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
+                long deadline = transport.tick(now);
+
+                flush();
+
+                if (transport.isClosed()) {
+                    LOG.info("IdleTimeoutCheck closed the transport due to the peer exceeding our requested idle-timeout.");
+                    disconnect();
+                } else {
+                    if (deadline > 0) {
+                        long delay = deadline - now;
+                        checkScheduled = true;
+                        LOG.trace("IdleTimeoutCheck rescheduling with delay: {0}", delay);
+                        idleTimeoutCheckTimerId = vertx.setTimer(delay, this);
+                    }
+                }
+            } else {
+                LOG.trace("IdleTimeoutCheck skipping check, connection is not active.");
+            }
+
+            if (!checkScheduled) {
+                idleTimeoutCheckTimerId = null;
+                LOG.trace("IdleTimeoutCheck exiting");
+            }
         }
     }
 }

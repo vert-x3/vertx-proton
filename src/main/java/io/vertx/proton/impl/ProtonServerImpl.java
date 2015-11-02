@@ -105,7 +105,7 @@ public class ProtonServerImpl implements ProtonServer {
                 } catch (UnknownHostException e) {
                 }
 
-                ProtonConnectionImpl connection = new ProtonConnectionImpl(hostname);
+                ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
                 if (advertiseAnonymousRelayCapability) {
                     connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
                 }

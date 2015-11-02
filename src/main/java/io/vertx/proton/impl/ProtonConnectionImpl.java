@@ -5,6 +5,7 @@ package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.*;
@@ -30,8 +31,9 @@ import static io.vertx.proton.ProtonHelper.future;
 public class ProtonConnectionImpl implements ProtonConnection {
     public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
 
-    final Connection connection = Proton.connection();
-    ProtonTransport transport;
+    private final Connection connection = Proton.connection();
+    private final Vertx vertx;
+    private ProtonTransport transport;
 
     private Handler<AsyncResult<ProtonConnection>> openHandler;
     private Handler<AsyncResult<ProtonConnection>> closeHandler;
@@ -50,7 +52,9 @@ public class ProtonConnectionImpl implements ProtonConnection {
     private ProtonSession defaultSession;
     private ProtonSender defaultSender;
 
-    ProtonConnectionImpl(String hostname) {
+
+    ProtonConnectionImpl(Vertx vertx, String hostname) {
+        this.vertx = vertx;
         this.connection.setContext(this);
         this.connection.setContainer("vert.x-"+UUID.randomUUID());
         this.connection.setHostname(hostname);
@@ -305,7 +309,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
     void bind(NetClient client, NetSocket socket) {
-        transport = new ProtonTransport(connection, client, socket);
+        transport = new ProtonTransport(connection, vertx, client, socket);
     }
 
     void bind(NetSocket socket) {
