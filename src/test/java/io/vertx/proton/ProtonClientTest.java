@@ -54,8 +54,10 @@ public class ProtonClientTest extends MockServerTestBase {
                 context.assertTrue(connection.isDisconnected());
                 async.complete();
             });
-            // Send a reqeust to the sever for him to disconnect us
-            connection.send(tag(""), message("command", "disconnect"));
+
+            // Send a request to the server for him to disconnect us
+            ProtonSender sender = connection.createSender(null).open();
+            sender.send(tag(""), message("command", "disconnect"));
         });
     }
 
@@ -259,7 +261,13 @@ public class ProtonClientTest extends MockServerTestBase {
                 ProtonConnection connection =  res.result();
                 connection.openHandler(x -> {
                     LOG.trace("Client connection opened");
-                    connection.send(tag("tag"), message("ignored", "content"));
+
+                    ProtonSender sender = connection.createSender(null);
+                    // Can optionally add an openHandler or sendQueueDrainHandler
+                    // to await remote sender open completing or credit to send being
+                    // granted. But here we will just buffer the send immediately.
+                    sender.open();
+                    sender.send(tag("tag"), message("ignored", "content"));
                 })
                 .open();
             });

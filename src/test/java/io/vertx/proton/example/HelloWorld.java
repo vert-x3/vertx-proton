@@ -6,6 +6,8 @@ package io.vertx.proton.example;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonSender;
+
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -61,10 +63,15 @@ public class HelloWorld {
 
         // Send messages to a queue..
         Message message = message("queue://foo", "Hello World from client");
-        connection.send(tag("m1"), message, delivery -> {
+
+        ProtonSender sender = connection.createSender(null);
+        // Can optionally add an openHandler or sendQueueDrainHandler
+        // to await remote sender open completing or credit to send being
+        // granted. But here we will just buffer the send immediately.
+        sender.open();
+        sender.send(tag("m1"), message, delivery -> {
             System.out.println("The message was sent");
         });
-
     }
 
 }

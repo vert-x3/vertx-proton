@@ -33,15 +33,29 @@ public interface ProtonConnection {
 
   ProtonConnection close();
 
-  ProtonSession session();
-
-  void send(byte[] tag, Message message);
-
-  void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived);
-
   ProtonReceiver receiver(String name);
 
   ProtonReceiver receiver();
+
+  /**
+   * Creates a sender used to send messages to the given node address. If no address
+   * (i.e null) is specified then a sender will be established to the 'anonymous relay'
+   * and each message must specify its destination in its 'to' field.
+   *
+   * @param address The address to attach to, or null to attach to the anonymous relay.
+   *
+   * @return the (unopened) sender.
+   */
+  ProtonSender createSender(String address);
+
+  /**
+   * Allows querying (once the connection has remotely opened) whether the peer
+   * advertises support for the anonymous relay (sender with null address).
+   * @return
+   */
+  boolean isAnonymousRelaySupported();
+
+  ProtonSession session();
 
   void disconnect();
 
@@ -59,5 +73,4 @@ public interface ProtonConnection {
 
   ProtonConnection receiverOpenHandler(Handler<ProtonReceiver> remoteReceiverOpenHandler);
 
-  boolean isAnonymousRelaySupported();
 }
