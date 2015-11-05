@@ -10,6 +10,14 @@ import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonHelper;
+
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Released;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Receiver;
@@ -113,7 +121,12 @@ public class ProtonSessionImpl implements ProtonSession {
 
     @Override
     public ProtonSender sender() {
-        return sender("auto-"+(autoLinkCounter++));
+        return sender(generateLinkName());
+    }
+
+    private String generateLinkName() {
+        //TODO: include useful details in name, like address and container?
+        return "auto-"+(autoLinkCounter++);
     }
 
     @Override
@@ -127,18 +140,25 @@ public class ProtonSessionImpl implements ProtonSession {
     }
 
     @Override
-    public ProtonReceiver receiver() {
-        return receiver("auto-" + (autoLinkCounter++));
-    }
+    public ProtonReceiver createReceiver(String address) {
+        //TODO: add options for configuring things like link name etc?
+        Receiver receiver = session.receiver(generateLinkName());
 
-    @Override
-    public ProtonReceiver receiver(String name) {
-        Receiver receiver = session.receiver(name);
-        if (receiver.getContext() != null) {
-            return (ProtonReceiver) receiver.getContext();
-        } else {
-            return new ProtonReceiverImpl(receiver);
-        }
+        Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
+
+        Source source = new Source();
+        source.setAddress(address);
+        source.setOutcomes(outcomes);
+        source.setDefaultOutcome(Released.getInstance());
+
+        Target target = new Target();
+
+        receiver.setSource(source);
+        receiver.setTarget(target);
+
+        ProtonReceiverImpl r = new ProtonReceiverImpl(receiver);
+        //TODO: set explicit defaults for settle mode etc?
+        return r;
     }
 
     /////////////////////////////////////////////////////////////////////////////

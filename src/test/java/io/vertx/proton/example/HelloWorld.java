@@ -49,7 +49,7 @@ public class HelloWorld {
         connection.open();
 
         // Receive messages from a queue
-        connection.receiver().setSource("queue://foo")
+        connection.createReceiver("queue://foo")
             .handler((delivery, msg) -> {
                 Section body = msg.getBody();
                 if (body instanceof AmqpValue) {
@@ -69,8 +69,9 @@ public class HelloWorld {
         // to await remote sender open completing or credit to send being
         // granted. But here we will just buffer the send immediately.
         sender.open();
+        System.out.println("Sending message to server");
         sender.send(tag("m1"), message, delivery -> {
-            System.out.println("The message was sent");
+            System.out.println("The message was received by the server");
         });
     }
 

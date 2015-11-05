@@ -5,6 +5,7 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
@@ -20,11 +21,12 @@ import static io.vertx.proton.ProtonHelper.tag;
 public class MockServer {
 
     private ProtonServer server;
+    private ProtonSender echoSender;
 
     enum Addresses {
         command,
         drop,
-        echo,
+        echo, // Echos message back to consumer at address "echo"
         two_messages,
         five_messages
     }
@@ -80,6 +82,17 @@ public class MockServer {
                         });
                         break;
                     }
+                    case echo:{
+                        if(echoSender == null) {
+                            sender.open();
+                            echoSender = sender;
+                            //TODO: set the source/target appropriately
+                        } else {
+                            sender.setCondition(condition(AmqpError.ILLEGAL_STATE.toString(), "Already have echo recipient"));
+                            sender.close();
+                        }
+                        break;
+                    }
                     default:
                         sender.setCondition(condition("Unknown address")).close();
                 }
@@ -110,11 +123,11 @@ public class MockServer {
             }
 
             case echo: {
-                ProtonSender sender = receiver.getSession().sender("echo");
-                if( !sender.isOpen() ) {
-                    sender.open();
+                if(echoSender != null) {
+                    echoSender.send(delivery.getTag(), msg);
+                } else {
+                    // TODO
                 }
-                sender.send(delivery.getTag(), msg);
                 break;
             }
 

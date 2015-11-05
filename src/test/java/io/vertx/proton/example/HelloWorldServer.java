@@ -87,7 +87,7 @@ public class HelloWorldServer {
                     System.out.println("Sending message to client");
                     Message m = message("Hello World from Server!");
                     sender.send(tag("m1"), m, delivery -> {
-                        System.out.println("The message was sent");
+                        System.out.println("The message was received by the client.");
                     });
                 }
             });

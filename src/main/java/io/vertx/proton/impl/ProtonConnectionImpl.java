@@ -222,13 +222,8 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
     @Override
-    public ProtonReceiver receiver(String name) {
-        return getDefaultSession().receiver(name);
-    }
-
-    @Override
-    public ProtonReceiver receiver() {
-        return getDefaultSession().receiver();
+    public ProtonReceiver createReceiver(String address) {
+        return getDefaultSession().createReceiver(address);
     }
 
     public void flush() {

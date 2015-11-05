@@ -33,16 +33,21 @@ public interface ProtonConnection {
 
   ProtonConnection close();
 
-  ProtonReceiver receiver(String name);
-
-  ProtonReceiver receiver();
+  /**
+   * Creates a receiver used to consumer messages from the given node address.
+   *
+   * @param address The source address to attach the consumer to.
+   *
+   * @return the (unopened) consumer.
+   */
+  ProtonReceiver createReceiver(String address);
 
   /**
    * Creates a sender used to send messages to the given node address. If no address
    * (i.e null) is specified then a sender will be established to the 'anonymous relay'
    * and each message must specify its destination in its 'to' field.
    *
-   * @param address The address to attach to, or null to attach to the anonymous relay.
+   * @param address The target address to attach to, or null to attach to the anonymous relay.
    *
    * @return the (unopened) sender.
    */

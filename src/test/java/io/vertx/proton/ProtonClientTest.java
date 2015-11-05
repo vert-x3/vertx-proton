@@ -94,7 +94,7 @@ public class ProtonClientTest extends MockServerTestBase {
         connect(context, connection -> {
 
             ProtonSession session = connection.session().open();
-            session.receiver("echo")
+            session.createReceiver(MockServer.Addresses.echo.toString())
                 .handler((d, m) -> {
                     String actual = (String) (getMessageBody(context, m));
                     context.assertEquals(data, actual);
@@ -119,7 +119,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
             AtomicInteger counter = new AtomicInteger(0);
             ProtonSession session = connection.session().open();
-            session.receiver().setSource("two_messages")
+            session.createReceiver(MockServer.Addresses.two_messages.toString())
                 .asyncHandler((d, m, settle) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
@@ -162,7 +162,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
             AtomicInteger counter = new AtomicInteger(0);
             ProtonSession session = connection.session().open();
-            session.receiver().setSource(MockServer.Addresses.five_messages.toString())
+            session.createReceiver(MockServer.Addresses.five_messages.toString())
                 .asyncHandler((d, m, settle) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {

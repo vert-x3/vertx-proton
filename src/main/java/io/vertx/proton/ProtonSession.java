@@ -31,8 +31,5 @@ public interface ProtonSession {
 
   ProtonSender sender(String name);
 
-  ProtonReceiver receiver();
-
-  ProtonReceiver receiver(String name);
-
+  ProtonReceiver createReceiver(String address);
 }

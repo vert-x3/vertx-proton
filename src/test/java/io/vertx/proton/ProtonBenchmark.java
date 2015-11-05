@@ -99,7 +99,7 @@ public class ProtonBenchmark extends MockServerTestBase {
 
             benchmark(BENCHMARK_DURATION, "Request Response Throughput", counter -> {
 
-                session.receiver("echo")
+                session.createReceiver(MockServer.Addresses.echo.toString())
                     .handler((d, m)->{
                         counter.incrementAndGet();
                     })
