@@ -52,6 +52,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         }
         sender().send(encodedMessage, 0, len);
 
+        //TODO: even if onRecieved is null, we shouldnt really settle if the link was established was SenderSettleMode.UNSETTLED
         if( onReceived==null || link.getSenderSettleMode() == SenderSettleMode.SETTLED  ) {
             delivery.settle();
         }
