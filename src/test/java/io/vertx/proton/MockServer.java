@@ -22,6 +22,7 @@ public class MockServer {
 
     private ProtonServer server;
     private ProtonSender echoSender;
+    private volatile int credits = 1000;
 
     enum Addresses {
         command,
@@ -56,7 +57,7 @@ public class MockServer {
                     address = receiver.getRemoteTarget().getAddress();
                 }
                 processMessage(connection, receiver, delivery, msg, address);
-            }).flow(100000).open();
+            }).flow(credits).open();
         });
         connection.senderOpenHandler(sender->{
             Addresses address = null;
@@ -109,6 +110,13 @@ public class MockServer {
 
     }
 
+    public int getProducerCredits() {
+        return credits;
+    }
+
+    public void setProducerCredits(int credits) {
+        this.credits = credits;
+    }
 
     public void close() {
         server.close();
