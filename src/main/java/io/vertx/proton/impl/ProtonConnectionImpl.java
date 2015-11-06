@@ -180,7 +180,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
     @Override
-    public ProtonSessionImpl session() {
+    public ProtonSessionImpl createSession() {
         return new ProtonSessionImpl(connection.session());
     }
 

@@ -59,7 +59,12 @@ public interface ProtonConnection {
    */
   boolean isAnonymousRelaySupported();
 
-  ProtonSession session();
+  /**
+   * Creates a new session, which can be used to create new senders/receivers on.
+   *
+   * @return the (unopened) session.
+   */
+  ProtonSession createSession();
 
   void disconnect();
 

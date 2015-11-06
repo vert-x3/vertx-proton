@@ -93,9 +93,7 @@ public class ProtonClientTest extends MockServerTestBase {
     private void sendReceiveEcho(TestContext context, String data) {
         Async async = context.async();
         connect(context, connection -> {
-
-            ProtonSession session = connection.session().open();
-            session.createReceiver(MockServer.Addresses.echo.toString())
+            connection.createReceiver(MockServer.Addresses.echo.toString())
                 .handler((d, m) -> {
                     String actual = (String) (getMessageBody(context, m));
                     context.assertEquals(data, actual);
@@ -105,7 +103,7 @@ public class ProtonClientTest extends MockServerTestBase {
                 .flow(10)
                 .open();
 
-            session.createSender(MockServer.Addresses.echo.toString())
+            connection.createSender(MockServer.Addresses.echo.toString())
                 .open()
                 .send(tag(""), message("echo", data));
 
@@ -119,8 +117,7 @@ public class ProtonClientTest extends MockServerTestBase {
         connect(context, connection -> {
 
             AtomicInteger counter = new AtomicInteger(0);
-            ProtonSession session = connection.session().open();
-            session.createReceiver(MockServer.Addresses.two_messages.toString())
+            connection.createReceiver(MockServer.Addresses.two_messages.toString())
                 .asyncHandler((d, m, settle) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
@@ -162,8 +159,7 @@ public class ProtonClientTest extends MockServerTestBase {
         connect(context, connection -> {
 
             AtomicInteger counter = new AtomicInteger(0);
-            ProtonSession session = connection.session().open();
-            session.createReceiver(MockServer.Addresses.five_messages.toString())
+            connection.createReceiver(MockServer.Addresses.five_messages.toString())
                 .asyncHandler((d, m, settle) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
