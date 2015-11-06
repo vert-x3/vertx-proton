@@ -3,7 +3,6 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.message.Message;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -45,7 +44,7 @@ public interface ProtonConnection {
   /**
    * Creates a sender used to send messages to the given node address. If no address
    * (i.e null) is specified then a sender will be established to the 'anonymous relay'
-   * and each message must specify its destination in its 'to' field.
+   * and each message must specify its destination address.
    *
    * @param address The target address to attach to, or null to attach to the anonymous relay.
    *

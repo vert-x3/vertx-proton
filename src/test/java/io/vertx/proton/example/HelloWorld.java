@@ -49,7 +49,9 @@ public class HelloWorld {
         connection.open();
 
         // Receive messages from a queue
-        connection.createReceiver("queue://foo")
+        String address = "queue://foo";
+
+        connection.createReceiver(address)
             .handler((delivery, msg) -> {
                 Section body = msg.getBody();
                 if (body instanceof AmqpValue) {
@@ -60,11 +62,12 @@ public class HelloWorld {
             .flow(10)  // Prefetch up to 10 messages
             .open();
 
-
-        // Send messages to a queue..
-        Message message = message("queue://foo", "Hello World from client");
-
+        // Create an anonymous sender, have the message carry the destination
         ProtonSender sender = connection.createSender(null);
+
+        // Send message to the queue..
+        Message message = message(address, "Hello World from client");
+
         // Can optionally add an openHandler or sendQueueDrainHandler
         // to await remote sender open completing or credit to send being
         // granted. But here we will just buffer the send immediately.

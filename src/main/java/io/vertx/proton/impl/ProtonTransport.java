@@ -91,7 +91,7 @@ class ProtonTransport extends BaseHandler {
                     break;
                 }
                 case LINK_REMOTE_OPEN: {
-                    ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                    ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
                     if( link == null ) {
                         connnection.fireRemoteLinkOpen(protonEvent.getLink());
                     } else {
@@ -100,12 +100,12 @@ class ProtonTransport extends BaseHandler {
                     break;
                 }
                 case LINK_REMOTE_CLOSE: {
-                    ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                    ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
                     link.fireRemoteClose();
                     break;
                 }
                 case LINK_FLOW:{
-                    ProtonLinkImpl link = (ProtonLinkImpl) protonEvent.getLink().getContext();
+                    ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
                     link.fireLinkFlow();
                     break;
                 }

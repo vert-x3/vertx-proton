@@ -12,12 +12,6 @@ import java.util.UUID;
 
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.amqp.messaging.Modified;
-import org.apache.qpid.proton.amqp.messaging.Rejected;
-import org.apache.qpid.proton.amqp.messaging.Released;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
@@ -62,8 +56,6 @@ public class ProtonConnectionImpl implements ProtonConnection {
     };
     private boolean anonymousRelaySupported;
     private ProtonSession defaultSession;
-    private ProtonSender defaultSender;
-
 
     ProtonConnectionImpl(Vertx vertx, String hostname) {
         this.vertx = vertx;
