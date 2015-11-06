@@ -27,12 +27,7 @@ public interface ProtonSession {
 
   ProtonSession closeHandler(Handler<AsyncResult<ProtonSession>> closeHandler);
 
-  ProtonSender sender();
+  ProtonSender createSender(String address);
 
-  ProtonSender sender(String name);
-
-  ProtonReceiver receiver();
-
-  ProtonReceiver receiver(String name);
-
+  ProtonReceiver createReceiver(String address);
 }

@@ -31,11 +31,13 @@ public class ProtonBenchmark extends MockServerTestBase {
 
     @Test
     public void benchmarkAtLeastOnceSendThroughput(TestContext context) {
+        server.setProducerCredits(1000);
+
         Async async = context.async();
         connect(context, connection ->
         {
             ProtonSender sender =
-                connection.session().open().sender()
+                connection.createSender(MockServer.Addresses.drop.toString())
                     .setQoS(ProtonQoS.AT_LEAST_ONCE)
                     .open();
 
@@ -60,11 +62,13 @@ public class ProtonBenchmark extends MockServerTestBase {
 
     @Test
     public void benchmarkAtMostOnceSendThroughput(TestContext context) {
+        server.setProducerCredits(100000);
+
         Async async = context.async();
         connect(context, connection ->
         {
             ProtonSender sender =
-                connection.session().open().sender()
+                connection.createSender(MockServer.Addresses.drop.toString())
                     .setQoS(ProtonQoS.AT_MOST_ONCE)
                     .open();
 
@@ -88,22 +92,24 @@ public class ProtonBenchmark extends MockServerTestBase {
 
     @Test
     public void benchmarkRequestResponse(TestContext context) {
+        int credits = 10;
+        server.setProducerCredits(credits);
+
         Async async = context.async();
         connect(context, connection ->
         {
-            ProtonSession session = connection.session().open();
-            ProtonSender sender = session.sender().open();
+            ProtonSender sender = connection.createSender(MockServer.Addresses.echo.toString()).open();
 
             byte[] tag = tag("m1");
             Message message = message("echo", "Hello World");
 
             benchmark(BENCHMARK_DURATION, "Request Response Throughput", counter -> {
 
-                session.receiver("echo")
+                connection.createReceiver(MockServer.Addresses.echo.toString())
                     .handler((d, m)->{
                         counter.incrementAndGet();
                     })
-                    .flow(10)
+                    .flow(credits)
                     .open();
 
                 sender.sendQueueDrainHandler(s -> {

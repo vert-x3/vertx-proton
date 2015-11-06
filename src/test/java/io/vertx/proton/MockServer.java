@@ -5,6 +5,7 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 
@@ -20,11 +21,13 @@ import static io.vertx.proton.ProtonHelper.tag;
 public class MockServer {
 
     private ProtonServer server;
+    private ProtonSender echoSender;
+    private volatile int credits = 1000;
 
     enum Addresses {
         command,
         drop,
-        echo,
+        echo, // Echos message back to consumer at address "echo"
         two_messages,
         five_messages
     }
@@ -54,7 +57,7 @@ public class MockServer {
                     address = receiver.getRemoteTarget().getAddress();
                 }
                 processMessage(connection, receiver, delivery, msg, address);
-            }).flow(100000).open();
+            }).flow(credits).open();
         });
         connection.senderOpenHandler(sender->{
             Addresses address = null;
@@ -80,6 +83,20 @@ public class MockServer {
                         });
                         break;
                     }
+                    case echo:{
+                        if(echoSender == null) {
+                            sender.open();
+                            echoSender = sender;
+                            //TODO: set the source/target appropriately
+                        } else {
+                            sender.setCondition(condition(AmqpError.ILLEGAL_STATE.toString(), "Already have echo recipient"));
+                            sender.close();
+                        }
+                        break;
+                    }
+                    case drop:{
+                        sender.open();
+                    }
                     default:
                         sender.setCondition(condition("Unknown address")).close();
                 }
@@ -93,6 +110,13 @@ public class MockServer {
 
     }
 
+    public int getProducerCredits() {
+        return credits;
+    }
+
+    public void setProducerCredits(int credits) {
+        this.credits = credits;
+    }
 
     public void close() {
         server.close();
@@ -110,11 +134,11 @@ public class MockServer {
             }
 
             case echo: {
-                ProtonSender sender = receiver.getSession().sender("echo");
-                if( !sender.isOpen() ) {
-                    sender.open();
+                if(echoSender != null) {
+                    echoSender.send(delivery.getTag(), msg);
+                } else {
+                    // TODO
                 }
-                sender.send(delivery.getTag(), msg);
                 break;
             }
 

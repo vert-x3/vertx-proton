@@ -18,16 +18,22 @@ import org.apache.qpid.proton.message.impl.MessageImpl;
 public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements ProtonSender {
 
     private Handler<ProtonSender> drainHandler;
+    private boolean anonymousSender;
 
     ProtonSenderImpl(Sender sender) {
         super(sender);
     }
+
     private Sender sender() {
         return (Sender)link;
     }
 
     @Override
     public void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived) {
+        if(anonymousSender && message.getAddress() == null) {
+            throw new IllegalArgumentException("Message must have an address when using anonymous sender.");
+        }
+        // TODO: prevent odd combination of onRecieved callback + SenderSettleMode.SETTLED, or just allow it?
 
         Delivery delivery = sender().delivery(tag); // start a new delivery..
         int BUFFER_SIZE = 1024;
@@ -46,6 +52,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         }
         sender().send(encodedMessage, 0, len);
 
+        //TODO: even if onRecieved is null, we shouldnt really settle if the link was established was SenderSettleMode.UNSETTLED
         if( onReceived==null || link.getSenderSettleMode() == SenderSettleMode.SETTLED  ) {
             delivery.settle();
         }
@@ -57,6 +64,14 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
 
     public void send(byte[] tag, Message message) {
         send(tag, message, null);
+    }
+
+    public boolean isAnonymousSender() {
+        return anonymousSender;
+    }
+
+    public void setAnonymousSender(boolean anonymousSender) {
+        this.anonymousSender = anonymousSender;
     }
 
     @Override

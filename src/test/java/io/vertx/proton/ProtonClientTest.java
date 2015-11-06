@@ -11,6 +11,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.impl.ProtonServerImpl;
 
+import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.transport.Target;
@@ -28,7 +29,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     private static Logger LOG = LoggerFactory.getLogger(ProtonClientTest.class);
 
-    @Test
+    @Test(timeout = 20000)
     public void testClientIdentification(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
@@ -45,7 +46,7 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testRemoteDisconnectHandling(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
@@ -54,12 +55,14 @@ public class ProtonClientTest extends MockServerTestBase {
                 context.assertTrue(connection.isDisconnected());
                 async.complete();
             });
-            // Send a reqeust to the sever for him to disconnect us
-            connection.send(tag(""), message("command", "disconnect"));
+
+            // Send a request to the server for him to disconnect us
+            ProtonSender sender = connection.createSender(null).open();
+            sender.send(tag(""), message("command", "disconnect"));
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testLocalDisconnectHandling(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
@@ -73,12 +76,12 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testRequestResponse(TestContext context) {
         sendReceiveEcho(context, "Hello World");
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testTransferLargeMessage(TestContext context) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < 1024*1024*5; i++) {
@@ -90,9 +93,7 @@ public class ProtonClientTest extends MockServerTestBase {
     private void sendReceiveEcho(TestContext context, String data) {
         Async async = context.async();
         connect(context, connection -> {
-
-            ProtonSession session = connection.session().open();
-            session.receiver("echo")
+            connection.createReceiver(MockServer.Addresses.echo.toString())
                 .handler((d, m) -> {
                     String actual = (String) (getMessageBody(context, m));
                     context.assertEquals(data, actual);
@@ -102,7 +103,7 @@ public class ProtonClientTest extends MockServerTestBase {
                 .flow(10)
                 .open();
 
-            session.sender()
+            connection.createSender(MockServer.Addresses.echo.toString())
                 .open()
                 .send(tag(""), message("echo", data));
 
@@ -110,14 +111,13 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testReceiverAsyncSettle(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
 
             AtomicInteger counter = new AtomicInteger(0);
-            ProtonSession session = connection.session().open();
-            session.receiver().setSource("two_messages")
+            connection.createReceiver(MockServer.Addresses.two_messages.toString())
                 .asyncHandler((d, m, settle) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
@@ -159,8 +159,7 @@ public class ProtonClientTest extends MockServerTestBase {
         connect(context, connection -> {
 
             AtomicInteger counter = new AtomicInteger(0);
-            ProtonSession session = connection.session().open();
-            session.receiver().setSource(MockServer.Addresses.five_messages.toString())
+            connection.createReceiver(MockServer.Addresses.five_messages.toString())
                 .asyncHandler((d, m, settle) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
@@ -240,6 +239,35 @@ public class ProtonClientTest extends MockServerTestBase {
     }
 
     @Test(timeout = 20000)
+    public void testAnonymousSenderEnforcesMessageHasAddress(TestContext context) {
+        Async async = context.async();
+        connect(context, connection->{
+            ProtonSender sender = connection.createSender(null);
+            Message messageWithNoAddress = Proton.message();
+            try {
+                sender.send(tag("t1"), messageWithNoAddress);
+                context.fail("Send should have thrown IAE due to lack of message address");
+            } catch (IllegalArgumentException iae) {
+                // Expected
+                connection.disconnect();
+                async.complete();
+            }
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testNonAnonymousSenderDoesNotEnforceMessageHasAddress(TestContext context) {
+        Async async = context.async();
+        connect(context, connection->{
+            ProtonSender sender = connection.createSender(MockServer.Addresses.drop.toString());
+            Message messageWithNoAddress = Proton.message();
+            sender.send(tag("t1"), messageWithNoAddress);
+            connection.disconnect();
+            async.complete();
+        });
+    }
+
+    @Test(timeout = 20000)
     public void testDefaultAnonymousSenderSpecifiesLinkTarget(TestContext context) throws Exception {
         server.close();
         Async async = context.async();
@@ -259,7 +287,13 @@ public class ProtonClientTest extends MockServerTestBase {
                 ProtonConnection connection =  res.result();
                 connection.openHandler(x -> {
                     LOG.trace("Client connection opened");
-                    connection.send(tag("tag"), message("ignored", "content"));
+
+                    ProtonSender sender = connection.createSender(null);
+                    // Can optionally add an openHandler or sendQueueDrainHandler
+                    // to await remote sender open completing or credit to send being
+                    // granted. But here we will just buffer the send immediately.
+                    sender.open();
+                    sender.send(tag("tag"), message("ignored", "content"));
                 })
                 .open();
             });

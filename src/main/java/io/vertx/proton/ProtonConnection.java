@@ -3,7 +3,6 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.message.Message;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -33,15 +32,39 @@ public interface ProtonConnection {
 
   ProtonConnection close();
 
-  ProtonSession session();
+  /**
+   * Creates a receiver used to consumer messages from the given node address.
+   *
+   * @param address The source address to attach the consumer to.
+   *
+   * @return the (unopened) consumer.
+   */
+  ProtonReceiver createReceiver(String address);
 
-  void send(byte[] tag, Message message);
+  /**
+   * Creates a sender used to send messages to the given node address. If no address
+   * (i.e null) is specified then a sender will be established to the 'anonymous relay'
+   * and each message must specify its destination address.
+   *
+   * @param address The target address to attach to, or null to attach to the anonymous relay.
+   *
+   * @return the (unopened) sender.
+   */
+  ProtonSender createSender(String address);
 
-  void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived);
+  /**
+   * Allows querying (once the connection has remotely opened) whether the peer
+   * advertises support for the anonymous relay (sender with null address).
+   * @return
+   */
+  boolean isAnonymousRelaySupported();
 
-  ProtonReceiver receiver(String name);
-
-  ProtonReceiver receiver();
+  /**
+   * Creates a new session, which can be used to create new senders/receivers on.
+   *
+   * @return the (unopened) session.
+   */
+  ProtonSession createSession();
 
   void disconnect();
 
@@ -59,5 +82,4 @@ public interface ProtonConnection {
 
   ProtonConnection receiverOpenHandler(Handler<ProtonReceiver> remoteReceiverOpenHandler);
 
-  boolean isAnonymousRelaySupported();
 }

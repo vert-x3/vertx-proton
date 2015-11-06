@@ -6,6 +6,8 @@ package io.vertx.proton.example;
 import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonSender;
+
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
@@ -47,7 +49,9 @@ public class HelloWorld {
         connection.open();
 
         // Receive messages from a queue
-        connection.receiver().setSource("queue://foo")
+        String address = "queue://foo";
+
+        connection.createReceiver(address)
             .handler((delivery, msg) -> {
                 Section body = msg.getBody();
                 if (body instanceof AmqpValue) {
@@ -58,13 +62,20 @@ public class HelloWorld {
             .flow(10)  // Prefetch up to 10 messages
             .open();
 
+        // Create an anonymous sender, have the message carry the destination
+        ProtonSender sender = connection.createSender(null);
 
-        // Send messages to a queue..
-        Message message = message("queue://foo", "Hello World from client");
-        connection.send(tag("m1"), message, delivery -> {
-            System.out.println("The message was sent");
+        // Send message to the queue..
+        Message message = message(address, "Hello World from client");
+
+        // Can optionally add an openHandler or sendQueueDrainHandler
+        // to await remote sender open completing or credit to send being
+        // granted. But here we will just buffer the send immediately.
+        sender.open();
+        System.out.println("Sending message to server");
+        sender.send(tag("m1"), message, delivery -> {
+            System.out.println("The message was received by the server");
         });
-
     }
 
 }

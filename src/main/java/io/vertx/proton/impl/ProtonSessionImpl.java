@@ -10,6 +10,14 @@ import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonHelper;
+
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Released;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Receiver;
@@ -111,34 +119,56 @@ public class ProtonSessionImpl implements ProtonSession {
         return this;
     }
 
-    @Override
-    public ProtonSender sender() {
-        return sender("auto-"+(autoLinkCounter++));
+    private String generateLinkName() {
+        //TODO: include useful details in name, like address and container?
+        return "auto-"+(autoLinkCounter++);
     }
 
     @Override
-    public ProtonSender sender(String name) {
-        Sender sender = session.sender(name);
-        if (sender.getContext() != null) {
-            return (ProtonSender) sender.getContext();
-        } else {
-            return new ProtonSenderImpl(sender);
+    public ProtonReceiver createReceiver(String address) {
+        //TODO: add options for configuring things like link name etc?
+        //TODO: add a default close/error handler?
+        Receiver receiver = session.receiver(generateLinkName());
+
+        Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
+
+        Source source = new Source();
+        source.setAddress(address);
+        source.setOutcomes(outcomes);
+        source.setDefaultOutcome(Released.getInstance());
+
+        Target target = new Target();
+
+        receiver.setSource(source);
+        receiver.setTarget(target);
+
+        ProtonReceiverImpl r = new ProtonReceiverImpl(receiver);
+        //TODO: set explicit defaults for settle mode etc?
+        return r;
+    }
+
+    @Override
+    public ProtonSender createSender(String address) {
+        //TODO: add a default close/error handler?
+        Sender sender = session.sender(generateLinkName());
+
+        Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
+        Source source = new Source();
+        source.setOutcomes(outcomes);
+
+        Target target = new Target();
+        target.setAddress(address);
+
+        sender.setSource(source);
+        sender.setTarget(target);
+
+        ProtonSenderImpl s = new ProtonSenderImpl(sender);
+        if(address == null) {
+            s.setAnonymousSender(true);
         }
-    }
 
-    @Override
-    public ProtonReceiver receiver() {
-        return receiver("auto-" + (autoLinkCounter++));
-    }
-
-    @Override
-    public ProtonReceiver receiver(String name) {
-        Receiver receiver = session.receiver(name);
-        if (receiver.getContext() != null) {
-            return (ProtonReceiver) receiver.getContext();
-        } else {
-            return new ProtonReceiverImpl(receiver);
-        }
+        //TODO: set explicit defaults for settle mode etc?
+        return s;
     }
 
     /////////////////////////////////////////////////////////////////////////////

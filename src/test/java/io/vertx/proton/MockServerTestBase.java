@@ -23,7 +23,6 @@ import io.vertx.ext.unit.TestContext;
 import org.junit.After;
 import org.junit.Before;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
 abstract public class MockServerTestBase {

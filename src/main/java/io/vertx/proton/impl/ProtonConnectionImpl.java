@@ -3,26 +3,32 @@
  */
 package io.vertx.proton.impl;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.net.NetClient;
-import io.vertx.core.net.NetSocket;
-import io.vertx.proton.*;
-import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.Symbol;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
-import org.apache.qpid.proton.amqp.transport.ErrorCondition;
-import org.apache.qpid.proton.engine.*;
-import org.apache.qpid.proton.message.Message;
+import static io.vertx.proton.ProtonHelper.future;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static io.vertx.proton.ProtonHelper.future;
+import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.engine.Connection;
+import org.apache.qpid.proton.engine.EndpointState;
+import org.apache.qpid.proton.engine.Link;
+import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Sender;
+import org.apache.qpid.proton.engine.Session;
+
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.net.NetClient;
+import io.vertx.core.net.NetSocket;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
+import io.vertx.proton.ProtonSession;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -50,8 +56,6 @@ public class ProtonConnectionImpl implements ProtonConnection {
     };
     private boolean anonymousRelaySupported;
     private ProtonSession defaultSession;
-    private ProtonSender defaultSender;
-
 
     ProtonConnectionImpl(Vertx vertx, String hostname) {
         this.vertx = vertx;
@@ -176,46 +180,27 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
 
     @Override
-    public ProtonSessionImpl session() {
+    public ProtonSessionImpl createSession() {
         return new ProtonSessionImpl(connection.session());
     }
 
-    public ProtonSession getDefaultSession() {
+    private ProtonSession getDefaultSession() {
         if( defaultSession == null ) {
             defaultSession = new ProtonSessionImpl(connection.session());
+            //TODO: add a default close/error handler?
             defaultSession.open();
         }
         return defaultSession;
     }
 
-    public ProtonSender getDefaultSender() {
-        if( defaultSender == null ) {
-            defaultSender = getDefaultSession().sender();
-            defaultSender.setSource(new Source());
-            defaultSender.setTarget(new Target());
-            defaultSender.open();
-        }
-        return defaultSender;
+    @Override
+    public ProtonSender createSender(String address) {
+        return getDefaultSession().createSender(address);
     }
 
     @Override
-    public void send(byte[] tag, Message message) {
-        getDefaultSender().send(tag, message);
-    }
-
-    @Override
-    public void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived) {
-        getDefaultSender().send(tag, message, onReceived);
-    }
-
-    @Override
-    public ProtonReceiver receiver(String name) {
-        return getDefaultSession().receiver(name);
-    }
-
-    @Override
-    public ProtonReceiver receiver() {
-        return getDefaultSession().receiver();
+    public ProtonReceiver createReceiver(String address) {
+        return getDefaultSession().createReceiver(address);
     }
 
     public void flush() {
