@@ -11,6 +11,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.impl.ProtonServerImpl;
 
+import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.transport.Target;
@@ -28,7 +29,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     private static Logger LOG = LoggerFactory.getLogger(ProtonClientTest.class);
 
-    @Test
+    @Test(timeout = 20000)
     public void testClientIdentification(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
@@ -45,7 +46,7 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testRemoteDisconnectHandling(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
@@ -61,7 +62,7 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testLocalDisconnectHandling(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
@@ -75,12 +76,12 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testRequestResponse(TestContext context) {
         sendReceiveEcho(context, "Hello World");
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testTransferLargeMessage(TestContext context) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < 1024*1024*5; i++) {
@@ -112,7 +113,7 @@ public class ProtonClientTest extends MockServerTestBase {
         });
     }
 
-    @Test
+    @Test(timeout = 20000)
     public void testReceiverAsyncSettle(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
@@ -238,6 +239,35 @@ public class ProtonClientTest extends MockServerTestBase {
                 async.complete();
             })
             .open();
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testAnonymousSenderEnforcesMessageHasAddress(TestContext context) {
+        Async async = context.async();
+        connect(context, connection->{
+            ProtonSender sender = connection.createSender(null);
+            Message messageWithNoAddress = Proton.message();
+            try {
+                sender.send(tag("t1"), messageWithNoAddress);
+                context.fail("Send should have thrown IAE due to lack of message address");
+            } catch (IllegalArgumentException iae) {
+                // Expected
+                connection.disconnect();
+                async.complete();
+            }
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testNonAnonymousSenderDoesNotEnforceMessageHasAddress(TestContext context) {
+        Async async = context.async();
+        connect(context, connection->{
+            ProtonSender sender = connection.createSender(MockServer.Addresses.drop.toString());
+            Message messageWithNoAddress = Proton.message();
+            sender.send(tag("t1"), messageWithNoAddress);
+            connection.disconnect();
+            async.complete();
         });
     }
 

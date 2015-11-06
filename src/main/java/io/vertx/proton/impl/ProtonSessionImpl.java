@@ -163,6 +163,10 @@ public class ProtonSessionImpl implements ProtonSession {
         sender.setTarget(target);
 
         ProtonSenderImpl s = new ProtonSenderImpl(sender);
+        if(address == null) {
+            s.setAnonymousSender(true);
+        }
+
         //TODO: set explicit defaults for settle mode etc?
         return s;
     }
