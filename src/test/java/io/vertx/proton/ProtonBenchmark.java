@@ -35,7 +35,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         connect(context, connection ->
         {
             ProtonSender sender =
-                connection.session().open().sender()
+                connection.session().open().createSender(MockServer.Addresses.drop.toString())
                     .setQoS(ProtonQoS.AT_LEAST_ONCE)
                     .open();
 
@@ -64,7 +64,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         connect(context, connection ->
         {
             ProtonSender sender =
-                connection.session().open().sender()
+                connection.session().open().createSender(MockServer.Addresses.drop.toString())
                     .setQoS(ProtonQoS.AT_MOST_ONCE)
                     .open();
 
@@ -92,7 +92,7 @@ public class ProtonBenchmark extends MockServerTestBase {
         connect(context, connection ->
         {
             ProtonSession session = connection.session().open();
-            ProtonSender sender = session.sender().open();
+            ProtonSender sender = session.createSender(MockServer.Addresses.echo.toString()).open();
 
             byte[] tag = tag("m1");
             Message message = message("echo", "Hello World");

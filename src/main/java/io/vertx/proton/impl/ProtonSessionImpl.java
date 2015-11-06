@@ -119,29 +119,15 @@ public class ProtonSessionImpl implements ProtonSession {
         return this;
     }
 
-    @Override
-    public ProtonSender sender() {
-        return sender(generateLinkName());
-    }
-
     private String generateLinkName() {
         //TODO: include useful details in name, like address and container?
         return "auto-"+(autoLinkCounter++);
     }
 
     @Override
-    public ProtonSender sender(String name) {
-        Sender sender = session.sender(name);
-        if (sender.getContext() != null) {
-            return (ProtonSender) sender.getContext();
-        } else {
-            return new ProtonSenderImpl(sender);
-        }
-    }
-
-    @Override
     public ProtonReceiver createReceiver(String address) {
         //TODO: add options for configuring things like link name etc?
+        //TODO: add a default close/error handler?
         Receiver receiver = session.receiver(generateLinkName());
 
         Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
@@ -159,6 +145,26 @@ public class ProtonSessionImpl implements ProtonSession {
         ProtonReceiverImpl r = new ProtonReceiverImpl(receiver);
         //TODO: set explicit defaults for settle mode etc?
         return r;
+    }
+
+    @Override
+    public ProtonSender createSender(String address) {
+        //TODO: add a default close/error handler?
+        Sender sender = session.sender(generateLinkName());
+
+        Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
+        Source source = new Source();
+        source.setOutcomes(outcomes);
+
+        Target target = new Target();
+        target.setAddress(address);
+
+        sender.setSource(source);
+        sender.setTarget(target);
+
+        ProtonSenderImpl s = new ProtonSenderImpl(sender);
+        //TODO: set explicit defaults for settle mode etc?
+        return s;
     }
 
     /////////////////////////////////////////////////////////////////////////////

@@ -104,7 +104,7 @@ public class ProtonClientTest extends MockServerTestBase {
                 .flow(10)
                 .open();
 
-            session.sender()
+            session.createSender(MockServer.Addresses.echo.toString())
                 .open()
                 .send(tag(""), message("echo", data));
 

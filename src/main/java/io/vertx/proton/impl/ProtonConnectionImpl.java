@@ -203,22 +203,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     @Override
     public ProtonSender createSender(String address) {
-        //TODO: move most of this into the session for reuse.
-
-        //TODO: add a default close/error handler?
-        ProtonSender sender = getDefaultSession().sender();
-
-        Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
-        Source source = new Source();
-        source.setOutcomes(outcomes);
-
-        Target target = new Target();
-        target.setAddress(address);
-
-        sender.setSource(source);
-        sender.setTarget(target);
-
-        return sender;
+        return getDefaultSession().createSender(address);
     }
 
     @Override

@@ -93,6 +93,9 @@ public class MockServer {
                         }
                         break;
                     }
+                    case drop:{
+                        sender.open();
+                    }
                     default:
                         sender.setCondition(condition("Unknown address")).close();
                 }
