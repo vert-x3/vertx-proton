@@ -21,6 +21,7 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetClient;
@@ -186,8 +187,20 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     private ProtonSession getDefaultSession() {
         if( defaultSession == null ) {
-            defaultSession = new ProtonSessionImpl(connection.session());
-            //TODO: add a default close/error handler?
+            defaultSession = createSession();
+            defaultSession.closeHandler(result -> {
+                String msg = "The connections default session closed unexpectedly";
+                if(!result.succeeded()) {
+                    msg += ": ";
+                    msg += ": " +String.valueOf(result.cause());
+                }
+                Future<ProtonConnection> failure = Future.failedFuture(msg);
+                Handler<AsyncResult<ProtonConnection>> connCloseHandler = closeHandler;
+                if(connCloseHandler != null) {
+                    connCloseHandler.handle(failure);
+                }
+            });
+
             defaultSession.open();
         }
         return defaultSession;
