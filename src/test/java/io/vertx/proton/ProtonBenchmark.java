@@ -36,6 +36,8 @@ public class ProtonBenchmark extends MockServerTestBase {
         Async async = context.async();
         connect(context, connection ->
         {
+            connection.open();
+
             ProtonSender sender =
                 connection.createSender(MockServer.Addresses.drop.toString())
                     .setQoS(ProtonQoS.AT_LEAST_ONCE)
@@ -62,11 +64,13 @@ public class ProtonBenchmark extends MockServerTestBase {
 
     @Test
     public void benchmarkAtMostOnceSendThroughput(TestContext context) {
-        server.setProducerCredits(100000);
+        server.setProducerCredits(5000);
 
         Async async = context.async();
         connect(context, connection ->
         {
+            connection.open();
+
             ProtonSender sender =
                 connection.createSender(MockServer.Addresses.drop.toString())
                     .setQoS(ProtonQoS.AT_MOST_ONCE)
@@ -98,6 +102,8 @@ public class ProtonBenchmark extends MockServerTestBase {
         Async async = context.async();
         connect(context, connection ->
         {
+            connection.open();
+
             ProtonSender sender = connection.createSender(MockServer.Addresses.echo.toString()).open();
 
             byte[] tag = tag("m1");

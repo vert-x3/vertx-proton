@@ -48,6 +48,7 @@ public class ProtonSessionImpl implements ProtonSession {
     ProtonSessionImpl(Session session) {
         this.session = session;
         this.session.setContext(this);
+        session.setIncomingCapacity(Integer.MAX_VALUE);
     }
 
     public ProtonConnectionImpl getConnectionImpl() {

@@ -44,6 +44,7 @@ class ProtonTransport extends BaseHandler {
         this.vertx = vertx;
         this.netClient = netClient;
         this.socket = socket;
+        transport.setMaxFrameSize(1024 * 32); //TODO: make configurable
         transport.bind(connection);
         connection.collect(collector);
         socket.endHandler(this::handleSocketEnd);

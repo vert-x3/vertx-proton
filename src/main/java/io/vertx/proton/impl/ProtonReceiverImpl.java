@@ -82,6 +82,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     //
     /////////////////////////////////////////////////////////////////////////////
     protected ByteArrayOutputStream current = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024];
 
     void onDelivery() {
         if (this.handler == null) {
@@ -93,13 +94,13 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
         if( delivery != null ) {
             int count;
-            byte[] buffer = new byte[1024];
             while ((count = receiver.recv(buffer, 0, buffer.length)) > 0) {
                 current.write(buffer, 0, count);
             }
 
-            // Expecting more deliveries..
-            if (count == 0) {
+            if (delivery.isPartial()) {
+                // Delivery is not yet completely received,
+                // return and allow further frames to arrive.
                 return;
             }
 
@@ -109,10 +110,9 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
             Message msg = Proton.message();
             msg.decode(data, 0, data.length);
 
-            delivery.setContext(msg);
-
             receiver.advance();
 
+            //TODO: (re)move, this isn't safe to do here
             delivery.disposition(new Accepted());
 
             ProtonDeliveryImpl impl = new ProtonDeliveryImpl(delivery);

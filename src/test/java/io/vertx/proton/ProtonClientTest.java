@@ -55,6 +55,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testRemoteDisconnectHandling(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
+            connection.open();
             context.assertFalse(connection.isDisconnected());
             connection.disconnectHandler(x ->{
                 context.assertTrue(connection.isDisconnected());
@@ -98,6 +99,7 @@ public class ProtonClientTest extends MockServerTestBase {
     private void sendReceiveEcho(TestContext context, String data) {
         Async async = context.async();
         connect(context, connection -> {
+            connection.open();
             connection.createReceiver(MockServer.Addresses.echo.toString())
                 .handler((d, m) -> {
                     String actual = (String) (getMessageBody(context, m));
@@ -120,7 +122,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testReceiverAsyncSettle(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
-
+            connection.open();
             AtomicInteger counter = new AtomicInteger(0);
             connection.createReceiver(MockServer.Addresses.two_messages.toString())
                 .asyncHandler((d, m, settle) -> {
@@ -162,7 +164,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testReceiverAsyncSettleAfterReceivingMultipleMessages(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
-
+            connection.open();
             AtomicInteger counter = new AtomicInteger(0);
             connection.createReceiver(MockServer.Addresses.five_messages.toString())
                 .asyncHandler((d, m, settle) -> {
@@ -247,6 +249,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testAnonymousSenderEnforcesMessageHasAddress(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
+            connection.open();
             ProtonSender sender = connection.createSender(null);
             Message messageWithNoAddress = Proton.message();
             try {
@@ -264,6 +267,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testNonAnonymousSenderDoesNotEnforceMessageHasAddress(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
+            connection.open();
             ProtonSender sender = connection.createSender(MockServer.Addresses.drop.toString());
             Message messageWithNoAddress = Proton.message();
             sender.send(tag("t1"), messageWithNoAddress);
