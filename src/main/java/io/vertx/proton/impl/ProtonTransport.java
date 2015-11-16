@@ -17,6 +17,7 @@ import org.apache.qpid.proton.engine.Collector;
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
+import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Transport;
 
 import java.nio.ByteBuffer;
@@ -66,7 +67,13 @@ class ProtonTransport extends BaseHandler {
         Event protonEvent = null;
         while ((protonEvent = collector.peek()) != null) {
             ProtonConnectionImpl connnection = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
-            switch (protonEvent.getType()) {
+
+            Type eventType = protonEvent.getType();
+            if (LOG.isTraceEnabled() && !eventType.equals(Type.TRANSPORT)) {
+                LOG.trace("New Proton Event: {0}", eventType);
+            }
+
+            switch (eventType) {
                 case CONNECTION_REMOTE_OPEN: {
                     connnection.fireRemoteOpen();
                     initiateIdleTimeoutChecks();
