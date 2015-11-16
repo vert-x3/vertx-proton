@@ -21,8 +21,11 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
@@ -35,15 +38,27 @@ import io.vertx.proton.ProtonSession;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ProtonConnectionImpl implements ProtonConnection {
+    private static Logger LOG = LoggerFactory.getLogger(ProtonConnectionImpl.class);
+
     public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
 
     private final Connection connection = Proton.connection();
     private final Vertx vertx;
     private ProtonTransport transport;
 
-    private Handler<AsyncResult<ProtonConnection>> openHandler;
-    private Handler<AsyncResult<ProtonConnection>> closeHandler;
-    private Handler<ProtonConnection> disconnectHandler;
+    private Handler<AsyncResult<ProtonConnection>> openHandler = (result) -> {
+        LOG.trace("Connection open completed");
+    };
+    private Handler<AsyncResult<ProtonConnection>> closeHandler = (result) -> {
+        if(result.succeeded()) {
+            LOG.trace("Connection closed");
+        } else {
+            LOG.warn("Connection closed with error", result.cause());
+        }
+    };
+    private Handler<ProtonConnection> disconnectHandler = (connection) -> {
+        LOG.trace("Connection disconnected");
+    };
 
     private Handler<ProtonSession> sessionOpenHandler = (session) -> {
         session.setCondition(new ErrorCondition(Symbol.getSymbol("Not Supported"), ""));
@@ -186,9 +201,23 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
     private ProtonSession getDefaultSession() {
         if( defaultSession == null ) {
-            defaultSession = new ProtonSessionImpl(connection.session());
-            //TODO: add a default close/error handler?
+            defaultSession = createSession();
+            defaultSession.closeHandler(result -> {
+                String msg = "The connections default session closed unexpectedly";
+                if(!result.succeeded()) {
+                    msg += ": ";
+                    msg += ": " +String.valueOf(result.cause());
+                }
+                Future<ProtonConnection> failure = Future.failedFuture(msg);
+                Handler<AsyncResult<ProtonConnection>> connCloseHandler = closeHandler;
+                if(connCloseHandler != null) {
+                    connCloseHandler.handle(failure);
+                }
+            });
+
             defaultSession.open();
+            // Deliberately not flushing, the sender/receiver open
+            // call will do that (if it doesn't happen otherwise).
         }
         return defaultSession;
     }

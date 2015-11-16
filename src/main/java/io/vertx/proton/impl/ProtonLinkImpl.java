@@ -257,7 +257,6 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
         if (openHandler != null) {
             openHandler.handle(ProtonHelper.future(self(), getRemoteCondition()));
         }
-        fireLinkFlow();
     }
 
     void fireRemoteClose() {

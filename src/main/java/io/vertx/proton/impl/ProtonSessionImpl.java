@@ -6,6 +6,8 @@ package io.vertx.proton.impl;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
@@ -28,15 +30,25 @@ import org.apache.qpid.proton.engine.Session;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ProtonSessionImpl implements ProtonSession {
+    private static Logger LOG = LoggerFactory.getLogger(ProtonSessionImpl.class);
 
     private final Session session;
     private int autoLinkCounter =0;
-    private Handler<AsyncResult<ProtonSession>> openHandler;
-    private Handler<AsyncResult<ProtonSession>> closeHandler;
+    private Handler<AsyncResult<ProtonSession>> openHandler = (result) -> {
+        LOG.trace("Session open completed");
+    };
+    private Handler<AsyncResult<ProtonSession>> closeHandler = (result) -> {
+        if(result.succeeded()) {
+            LOG.trace("Session closed");
+        } else {
+            LOG.warn("Session closed with error", result.cause());
+        }
+    };
 
     ProtonSessionImpl(Session session) {
         this.session = session;
         this.session.setContext(this);
+        session.setIncomingCapacity(Integer.MAX_VALUE);
     }
 
     public ProtonConnectionImpl getConnectionImpl() {
@@ -144,6 +156,17 @@ public class ProtonSessionImpl implements ProtonSession {
 
         ProtonReceiverImpl r = new ProtonReceiverImpl(receiver);
         //TODO: set explicit defaults for settle mode etc?
+        r.openHandler((result) -> {
+            LOG.trace("Receiver open completed");
+        });
+        r.closeHandler((result) -> {
+            if(result.succeeded()) {
+                LOG.trace("Receiver closed");
+            } else {
+                LOG.warn("Receiver closed with error", result.cause());
+            }
+        });
+
         return r;
     }
 
@@ -166,6 +189,17 @@ public class ProtonSessionImpl implements ProtonSession {
         if(address == null) {
             s.setAnonymousSender(true);
         }
+
+        s.openHandler((result) -> {
+            LOG.trace("Sender open completed");
+        });
+        s.closeHandler((result) -> {
+            if(result.succeeded()) {
+                LOG.trace("Sender closed");
+            } else {
+                LOG.warn("Sender closed with error", result.cause());
+            }
+        });
 
         //TODO: set explicit defaults for settle mode etc?
         return s;

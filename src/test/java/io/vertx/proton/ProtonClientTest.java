@@ -4,6 +4,8 @@
 package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
@@ -14,11 +16,14 @@ import io.vertx.proton.impl.ProtonServerImpl;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.vertx.proton.ProtonHelper.message;
@@ -50,6 +55,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testRemoteDisconnectHandling(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
+            connection.open();
             context.assertFalse(connection.isDisconnected());
             connection.disconnectHandler(x ->{
                 context.assertTrue(connection.isDisconnected());
@@ -93,6 +99,7 @@ public class ProtonClientTest extends MockServerTestBase {
     private void sendReceiveEcho(TestContext context, String data) {
         Async async = context.async();
         connect(context, connection -> {
+            connection.open();
             connection.createReceiver(MockServer.Addresses.echo.toString())
                 .handler((d, m) -> {
                     String actual = (String) (getMessageBody(context, m));
@@ -115,7 +122,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testReceiverAsyncSettle(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
-
+            connection.open();
             AtomicInteger counter = new AtomicInteger(0);
             connection.createReceiver(MockServer.Addresses.two_messages.toString())
                 .asyncHandler((d, m, settle) -> {
@@ -157,7 +164,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testReceiverAsyncSettleAfterReceivingMultipleMessages(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
-
+            connection.open();
             AtomicInteger counter = new AtomicInteger(0);
             connection.createReceiver(MockServer.Addresses.five_messages.toString())
                 .asyncHandler((d, m, settle) -> {
@@ -242,6 +249,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testAnonymousSenderEnforcesMessageHasAddress(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
+            connection.open();
             ProtonSender sender = connection.createSender(null);
             Message messageWithNoAddress = Proton.message();
             try {
@@ -259,6 +267,7 @@ public class ProtonClientTest extends MockServerTestBase {
     public void testNonAnonymousSenderDoesNotEnforceMessageHasAddress(TestContext context) {
         Async async = context.async();
         connect(context, connection->{
+            connection.open();
             ProtonSender sender = connection.createSender(MockServer.Addresses.drop.toString());
             Message messageWithNoAddress = Proton.message();
             sender.send(tag("t1"), messageWithNoAddress);
@@ -274,11 +283,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
         ProtonServer protonServer = null;
         try {
-            protonServer = ProtonServer.create(vertx);
-            protonServer.connectHandler((serverConnection) -> processConnectionAnonymousSenderSpecifiesLinkTarget(context, async, serverConnection));
-            FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
-            protonServer.listen(0, handler);
-            handler.get();
+            protonServer = createServer((serverConnection) -> processConnectionAnonymousSenderSpecifiesLinkTarget(context, async, serverConnection));
 
             ProtonClient client = ProtonClient.create(vertx);
             client.connect("localhost", protonServer.actualPort(), res -> {
@@ -329,6 +334,93 @@ public class ProtonClientTest extends MockServerTestBase {
         serverConnection.openHandler(result -> {
             serverConnection.open();
         });
+    }
+
+    @Test(timeout = 20000)
+    public void testRemoteCloseDefaultSessionWithError(TestContext context) throws Exception {
+        remoteCloseDefaultSessionTestImpl(context, true);
+    }
+
+    @Test(timeout = 20000)
+    public void testRemoteCloseDefaultSessionWithoutError(TestContext context) throws Exception {
+        remoteCloseDefaultSessionTestImpl(context, false);
+    }
+
+    private void remoteCloseDefaultSessionTestImpl(TestContext context, boolean sessionError)
+            throws InterruptedException, ExecutionException {
+        server.close();
+        Async async = context.async();
+
+        ProtonServer protonServer = null;
+        try {
+            protonServer = createServer(serverConnection -> {
+                Future<ProtonSession> sessionFuture = Future.<ProtonSession>future();
+                // Expect a session to open, when the sender is created by the client
+                serverConnection.sessionOpenHandler(serverSession -> {
+                    LOG.trace("Server session open");
+                    serverSession.open();
+                    sessionFuture.complete(serverSession);
+                    });
+                // Expect a receiver link, then close the session after opening it.
+                serverConnection.receiverOpenHandler(serverReceiver -> {
+                    LOG.trace("Server receiver open");
+                    serverReceiver.flow(10).open();
+
+                    context.assertTrue(sessionFuture.succeeded(), "Session future not [yet] succeeded");
+                    LOG.trace("Server session close");
+                    ProtonSession s = sessionFuture.result();
+                    if (sessionError) {
+                        ErrorCondition error = new ErrorCondition();
+                        error.setCondition(AmqpError.INTERNAL_ERROR);
+                        error.setDescription("error description");
+                        s.setCondition(error);
+                    }
+                    s.close();
+                });
+                LOG.trace("Server connection open");
+                serverConnection.open();
+            });
+
+            //===== Client Handling  =====
+
+            ProtonClient client = ProtonClient.create(vertx);
+            client.connect("localhost", protonServer.actualPort(), res -> {
+                context.assertTrue(res.succeeded());
+
+                ProtonConnection connection =  res.result();
+                connection.openHandler(x -> {
+                        context.assertTrue(x.succeeded(), "Connection open failed");
+                        LOG.trace("Client connection opened");
+
+                        // Create a sender to provoke creation (and subsequent
+                        // closure of by the server) the connections default session
+                        connection.createSender(null).open();
+                    });
+                connection.closeHandler(x -> {
+                    LOG.debug("Connection close handler called: " + x.cause());
+                    async.complete();
+                   });
+                connection.open();
+            });
+
+            async.awaitSuccess();
+        } finally {
+            if (protonServer != null) {
+                protonServer.close();
+            }
+        }
+    }
+
+    private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException, ExecutionException {
+        ProtonServer server = ProtonServer.create(vertx);
+
+        server.connectHandler(serverConnHandler);
+
+        FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
+        server.listen(0, handler);
+        handler.get();
+
+        return server;
     }
 
     private void validateMessage(TestContext context, int count, Object expected, Message msg) {
