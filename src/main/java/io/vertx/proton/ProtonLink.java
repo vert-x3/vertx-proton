@@ -11,37 +11,6 @@ import org.apache.qpid.proton.amqp.transport.Target;
  */
 public interface ProtonLink<T extends ProtonLink> {
 
-    Target getTarget();
-
-    T setTarget(Target address);
-
-    T setTarget(String address);
-
-    Target getRemoteTarget();
-
-
-    Source getSource();
-
-    T setSource(Source address);
-
-    T setSource(String address);
-
-    Source getRemoteSource();
-
-
-    ProtonSession getSession();
-
-    ErrorCondition getCondition();
-
-
-    ErrorCondition getRemoteCondition();
-
-    ProtonQoS getQoS();
-    T setQoS(ProtonQoS qos);
-    ProtonQoS getRemoteQoS();
-
-    T setCondition(ErrorCondition condition);
-
     T open();
 
     T close();
@@ -51,4 +20,28 @@ public interface ProtonLink<T extends ProtonLink> {
     T closeHandler(Handler<AsyncResult<T>> closeHandler);
 
     boolean isOpen();
+
+    Target getTarget();
+
+    T setTarget(Target target);
+
+    Target getRemoteTarget();
+
+    Source getSource();
+
+    T setSource(Source source);
+
+    Source getRemoteSource();
+
+    ProtonSession getSession();
+
+    ErrorCondition getCondition();
+
+    T setCondition(ErrorCondition condition);
+
+    ErrorCondition getRemoteCondition();
+
+    ProtonQoS getQoS();
+    T setQoS(ProtonQoS qos);
+    ProtonQoS getRemoteQoS();
 }
