@@ -15,4 +15,5 @@ public interface ProtonDelivery {
   ProtonDelivery disposition(DeliveryState state);
   DeliveryState getRemoteState();
 
+  boolean remotelySettled();
 }

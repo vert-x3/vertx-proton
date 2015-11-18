@@ -37,6 +37,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         return delivery.isSettled();
     }
 
+    @Override
     public boolean remotelySettled() {
         return delivery.remotelySettled();
     }
