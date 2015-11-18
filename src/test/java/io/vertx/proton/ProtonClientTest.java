@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.vertx.proton.ProtonHelper.message;
@@ -124,8 +125,15 @@ public class ProtonClientTest extends MockServerTestBase {
         connect(context, connection -> {
             connection.open();
             AtomicInteger counter = new AtomicInteger(0);
-            connection.createReceiver(MockServer.Addresses.two_messages.toString())
-                .asyncHandler((d, m, settle) -> {
+            AtomicBoolean msgAccepted = new AtomicBoolean();
+            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.two_messages.toString());
+
+            // Set the receiver not to auto-accept messages after the handler runs
+            // and in turn not auto-settle, or replenish the credit used. We will
+            // accept+settle the message manually at a later point.
+            receiver.setAutoAccept(false);
+
+            receiver.handler((d, m) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
                         case 1: {
@@ -134,7 +142,8 @@ public class ProtonClientTest extends MockServerTestBase {
                             // On 1st message
                             // lets delay the settlement and credit..
                             vertx.setTimer(1000, x -> {
-                                settle.run();
+                                d.accept(true);
+                                msgAccepted.set(true);
                             });
 
                             // We only flowed 1 credit, so we should not get
@@ -147,6 +156,8 @@ public class ProtonClientTest extends MockServerTestBase {
                         }
                         case 2: {
                             validateMessage(context, count, "World", m);
+                            context.assertTrue(msgAccepted.get(), "Earlier message was not yet accepted+settled,"
+                                    + " should not have recieved message 2 yet!");
 
                             // On 2nd message.. lets finish the test..
                             async.complete();
@@ -166,8 +177,15 @@ public class ProtonClientTest extends MockServerTestBase {
         connect(context, connection -> {
             connection.open();
             AtomicInteger counter = new AtomicInteger(0);
-            connection.createReceiver(MockServer.Addresses.five_messages.toString())
-                .asyncHandler((d, m, settle) -> {
+            AtomicBoolean msgAccepted = new AtomicBoolean();
+            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.five_messages.toString());
+
+            // Set the receiver not to auto-accept messages after the handler runs
+            // and in turn not auto-settle, or replenish the credit used. We will
+            // accept+settle the message manually at a later point.
+            receiver.setAutoAccept(false);
+
+            receiver.handler((d, m) -> {
                     int count = counter.incrementAndGet();
                     switch (count) {
                         case 1: // Fall-through
@@ -179,12 +197,13 @@ public class ProtonClientTest extends MockServerTestBase {
                         case 4: {
                             validateMessage(context, count, String.valueOf(count), m);
 
-                            // We only issued 4 credits, so we should not get any more messages
-                            // until a previous one is settled and a credit flow issued, use the
-                            // callback for this msg to do that.
+                            // We only issue 4 credits, so we should not get more
+                            // messages until one is acked and a credit flowed, use
+                            // the callback for this msg to do that
                             vertx.setTimer(1000, x -> {
                                 LOG.trace("Settling msg 4 and flowing more credit");
-                                settle.run();
+                                d.accept(true);
+                                msgAccepted.set(true);
                             });
 
                             // Check that we haven't processed any more messages before then
@@ -196,6 +215,8 @@ public class ProtonClientTest extends MockServerTestBase {
                         }
                         case 5: {
                             validateMessage(context, count, String.valueOf(count), m);
+                            context.assertTrue(msgAccepted.get(), "An earlier message was not yet accepted+settled,"
+                                                                    + " should not have recieved message 5 yet!");
 
                             // Got the last message, lets finish the test.
                             LOG.trace("Got msg 5, completing async");
