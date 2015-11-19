@@ -9,8 +9,6 @@ import io.vertx.core.Future;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 
@@ -57,17 +55,4 @@ public interface ProtonHelper {
             return Future.succeededFuture(null);
         }
     }
-
-    public static Target target(String address) {
-        Target value = new Target();
-        value.setAddress(address);
-        return value;
-    }
-
-    public static Source source(String address) {
-        Source value = new Source();
-        value.setAddress(address);
-        return value;
-    }
-
 }

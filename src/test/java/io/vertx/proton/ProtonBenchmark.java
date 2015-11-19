@@ -51,7 +51,9 @@ public class ProtonBenchmark extends MockServerTestBase {
                 sender.sendQueueDrainHandler(s -> {
                     while (!sender.sendQueueFull()) {
                         sender.send(tag, message, d -> {
-                            counter.incrementAndGet();
+                            if(d.remotelySettled()) {
+                                counter.incrementAndGet();
+                            }
                         });
                     }
                 });

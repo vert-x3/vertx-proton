@@ -12,7 +12,11 @@ public interface ProtonDelivery {
   int getMessageFormat();
 
   DeliveryState getLocalState();
+  ProtonDelivery accept(boolean settle);
   ProtonDelivery disposition(DeliveryState state);
   DeliveryState getRemoteState();
 
+  ProtonDelivery settle();
+
+  boolean remotelySettled();
 }

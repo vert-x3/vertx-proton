@@ -17,9 +17,6 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
 
-import static io.vertx.proton.ProtonHelper.source;
-import static io.vertx.proton.ProtonHelper.target;
-
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
@@ -88,14 +85,9 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     }
 
     @Override
-    public T setTarget(Target address) {
-        link.setTarget(address);
+    public T setTarget(Target target) {
+        link.setTarget(target);
         return self();
-    }
-
-    @Override
-    public T setTarget(String address) {
-        return setTarget(target(address));
     }
 
     @Override
@@ -109,16 +101,10 @@ abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
     }
 
     @Override
-    public T setSource(Source address) {
-        link.setSource(address);
+    public T setSource(Source source) {
+        link.setSource(source);
         return self();
     }
-
-    @Override
-    public T setSource(String address) {
-        return setSource(source(address));
-    }
-
 
     public int getUnsettled() {
         return link.getUnsettled();
