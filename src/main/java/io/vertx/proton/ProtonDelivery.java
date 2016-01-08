@@ -11,9 +11,24 @@ public interface ProtonDelivery {
 
   int getMessageFormat();
 
-  DeliveryState getLocalState();
-  ProtonDelivery accept(boolean settle);
+  /**
+   * Updates the DeliveryState
+   *
+   * @param state the delivery state to apply
+   * @return itself
+   */
   ProtonDelivery disposition(DeliveryState state);
+
+  /**
+   * Updates the DeliveryState, and optionally settle the delivery as well.
+   *
+   * @param state the delivery state to apply
+   * @param settle whether to {@link #settle()} the delivery at the same time
+   * @return itself
+   */
+  ProtonDelivery disposition(DeliveryState state, boolean settle);
+
+  DeliveryState getLocalState();
   DeliveryState getRemoteState();
 
   ProtonDelivery settle();

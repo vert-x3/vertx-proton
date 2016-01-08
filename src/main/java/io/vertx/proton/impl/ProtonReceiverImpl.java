@@ -10,6 +10,8 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.message.Message;
 
+import static io.vertx.proton.ProtonHelper.accepted;
+
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -110,7 +112,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
             handler.handle(delImpl, msg);
             if (autoAccept) {
                 //TODO: check that the message didn't already have other state applied?
-                delImpl.accept(autoSettle);
+                accepted(delImpl, autoSettle);
             }
         }
     }

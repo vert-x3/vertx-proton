@@ -27,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.vertx.proton.ProtonHelper.accepted;
 import static io.vertx.proton.ProtonHelper.message;
 import static io.vertx.proton.ProtonHelper.tag;
 
@@ -142,7 +143,7 @@ public class ProtonClientTest extends MockServerTestBase {
                             // On 1st message
                             // lets delay the settlement and credit..
                             vertx.setTimer(1000, x -> {
-                                d.accept(true);
+                                accepted(d, true);
                                 msgAccepted.set(true);
                             });
 
@@ -202,7 +203,7 @@ public class ProtonClientTest extends MockServerTestBase {
                             // the callback for this msg to do that
                             vertx.setTimer(1000, x -> {
                                 LOG.trace("Settling msg 4 and flowing more credit");
-                                d.accept(true);
+                                accepted(d, true);
                                 msgAccepted.set(true);
                             });
 

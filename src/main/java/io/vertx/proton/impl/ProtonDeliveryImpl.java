@@ -89,13 +89,13 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         return delivery.isBuffered();
     }
 
-    //TODO: remove this method
     @Override
     public ProtonDelivery disposition(DeliveryState state) {
-        disposition(state, true);
+        disposition(state, false);
         return this;
     }
 
+    @Override
     public ProtonDelivery disposition(DeliveryState state, boolean settle) {
         delivery.disposition(state);
         if(settle) {
@@ -141,12 +141,5 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
     public ProtonLinkImpl getLinkImpl() {
         return (ProtonLinkImpl) delivery.getLink().getContext();
-    }
-
-    //TODO: move to an 'incoming delivery' interface ?
-    @Override
-    public ProtonDelivery accept(boolean settle) {
-        disposition(Accepted.getInstance(), settle);
-        return this;
     }
 }
