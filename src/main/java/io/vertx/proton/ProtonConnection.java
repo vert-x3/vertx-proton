@@ -55,7 +55,8 @@ public interface ProtonConnection {
   /**
    * Allows querying (once the connection has remotely opened) whether the peer
    * advertises support for the anonymous relay (sender with null address).
-   * @return
+   *
+   * @return true if the peer advertised support for the anonymous relay
    */
   boolean isAnonymousRelaySupported();
 

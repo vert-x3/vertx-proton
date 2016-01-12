@@ -8,7 +8,11 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Released;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.message.Message;
 
@@ -54,5 +58,29 @@ public interface ProtonHelper {
         } else {
             return Future.succeededFuture(null);
         }
+    }
+
+    public static ProtonDelivery accepted(ProtonDelivery delivery, boolean settle) {
+        delivery.disposition(Accepted.getInstance(), settle);
+        return delivery;
+    }
+
+    public static ProtonDelivery rejected(ProtonDelivery delivery, boolean settle) {
+        delivery.disposition(new Rejected(), settle);
+        return delivery;
+    }
+
+    public static ProtonDelivery released(ProtonDelivery delivery, boolean settle) {
+        delivery.disposition(Released.getInstance(), settle);
+        return delivery;
+    }
+
+    public static ProtonDelivery modified(ProtonDelivery delivery, boolean settle, boolean deliveryFailed, boolean undeliverableHere) {
+        Modified modified = new Modified();
+        modified.setDeliveryFailed(deliveryFailed);
+        modified.setUndeliverableHere(undeliverableHere);
+
+        delivery.disposition(modified, settle);
+        return delivery;
     }
 }
