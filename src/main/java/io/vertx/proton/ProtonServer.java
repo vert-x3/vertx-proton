@@ -14,6 +14,10 @@ public interface ProtonServer {
     return new ProtonServerImpl(vertx);
   }
 
+  static ProtonServer create(Vertx vertx, ProtonServerOptions options) {
+      return new ProtonServerImpl(vertx, options);
+  }
+
   int actualPort();
 
   ProtonServer listen(int port);

@@ -15,4 +15,6 @@ public interface ProtonClient {
   }
 
   void connect(String host, int port, Handler<AsyncResult<ProtonConnection>> connectionHandler);
+
+  void connect(ProtonClientOptions options, String host, int port, Handler<AsyncResult<ProtonConnection>> connectionHandler);
 }

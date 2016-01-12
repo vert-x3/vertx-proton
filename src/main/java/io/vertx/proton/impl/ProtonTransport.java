@@ -39,6 +39,8 @@ class ProtonTransport extends BaseHandler {
 
     private volatile Long idleTimeoutCheckTimerId; //TODO: cancel when closing etc?
 
+    private boolean failed;
+
     ProtonTransport(Connection connection, Vertx vertx, NetClient netClient, NetSocket socket) {
         this.connection = connection;
         this.vertx = vertx;
@@ -127,6 +129,10 @@ class ProtonTransport extends BaseHandler {
                     }
                     break;
                 }
+                case TRANSPORT_ERROR: {
+                    failed = true;
+                    break;
+                }
 
                 case CONNECTION_INIT:
                 case CONNECTION_BOUND:
@@ -164,6 +170,11 @@ class ProtonTransport extends BaseHandler {
     }
 
     private void pumpInbound(ByteBuffer bytes) {
+        if(failed) {
+            LOG.trace("Skipping processing of data following transport error: {0}", bytes);
+            return;
+        }
+
         // Lets push bytes from vert.x to proton engine.
         ByteBuffer inputBuffer = transport.getInputBuffer();
         while (bytes.hasRemaining() && inputBuffer.hasRemaining()) {

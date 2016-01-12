@@ -17,6 +17,7 @@ import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
+import io.vertx.proton.ProtonServerOptions;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -31,6 +32,11 @@ public class ProtonServerImpl implements ProtonServer {
     public ProtonServerImpl(Vertx vertx) {
         this.vertx = vertx;
         this.server = this.vertx.createNetServer();
+    }
+
+    public ProtonServerImpl(Vertx vertx, ProtonServerOptions options) {
+        this.vertx = vertx;
+        this.server = this.vertx.createNetServer(options);
     }
 
     public int actualPort() {
