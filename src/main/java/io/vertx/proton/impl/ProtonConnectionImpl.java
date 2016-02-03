@@ -322,12 +322,12 @@ public class ProtonConnectionImpl implements ProtonConnection {
         }
     }
 
-    void bind(NetClient client, NetSocket socket) {
-        transport = new ProtonTransport(connection, vertx, client, socket);
+    void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator) {
+        transport = new ProtonTransport(connection, vertx, client, socket, authenticator);
     }
 
-    void bind(NetSocket socket) {
-        bind(null, socket);
+    void bindServer(NetSocket socket, ProtonSaslServerAuthenticatorImpl authenticator) {
+        transport = new ProtonTransport(connection, vertx, null, socket, authenticator);
     }
 
     void fireRemoteSessionOpen(Session session) {

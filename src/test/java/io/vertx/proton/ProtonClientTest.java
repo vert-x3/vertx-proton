@@ -399,8 +399,10 @@ public class ProtonClientTest extends MockServerTestBase {
                     }
                     s.close();
                 });
-                LOG.trace("Server connection open");
-                serverConnection.open();
+                serverConnection.openHandler(result -> {
+                    LOG.trace("Server connection open");
+                    serverConnection.open();
+                });
             });
 
             //===== Client Handling  =====
@@ -419,7 +421,7 @@ public class ProtonClientTest extends MockServerTestBase {
                         connection.createSender(null).open();
                     });
                 connection.closeHandler(x -> {
-                    LOG.debug("Connection close handler called: " + x.cause());
+                    LOG.trace("Connection close handler called (as espected): " + x.cause());
                     async.complete();
                    });
                 connection.open();

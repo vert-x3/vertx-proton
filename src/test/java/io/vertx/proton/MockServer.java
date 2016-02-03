@@ -24,6 +24,10 @@ public class MockServer {
     private ProtonSender echoSender;
     private volatile int credits = 1000;
 
+    // Toggle to reuse a fixed port, e.g for capture.
+    private int bindPort = 0;
+    private boolean reuseAddress = false;
+
     enum Addresses {
         command,
         drop,
@@ -37,10 +41,12 @@ public class MockServer {
 
 
     public MockServer(Vertx vertx) throws ExecutionException, InterruptedException {
-        server = ProtonServer.create(vertx);
+        ProtonServerOptions protonServerOptions = new ProtonServerOptions();
+        protonServerOptions.setReuseAddress(reuseAddress);
+        server = ProtonServer.create(vertx, protonServerOptions);
         server.connectHandler((connection) -> processConnection(vertx, connection));
         FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
-        server.listen(0, handler);
+        server.listen(bindPort, handler);
         handler.get();
     }
 

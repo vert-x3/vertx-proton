@@ -19,6 +19,7 @@ import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.TransportException;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -36,17 +37,22 @@ class ProtonTransport extends BaseHandler {
     private final NetSocket socket;
     private final Transport transport = Proton.transport();
     private final Collector collector = Proton.collector();
+    private ProtonSaslAuthenticator authenticator;
 
     private volatile Long idleTimeoutCheckTimerId; //TODO: cancel when closing etc?
 
     private boolean failed;
 
-    ProtonTransport(Connection connection, Vertx vertx, NetClient netClient, NetSocket socket) {
+    ProtonTransport(Connection connection, Vertx vertx, NetClient netClient, NetSocket socket, ProtonSaslAuthenticator authenticator) {
         this.connection = connection;
         this.vertx = vertx;
         this.netClient = netClient;
         this.socket = socket;
         transport.setMaxFrameSize(1024 * 32); //TODO: make configurable
+        if(authenticator != null) {
+            authenticator.init(transport);
+        }
+        this.authenticator = authenticator;
         transport.bind(connection);
         connection.collect(collector);
         socket.endHandler(this::handleSocketEnd);
@@ -155,7 +161,20 @@ class ProtonTransport extends BaseHandler {
             }
             collector.pop();
         }
+
+        processSaslAuthentication();
+
         flush();
+    }
+
+    private void processSaslAuthentication() {
+        if (authenticator == null) {
+            return;
+        }
+
+        if (authenticator.process()) {
+            authenticator = null;
+        }
     }
 
     private void initiateIdleTimeoutChecks() {
@@ -179,7 +198,11 @@ class ProtonTransport extends BaseHandler {
         ByteBuffer inputBuffer = transport.getInputBuffer();
         while (bytes.hasRemaining() && inputBuffer.hasRemaining()) {
             inputBuffer.put(bytes.get());
-            transport.processInput().checkIsOk();
+            try{
+                transport.processInput().checkIsOk();
+            } catch(TransportException te) {
+                failed = true;
+            }
         }
     }
 
