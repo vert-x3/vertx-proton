@@ -78,7 +78,6 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     protected ByteArrayOutputStream current = new ByteArrayOutputStream();
     byte[] buffer = new byte[1024];
     private boolean autoAccept = true;
-    private boolean autoSettle = true;
 
     void onDelivery() {
         if (this.handler == null) {
@@ -110,9 +109,8 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
             ProtonDeliveryImpl delImpl = new ProtonDeliveryImpl(delivery);
             handler.handle(delImpl, msg);
-            if (autoAccept) {
-                //TODO: check that the message didn't already have other state applied?
-                accepted(delImpl, autoSettle);
+            if (autoAccept && delivery.getLocalState() == null) {
+                accepted(delImpl, true);
             }
         }
     }
@@ -125,17 +123,6 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     @Override
     public ProtonReceiver setAutoAccept(boolean autoAccept) {
         this.autoAccept = autoAccept;
-        return this;
-    }
-
-    @Override
-    public boolean isAutoSettle() {
-        return autoSettle;
-    }
-
-    @Override
-    public ProtonReceiver setAutoSettle(boolean autoSettle) {
-        this.autoSettle = autoSettle;
         return this;
     }
 }
