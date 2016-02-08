@@ -6,7 +6,6 @@ package io.vertx.proton.impl;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.engine.Delivery;
 
@@ -17,6 +16,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
     private final Delivery delivery;
     private Handler<ProtonDelivery> handler;
+    private boolean autoSettle;
 
     ProtonDeliveryImpl(Delivery delivery) {
         this.delivery = delivery;
@@ -133,13 +133,26 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         return this;
     }
 
+    boolean isAutoSettle() {
+        return autoSettle;
+    }
+
+    void setAutoSettle(boolean autoSettle) {
+        this.autoSettle = autoSettle;
+    }
+
     void fireUpdate() {
         if( this.handler!=null ) {
             this.handler.handle(this);
+        }
+
+        if(autoSettle && delivery.remotelySettled() && !delivery.isSettled()) {
+            settle();
         }
     }
 
     public ProtonLinkImpl getLinkImpl() {
         return (ProtonLinkImpl) delivery.getLink().getContext();
     }
+
 }

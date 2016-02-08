@@ -19,6 +19,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
 
     private Handler<ProtonSender> drainHandler;
     private boolean anonymousSender;
+    private boolean autoSettle;
 
     ProtonSenderImpl(Sender sender) {
         super(sender);
@@ -29,7 +30,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
     }
 
     @Override
-    public void send(byte[] tag, Message message, Handler<ProtonDelivery> onReceived) {
+    public void send(byte[] tag, Message message, Handler<ProtonDelivery> onUpdated) {
         if(anonymousSender && message.getAddress() == null) {
             throw new IllegalArgumentException("Message must have an address when using anonymous sender.");
         }
@@ -53,17 +54,31 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         sender().send(encodedMessage, 0, len);
 
         //TODO: even if onRecieved is null, we shouldnt really settle if the link was established was SenderSettleMode.UNSETTLED
-        if( onReceived==null || link.getSenderSettleMode() == SenderSettleMode.SETTLED  ) {
+        if( onUpdated == null || link.getSenderSettleMode() == SenderSettleMode.SETTLED  ) {
             delivery.settle();
         }
         sender().advance(); // ends the delivery.
-        getSession().getConnectionImpl().flush();
 
-        new ProtonDeliveryImpl(delivery).handler(onReceived);
+        ProtonDeliveryImpl protonDeliveryImpl = new ProtonDeliveryImpl(delivery);
+        protonDeliveryImpl.setAutoSettle(autoSettle);
+        protonDeliveryImpl.handler(onUpdated);
+
+        getSession().getConnectionImpl().flush();
     }
 
     public void send(byte[] tag, Message message) {
         send(tag, message, null);
+    }
+
+    @Override
+    public boolean isAutoSettle() {
+        return autoSettle;
+    }
+
+    @Override
+    public ProtonSender setAutoSettle(boolean autoSettle) {
+        this.autoSettle = autoSettle;
+        return this;
     }
 
     public boolean isAnonymousSender() {
