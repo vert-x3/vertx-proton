@@ -242,7 +242,9 @@ public class ProtonClientSslTest {
             serverSender.open();
         });
 
-        LOG.trace("Server connection open");
-        serverConnection.open();
+        serverConnection.openHandler(serverSender -> {
+            LOG.trace("Server connection open");
+            serverConnection.open();
+        });
     }
 }

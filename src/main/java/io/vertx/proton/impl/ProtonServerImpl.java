@@ -116,8 +116,7 @@ public class ProtonServerImpl implements ProtonServer {
                     connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
                 }
 
-                connection.bind(netSocket);
-                handler.handle(connection);
+                connection.bindServer(netSocket, new ProtonSaslServerAuthenticatorImpl(handler, connection));
             }
         });
         return this;

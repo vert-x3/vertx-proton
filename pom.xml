@@ -15,6 +15,8 @@
 
     <properties>
         <stack.version>3.3.0-SNAPSHOT</stack.version>
+        <activemq.version>5.13.0</activemq.version>
+        <proton.version>0.11.1</proton.version>
     </properties>
 
     <dependencyManagement>
@@ -37,7 +39,7 @@
         <dependency>
             <groupId>org.apache.qpid</groupId>
             <artifactId>proton-j</artifactId>
-            <version>0.11.1</version>
+            <version>${proton.version}</version>
         </dependency>
 
         <dependency>
@@ -51,6 +53,27 @@
             <groupId>io.vertx</groupId>
             <artifactId>vertx-unit</artifactId>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-broker</artifactId>
+          <version>${activemq.version}</version>
+          <scope>test</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-amqp</artifactId>
+          <version>${activemq.version}</version>
+          <scope>test</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-jaas</artifactId>
+          <version>${activemq.version}</version>
+          <scope>test</scope>
         </dependency>
 
     </dependencies>

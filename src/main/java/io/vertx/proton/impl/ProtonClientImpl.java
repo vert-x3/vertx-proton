@@ -25,23 +25,36 @@ public class ProtonClientImpl implements ProtonClient {
     }
 
     public void connect(String host, int port, Handler<AsyncResult<ProtonConnection>> handler) {
-        final NetClient netClient = vertx.createNetClient();
-        connectNetClient(netClient, host, port, handler);
+        connect(host, port, null, null, handler);
+    }
+
+    public void connect(String host, int port, String username, String password, Handler<AsyncResult<ProtonConnection>> handler) {
+        connect(new ProtonClientOptions(), host, port, username, password, handler);
     }
 
     public void connect(ProtonClientOptions options, String host, int port, Handler<AsyncResult<ProtonConnection>> handler) {
-        final NetClient netClient = vertx.createNetClient(options);
-        connectNetClient(netClient, host, port, handler);
+        connect(options, host, port, null, null, handler);
     }
 
-    private void connectNetClient(NetClient netClient, String host, int port, Handler<AsyncResult<ProtonConnection>> handler) {
+    public void connect(ProtonClientOptions options, String host, int port, String username, String password, Handler<AsyncResult<ProtonConnection>> handler) {
+        final NetClient netClient = vertx.createNetClient(options);
+        connectNetClient(netClient, host, port, username, password, handler, options);
+    }
+
+    private void connectNetClient(NetClient netClient, String host, int port, String username, String password, Handler<AsyncResult<ProtonConnection>> connectHandler, ProtonClientOptions options) {
         netClient.connect(port, host, res -> {
             if (res.succeeded()) {
                 ProtonConnectionImpl amqpConnnection = new ProtonConnectionImpl(vertx, host);
-                amqpConnnection.bind(netClient, res.result());
-                handler.handle(Future.succeededFuture(amqpConnnection));
+
+                ProtonSaslClientAuthenticatorImpl authenticator = new ProtonSaslClientAuthenticatorImpl(username, password, options.getAllowedSaslMechanisms(), res.result(), connectHandler, amqpConnnection);
+                amqpConnnection.bindClient(netClient, res.result(), authenticator);
+
+                //Need to flush here to get the SASL process going, or it will wait until calls on the connection are processed later (e.g open()).
+                //TODO: Would that actually be ok? Would remove this complexity and leave Connect being just about the TCP/SSL connection...
+                //      but we would then need to handle the peer sending their SASL details before we do, which is allowed.
+                amqpConnnection.flush();
             } else {
-                handler.handle(Future.failedFuture(res.cause()));
+                connectHandler.handle(Future.failedFuture(res.cause()));
             }
         });
     }
