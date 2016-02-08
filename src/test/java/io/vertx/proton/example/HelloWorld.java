@@ -28,10 +28,13 @@ public class HelloWorld {
         // Create the Vert.x AMQP client instance
         ProtonClient client = ProtonClient.create(vertx);
 
+        // Connect, then use the event loop thread to process the connection
         client.connect("localhost", 5672, res -> {
             if (res.succeeded()) {
                 System.out.println("We're connected");
-                helloWorldSendAndConsumeExample(res.result());
+
+                ProtonConnection connection = res.result();
+                helloWorldSendAndConsumeExample(connection);
             } else {
                 res.cause().printStackTrace();
             }
@@ -45,10 +48,9 @@ public class HelloWorld {
     }
 
     private static void helloWorldSendAndConsumeExample(ProtonConnection connection) {
-
         connection.open();
 
-        // Receive messages from a queue
+        // Receive messages from queue "foo" (using an ActiveMQ style address as example).
         String address = "queue://foo";
 
         connection.createReceiver(address)
@@ -58,8 +60,12 @@ public class HelloWorld {
                     String content = (String) ((AmqpValue) body).getValue();
                     System.out.println("Received message with content: " + content);
                 }
+                // By default, the receiver automatically accepts (and settles) the delivery
+                // when the handler returns, if no other disposition has been applied.
+                // To change this and always manage dispositions yourself, use the
+                // setAutoAccept method on the receiver.
             })
-            .flow(10)  // Prefetch up to 10 messages
+            .flow(10)  // Prefetch up to 10 messages. The client will replenish credit as deliveries are settled.
             .open();
 
         // Create an anonymous sender, have the message carry the destination
