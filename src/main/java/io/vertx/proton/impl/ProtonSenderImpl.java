@@ -53,19 +53,23 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         }
         sender().send(encodedMessage, 0, len);
 
-        //TODO: even if onRecieved is null, we shouldnt really settle if the link was established was SenderSettleMode.UNSETTLED
-        if( onUpdated == null || link.getSenderSettleMode() == SenderSettleMode.SETTLED  ) {
+        if( link.getSenderSettleMode() == SenderSettleMode.SETTLED ) {
             delivery.settle();
         }
         sender().advance(); // ends the delivery.
 
         ProtonDeliveryImpl protonDeliveryImpl = new ProtonDeliveryImpl(delivery);
-        protonDeliveryImpl.setAutoSettle(autoSettle);
-        protonDeliveryImpl.handler(onUpdated);
+        if(onUpdated != null) {
+            protonDeliveryImpl.setAutoSettle(autoSettle);
+            protonDeliveryImpl.handler(onUpdated);
+        } else {
+            protonDeliveryImpl.setAutoSettle(true);
+        }
 
         getSession().getConnectionImpl().flush();
     }
 
+    @Override
     public void send(byte[] tag, Message message) {
         send(tag, message, null);
     }
@@ -81,11 +85,11 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         return this;
     }
 
-    public boolean isAnonymousSender() {
+    boolean isAnonymousSender() {
         return anonymousSender;
     }
 
-    public void setAnonymousSender(boolean anonymousSender) {
+    void setAnonymousSender(boolean anonymousSender) {
         this.anonymousSender = anonymousSender;
     }
 
