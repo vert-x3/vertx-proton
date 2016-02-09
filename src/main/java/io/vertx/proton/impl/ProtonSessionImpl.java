@@ -12,6 +12,7 @@ import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonHelper;
+import io.vertx.proton.ProtonQoS;
 
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -139,7 +140,6 @@ public class ProtonSessionImpl implements ProtonSession {
     @Override
     public ProtonReceiver createReceiver(String address) {
         //TODO: add options for configuring things like link name etc?
-        //TODO: add a default close/error handler?
         Receiver receiver = session.receiver(generateLinkName());
 
         Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
@@ -155,7 +155,6 @@ public class ProtonSessionImpl implements ProtonSession {
         receiver.setTarget(target);
 
         ProtonReceiverImpl r = new ProtonReceiverImpl(receiver);
-        //TODO: set explicit defaults for settle mode etc?
         r.openHandler((result) -> {
             LOG.trace("Receiver open completed");
         });
@@ -167,12 +166,14 @@ public class ProtonSessionImpl implements ProtonSession {
             }
         });
 
+        // Default to at-least-once
+        r.setQoS(ProtonQoS.AT_LEAST_ONCE);
+
         return r;
     }
 
     @Override
     public ProtonSender createSender(String address) {
-        //TODO: add a default close/error handler?
         Sender sender = session.sender(generateLinkName());
 
         Symbol[] outcomes = new Symbol[]{ Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL};
@@ -201,7 +202,9 @@ public class ProtonSessionImpl implements ProtonSession {
             }
         });
 
-        //TODO: set explicit defaults for settle mode etc?
+        // Default to at-least-once
+        s.setQoS(ProtonQoS.AT_LEAST_ONCE);
+
         return s;
     }
 

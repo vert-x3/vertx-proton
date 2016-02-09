@@ -435,6 +435,92 @@ public class ProtonClientTest extends MockServerTestBase {
         }
     }
 
+    @Test(timeout = 20000)
+    public void testReceiverOpenWithAtLeastOnceQos(TestContext context) throws Exception {
+        doOpenLinkWithQosTestImpl(context, true, ProtonQoS.AT_LEAST_ONCE);
+    }
+
+    @Test(timeout = 20000)
+    public void testReceiverOpenWithAtMostOnceQos(TestContext context) throws Exception {
+        doOpenLinkWithQosTestImpl(context, true, ProtonQoS.AT_MOST_ONCE);
+    }
+
+    @Test(timeout = 20000)
+    public void testSenderOpenWithAtLeastOnceQos(TestContext context) throws Exception {
+        doOpenLinkWithQosTestImpl(context, false, ProtonQoS.AT_LEAST_ONCE);
+    }
+
+    @Test(timeout = 20000)
+    public void testSenderOpenWithAtMostOnceQos(TestContext context) throws Exception {
+        doOpenLinkWithQosTestImpl(context, false, ProtonQoS.AT_MOST_ONCE);
+    }
+
+    public void doOpenLinkWithQosTestImpl(TestContext context, boolean clientSender, ProtonQoS qos) throws Exception {
+        server.close();
+        Async serverAsync = context.async();
+        Async clientAsync = context.async();
+
+        ProtonServer protonServer = null;
+        try {
+            protonServer = createServer((serverConnection) -> {
+                serverConnection.openHandler(result -> {
+                    serverConnection.open();
+                });
+                serverConnection.sessionOpenHandler(session -> session.open());
+                if(clientSender) {
+                    serverConnection.receiverOpenHandler(receiver -> {
+                        context.assertEquals(qos, receiver.getRemoteQoS(), "unexpected remote qos value");
+                        LOG.trace("Server receiver opened");
+                        receiver.open();
+                        serverAsync.complete();
+                    });
+                } else {
+                    serverConnection.senderOpenHandler(sender -> {
+                        context.assertEquals(qos, sender.getRemoteQoS(), "unexpected remote qos value");
+                        LOG.trace("Server sender opened");
+                        sender.open();
+                        serverAsync.complete();
+                    });
+                }
+            });
+
+            //===== Client Handling  =====
+
+            ProtonClient client = ProtonClient.create(vertx);
+            client.connect("localhost", protonServer.actualPort(), res -> {
+                context.assertTrue(res.succeeded());
+
+                ProtonConnection connection =  res.result();
+                connection.openHandler(x -> {
+                    LOG.trace("Client connection opened");
+                    final ProtonLink<?> link;
+                    if(clientSender) {
+                        link = connection.createSender(null);
+                    } else {
+                        link = connection.createReceiver("some-address");
+                    }
+                    link.setQoS(qos);
+
+                    link.openHandler(y -> {
+                        LOG.trace("Client link opened");
+                        context.assertEquals(qos, link.getRemoteQoS(), "unexpected remote qos value");
+                        clientAsync.complete();
+                    });
+                    link.open();
+
+                })
+                .open();
+            });
+
+            serverAsync.awaitSuccess();
+            clientAsync.awaitSuccess();
+        } finally {
+            if (protonServer != null) {
+                protonServer.close();
+            }
+        }
+    }
+
     private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException, ExecutionException {
         ProtonServer server = ProtonServer.create(vertx);
 

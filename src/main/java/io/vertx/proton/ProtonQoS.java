@@ -2,6 +2,5 @@ package io.vertx.proton;
 
 public enum ProtonQoS {
     AT_MOST_ONCE,
-    AT_LEAST_ONCE,
-    ONCE_AND_ONLY_ONCE
+    AT_LEAST_ONCE
 }
