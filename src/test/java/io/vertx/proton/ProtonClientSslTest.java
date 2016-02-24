@@ -71,7 +71,10 @@ public class ProtonClientSslTest {
         client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
             // Expect connect to succeed
             context.assertTrue(res.succeeded());
-            ProtonReceiver receiver = res.result().createReceiver("some-address");
+            ProtonConnection connection = res.result();
+            connection.open();
+
+            ProtonReceiver receiver = connection.createReceiver("some-address");
 
             receiver.openHandler(recvResult -> {
                 context.assertTrue(recvResult.succeeded());

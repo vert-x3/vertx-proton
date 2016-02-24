@@ -16,7 +16,7 @@
     <properties>
         <stack.version>3.2.1</stack.version>
         <activemq.version>5.13.0</activemq.version>
-        <proton.version>0.11.1</proton.version>
+        <proton.version>0.12.0</proton.version>
     </properties>
 
     <dependencyManagement>
