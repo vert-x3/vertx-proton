@@ -56,7 +56,7 @@ public interface ProtonHelper {
         if (err.getCondition() != null) {
             return Future.failedFuture(err.toString());
         } else {
-            return Future.succeededFuture(null);
+            return Future.succeededFuture(value);
         }
     }
 

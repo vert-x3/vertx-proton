@@ -37,6 +37,22 @@ public class ProtonClientTest extends MockServerTestBase {
     private static Logger LOG = LoggerFactory.getLogger(ProtonClientTest.class);
 
     @Test(timeout = 20000)
+    public void testConnectionOpenResultReturnsConnection(TestContext context) {
+        Async async = context.async();
+        connect(context, connectedConn -> {
+            connectedConn.openHandler(result -> {
+                context.assertTrue(result.succeeded());
+
+                ProtonConnection openedConn = result.result();
+                context.assertNotNull(openedConn, "opened connection result should not be null");
+                openedConn.disconnect();
+                async.complete();
+            })
+            .open();
+        });
+    }
+
+    @Test(timeout = 20000)
     public void testClientIdentification(TestContext context) {
         Async async = context.async();
         connect(context, connection -> {
