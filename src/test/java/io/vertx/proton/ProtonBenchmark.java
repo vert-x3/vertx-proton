@@ -13,7 +13,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static io.vertx.proton.ProtonHelper.message;
-import static io.vertx.proton.ProtonHelper.tag;
 
 @RunWith(VertxUnitRunner.class)
 public class ProtonBenchmark extends MockServerTestBase {
@@ -44,13 +43,12 @@ public class ProtonBenchmark extends MockServerTestBase {
                     .open();
 
             String name = "At Least Once Send Throughput";
-            byte[] tag = tag("m1");
             Message message = message("drop", "Hello World");
 
             benchmark(BENCHMARK_DURATION, name, counter -> {
                 sender.sendQueueDrainHandler(s -> {
                     while (!sender.sendQueueFull()) {
-                        sender.send(tag, message, d -> {
+                        sender.send(message, d -> {
                             if(d.remotelySettled()) {
                                 counter.incrementAndGet();
                             }
@@ -79,13 +77,12 @@ public class ProtonBenchmark extends MockServerTestBase {
                     .open();
 
             String name = "At Most Once Send Throughput";
-            byte[] tag = tag("m1");
             Message message = message("drop", "Hello World");
 
             benchmark(BENCHMARK_DURATION, name, counter -> {
                 sender.sendQueueDrainHandler(s -> {
                     while (!sender.sendQueueFull()) {
-                        sender.send(tag, message);
+                        sender.send(message);
                         counter.incrementAndGet();
                     }
                 });
@@ -108,7 +105,6 @@ public class ProtonBenchmark extends MockServerTestBase {
 
             ProtonSender sender = connection.createSender(MockServer.Addresses.echo.toString()).open();
 
-            byte[] tag = tag("m1");
             Message message = message("echo", "Hello World");
 
             benchmark(BENCHMARK_DURATION, "Request Response Throughput", counter -> {
@@ -122,7 +118,7 @@ public class ProtonBenchmark extends MockServerTestBase {
 
                 sender.sendQueueDrainHandler(s -> {
                     while (!sender.sendQueueFull()) {
-                        sender.send(tag, message);
+                        sender.send(message);
                     }
                 });
             }, () -> {

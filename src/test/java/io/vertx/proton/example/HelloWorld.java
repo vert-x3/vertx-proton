@@ -13,7 +13,6 @@ import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
 import static io.vertx.proton.ProtonHelper.message;
-import static io.vertx.proton.ProtonHelper.tag;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -68,10 +67,10 @@ public class HelloWorld {
             .flow(10)  // Prefetch up to 10 messages. The client will replenish credit as deliveries are settled.
             .open();
 
-        // Create an anonymous sender, have the message carry the destination
+        // Create an anonymous (no address) sender, have the message carry its destination
         ProtonSender sender = connection.createSender(null);
 
-        // Send message to the queue..
+        // Create a message to send, have it carry its destination for use with the anonymous sender
         Message message = message(address, "Hello World from client");
 
         // Can optionally add an openHandler or sendQueueDrainHandler
@@ -79,8 +78,9 @@ public class HelloWorld {
         // granted. But here we will just buffer the send immediately.
         sender.open();
         System.out.println("Sending message to server");
-        sender.send(tag("m1"), message, delivery -> {
-            System.out.println("The message was received by the server");
+        sender.send(message, delivery -> {
+            System.out.println(String.format("The message was received by the server: remote state=%s, remotely settled=%s",
+                                                                  delivery.getRemoteState(), delivery.remotelySettled()));
         });
     }
 

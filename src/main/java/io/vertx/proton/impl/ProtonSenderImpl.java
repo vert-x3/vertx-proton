@@ -6,6 +6,9 @@ package io.vertx.proton.impl;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
+
+import java.nio.charset.StandardCharsets;
+
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
@@ -20,6 +23,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
     private Handler<ProtonSender> drainHandler;
     private boolean anonymousSender;
     private boolean autoSettle;
+    private int tag = 1;
 
     ProtonSenderImpl(Sender sender) {
         super(sender);
@@ -27,6 +31,25 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
 
     private Sender sender() {
         return (Sender)link;
+    }
+
+    @Override
+    public void send(Message message) {
+        send(message, null);
+    }
+
+    @Override
+    public void send(Message message, Handler<ProtonDelivery> onUpdated) {
+        send(generateTag(), message, onUpdated);
+    }
+
+    private byte[] generateTag() {
+        return String.valueOf(tag++).getBytes(StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public void send(byte[] tag, Message message) {
+        send(tag, message, null);
     }
 
     @Override
@@ -70,11 +93,6 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
     }
 
     @Override
-    public void send(byte[] tag, Message message) {
-        send(tag, message, null);
-    }
-
-    @Override
     public boolean isAutoSettle() {
         return autoSettle;
     }
@@ -102,7 +120,6 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
     public boolean sendQueueFull() {
         return link.getRemoteCredit() <= 0;
     }
-
 
     @Override
     public void sendQueueDrainHandler(Handler<ProtonSender> drainHandler) {

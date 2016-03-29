@@ -72,19 +72,19 @@ public class MockServer {
                 switch (address) {
                     case two_messages:{
                         sender.open();
-                        sender.send(tag("m1"), message("Hello"));
-                        sender.send(tag("m2"), message("World"), d->{
+                        sender.send(message("Hello"));
+                        sender.send(message("World"), d->{
                             sender.close();
                         });
                         break;
                     }
                     case five_messages:{
                         sender.open();
-                        sender.send(tag("m1"), message("1"));
-                        sender.send(tag("m2"), message("2"));
-                        sender.send(tag("m3"), message("3"));
-                        sender.send(tag("m4"), message("4"));
-                        sender.send(tag("m5"), message("5"), d->{
+                        sender.send(message("1"));
+                        sender.send(message("2"));
+                        sender.send(message("3"));
+                        sender.send(message("4"));
+                        sender.send(message("5"), d->{
                             sender.close();
                         });
                         break;
