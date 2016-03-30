@@ -8,15 +8,15 @@ import org.apache.qpid.proton.message.Message;
  */
 public interface ProtonSender extends ProtonLink<ProtonSender> {
 
-  void send(Message message);
+  ProtonDelivery send(Message message);
 
-  void send(Message message, Handler<ProtonDelivery> onUpdated);
-
-  //TODO: leave method, or just remove?
-  void send(byte[] tag, Message message);
+  ProtonDelivery send(Message message, Handler<ProtonDelivery> onUpdated);
 
   //TODO: leave method, or just remove?
-  void send(byte[] tag, Message message, Handler<ProtonDelivery> onUpdated);
+  ProtonDelivery send(byte[] tag, Message message);
+
+  //TODO: leave method, or just remove?
+  ProtonDelivery send(byte[] tag, Message message, Handler<ProtonDelivery> onUpdated);
 
   boolean sendQueueFull();
 

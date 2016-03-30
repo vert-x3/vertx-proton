@@ -34,13 +34,13 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
     }
 
     @Override
-    public void send(Message message) {
-        send(message, null);
+    public ProtonDelivery send(Message message) {
+        return send(message, null);
     }
 
     @Override
-    public void send(Message message, Handler<ProtonDelivery> onUpdated) {
-        send(generateTag(), message, onUpdated);
+    public ProtonDelivery send(Message message, Handler<ProtonDelivery> onUpdated) {
+        return send(generateTag(), message, onUpdated);
     }
 
     private byte[] generateTag() {
@@ -48,12 +48,12 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
     }
 
     @Override
-    public void send(byte[] tag, Message message) {
-        send(tag, message, null);
+    public ProtonDelivery send(byte[] tag, Message message) {
+        return send(tag, message, null);
     }
 
     @Override
-    public void send(byte[] tag, Message message, Handler<ProtonDelivery> onUpdated) {
+    public ProtonDelivery send(byte[] tag, Message message, Handler<ProtonDelivery> onUpdated) {
         if(anonymousSender && message.getAddress() == null) {
             throw new IllegalArgumentException("Message must have an address when using anonymous sender.");
         }
@@ -90,6 +90,8 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
         }
 
         getSession().getConnectionImpl().flush();
+
+        return protonDeliveryImpl;
     }
 
     @Override
