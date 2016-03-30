@@ -7,18 +7,6 @@ import org.apache.qpid.proton.amqp.transport.DeliveryState;
  */
 public interface ProtonDelivery {
 
-  byte[] getTag();
-
-  int getMessageFormat();
-
-  /**
-   * Updates the DeliveryState
-   *
-   * @param state the delivery state to apply
-   * @return itself
-   */
-  ProtonDelivery disposition(DeliveryState state);
-
   /**
    * Updates the DeliveryState, and optionally settle the delivery as well.
    *
@@ -34,4 +22,8 @@ public interface ProtonDelivery {
   ProtonDelivery settle();
 
   boolean remotelySettled();
+
+  byte[] getTag();
+
+  int getMessageFormat();
 }

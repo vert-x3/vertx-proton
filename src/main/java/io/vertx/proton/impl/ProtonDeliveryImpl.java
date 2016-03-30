@@ -44,6 +44,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         return delivery.remotelySettled();
     }
 
+    @Override
     public byte[] getTag() {
         return delivery.getTag();
     }
@@ -81,18 +82,13 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
         return delivery.getRemoteState();
     }
 
+    @Override
     public int getMessageFormat() {
         return delivery.getMessageFormat();
     }
 
     public boolean isBuffered() {
         return delivery.isBuffered();
-    }
-
-    @Override
-    public ProtonDelivery disposition(DeliveryState state) {
-        disposition(state, false);
-        return this;
     }
 
     @Override
