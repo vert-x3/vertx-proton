@@ -59,7 +59,10 @@ public class HelloWorldServer {
 
         connection.receiverOpenHandler(receiver -> {
             receiver
-                .setTarget(receiver.getRemoteTarget())
+                .setTarget(receiver.getRemoteTarget()) //This is rather naive, for example use only, proper
+                                                       //servers should ensure that they advertise their own
+                                                       //Target settings that actually reflect what is in place.
+                                                       //The request may have also been for a dynamic address.
                 .handler((delivery, msg) -> {
 
                     String address = msg.getAddress();
@@ -78,7 +81,11 @@ public class HelloWorldServer {
 
         connection.senderOpenHandler(sender -> {
             System.out.println("Sending to client from: " + sender.getRemoteSource().getAddress());
-            sender.setSource(sender.getRemoteSource()).open();
+            sender.setSource(sender.getRemoteSource()); //This is rather naive, for example use only, proper
+                                                        //servers should ensure that they advertise their own
+                                                        //Source settings that actually reflect what is in place.
+                                                        //The request may have also been for a dynamic address.
+            sender.open();
             vertx.setPeriodic(1000, timer -> {
                 if (connection.isDisconnected()) {
                     vertx.cancelTimer(timer);
