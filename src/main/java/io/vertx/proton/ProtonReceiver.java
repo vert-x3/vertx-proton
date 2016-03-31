@@ -1,5 +1,7 @@
 package io.vertx.proton;
 
+import java.lang.IllegalStateException;
+
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
@@ -44,8 +46,7 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    *
    * @param messages the credits to flow
    * @return the receiver
+   * @throws IllegalStateException if prefetch is non-zero.
    */
-  ProtonReceiver flow(int credits); // TODO: change method to alert existing uses they
-                                    // generally don't need to use this now?
-                                    // Could throw if prefetch is still enabled?
+  ProtonReceiver flow(int credits) throws IllegalStateException;
 }

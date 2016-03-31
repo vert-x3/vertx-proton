@@ -44,11 +44,18 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     }
 
     @Override
-    public ProtonReceiver flow(int credits) {
-        //TODO: batch credit replenish, optionally flush if exceeding a given threshold?
+    public ProtonReceiver flow(int credits) throws IllegalStateException {
+        flow(credits, true);
+        return this;
+    }
+
+    private void flow(int credits, boolean checkPrefetch) throws IllegalStateException {
+        if(checkPrefetch && prefetch > 0) {
+            throw new IllegalStateException("Manual credit management not available while prefetch is non-zero");
+        }
+
         getReceiver().flow(credits);
         flushConnection();
-        return this;
     }
 
     public boolean draining() {
@@ -118,7 +125,8 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
             if(prefetch > 0) {
                 // Replenish credit if prefetch is configured.
-                flow(1);
+                //TODO: batch credit replenish, optionally flush if exceeding a given threshold?
+                flow(prefetch, false);
             }
         }
     }
@@ -136,6 +144,10 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
     @Override
     public ProtonReceiver setPrefetch(int messages) {
+        if(messages < 0) {
+            throw new IllegalArgumentException("Value must not be negative");
+        }
+
         prefetch = messages;
         return this;
     }
@@ -150,7 +162,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
         super.open();
         if(prefetch > 0) {
             // Grant initial credit if prefetching.
-            flow(prefetch);
+            flow(prefetch, false);
         }
 
         return this;
