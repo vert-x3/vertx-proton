@@ -13,7 +13,6 @@ import java.util.concurrent.ExecutionException;
 
 import static io.vertx.proton.ProtonHelper.condition;
 import static io.vertx.proton.ProtonHelper.message;
-import static io.vertx.proton.ProtonHelper.tag;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -63,7 +62,7 @@ public class MockServer {
                     address = receiver.getRemoteTarget().getAddress();
                 }
                 processMessage(connection, receiver, delivery, msg, address);
-            }).flow(credits).open();
+            }).setPrefetch(credits).open();
         });
         connection.senderOpenHandler(sender->{
             Addresses address = null;
@@ -72,8 +71,8 @@ public class MockServer {
                 switch (address) {
                     case two_messages:{
                         sender.open();
-                        sender.send(message("Hello"));
-                        sender.send(message("World"), d->{
+                        sender.send(message("1"));
+                        sender.send(message("2"), d->{
                             sender.close();
                         });
                         break;

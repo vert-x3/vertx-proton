@@ -19,6 +19,7 @@ import java.io.ByteArrayOutputStream;
  */
 public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implements ProtonReceiver {
     private ProtonMessageHandler handler;
+    private int prefetch = 1000;
 
     ProtonReceiverImpl(Receiver receiver) {
         super(receiver);
@@ -108,9 +109,16 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
             receiver.advance();
 
             ProtonDeliveryImpl delImpl = new ProtonDeliveryImpl(delivery);
+
             handler.handle(delImpl, msg);
+
             if (autoAccept && delivery.getLocalState() == null) {
                 accepted(delImpl, true);
+            }
+
+            if(prefetch > 0) {
+                // Replenish credit if prefetch is configured.
+                flow(1);
             }
         }
     }
@@ -123,6 +131,28 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     @Override
     public ProtonReceiver setAutoAccept(boolean autoAccept) {
         this.autoAccept = autoAccept;
+        return this;
+    }
+
+    @Override
+    public ProtonReceiver setPrefetch(int messages) {
+        prefetch = messages;
+        return this;
+    }
+
+    @Override
+    public int getPrefetch() {
+        return prefetch;
+    }
+
+    @Override
+    public ProtonReceiver open() {
+        super.open();
+        if(prefetch > 0) {
+            // Grant initial credit if prefetching.
+            flow(prefetch);
+        }
+
         return this;
     }
 }

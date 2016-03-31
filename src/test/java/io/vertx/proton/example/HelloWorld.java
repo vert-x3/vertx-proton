@@ -64,7 +64,6 @@ public class HelloWorld {
                 // To change this and always manage dispositions yourself, use the
                 // setAutoAccept method on the receiver.
             })
-            .flow(10)  // Prefetch up to 10 messages. The client will replenish credit as deliveries are settled.
             .open();
 
         // Create an anonymous (no address) sender, have the message carry its destination

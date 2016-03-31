@@ -106,14 +106,8 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
     @Override
     public ProtonDelivery settle() {
         delivery.settle();
-        //TODO: for whatever reason, allowing it to flush
-        //here as well actually increases performance...?
         flushConnection();
 
-        //TODO: something nicer to replenish receiver credit?
-        if(getLinkImpl() instanceof ProtonReceiverImpl) {
-            ((ProtonReceiverImpl) getLinkImpl()).flow(1);
-        }
         return this;
     }
 

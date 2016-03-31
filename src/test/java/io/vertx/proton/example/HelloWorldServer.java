@@ -73,7 +73,6 @@ public class HelloWorldServer {
                         System.out.println("message to:"+address+", body: " + content);
                     }
                 })
-                .flow(10)
                 .open();
         });
 

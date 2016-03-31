@@ -27,7 +27,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.vertx.proton.ProtonHelper.accepted;
 import static io.vertx.proton.ProtonHelper.message;
 import static io.vertx.proton.ProtonHelper.tag;
 
@@ -125,7 +124,6 @@ public class ProtonClientTest extends MockServerTestBase {
                     connection.disconnect();
                     async.complete();
                 })
-                .flow(10)
                 .open();
 
             connection.createSender(MockServer.Addresses.echo.toString())
@@ -133,118 +131,6 @@ public class ProtonClientTest extends MockServerTestBase {
                 .send(tag(""), message("echo", data));
 
 
-        });
-    }
-
-    @Test(timeout = 20000)
-    public void testReceiverAsyncSettle(TestContext context) {
-        Async async = context.async();
-        connect(context, connection -> {
-            connection.open();
-            AtomicInteger counter = new AtomicInteger(0);
-            AtomicBoolean msgAccepted = new AtomicBoolean();
-            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.two_messages.toString());
-
-            // Set the receiver not to auto-accept messages after the handler runs
-            // and in turn not auto-settle, or replenish the credit used. We will
-            // accept+settle the message manually at a later point.
-            receiver.setAutoAccept(false);
-
-            receiver.handler((d, m) -> {
-                    int count = counter.incrementAndGet();
-                    switch (count) {
-                        case 1: {
-                            validateMessage(context, count, "Hello", m);
-
-                            // On 1st message
-                            // lets delay the settlement and credit..
-                            vertx.setTimer(1000, x -> {
-                                accepted(d, true);
-                                msgAccepted.set(true);
-                            });
-
-                            // We only flowed 1 credit, so we should not get
-                            // another message until we run the settle callback
-                            // above and issue another credit to the sender.
-                            vertx.setTimer(500, x -> {
-                                context.assertEquals(1, counter.get());
-                            });
-                            break;
-                        }
-                        case 2: {
-                            validateMessage(context, count, "World", m);
-                            context.assertTrue(msgAccepted.get(), "Earlier message was not yet accepted+settled,"
-                                    + " should not have recieved message 2 yet!");
-
-                            // On 2nd message.. lets finish the test..
-                            async.complete();
-                            connection.disconnect();
-                            break;
-                        }
-                    }
-                })
-                .flow(1)
-                .open();
-        });
-    }
-
-    @Test(timeout = 20000)
-    public void testReceiverAsyncSettleAfterReceivingMultipleMessages(TestContext context) {
-        Async async = context.async();
-        connect(context, connection -> {
-            connection.open();
-            AtomicInteger counter = new AtomicInteger(0);
-            AtomicBoolean msgAccepted = new AtomicBoolean();
-            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.five_messages.toString());
-
-            // Set the receiver not to auto-accept messages after the handler runs
-            // and in turn not auto-settle, or replenish the credit used. We will
-            // accept+settle the message manually at a later point.
-            receiver.setAutoAccept(false);
-
-            receiver.handler((d, m) -> {
-                    int count = counter.incrementAndGet();
-                    switch (count) {
-                        case 1: // Fall-through
-                        case 2: // Fall-through
-                        case 3: {
-                            validateMessage(context, count, String.valueOf(count), m);
-                            break;
-                        }
-                        case 4: {
-                            validateMessage(context, count, String.valueOf(count), m);
-
-                            // We only issue 4 credits, so we should not get more
-                            // messages until one is acked and a credit flowed, use
-                            // the callback for this msg to do that
-                            vertx.setTimer(1000, x -> {
-                                LOG.trace("Settling msg 4 and flowing more credit");
-                                accepted(d, true);
-                                msgAccepted.set(true);
-                            });
-
-                            // Check that we haven't processed any more messages before then
-                            vertx.setTimer(500, x -> {
-                                LOG.trace("Checking msg 5 not received yet");
-                                context.assertEquals(4, counter.get());
-                            });
-                            break;
-                        }
-                        case 5: {
-                            validateMessage(context, count, String.valueOf(count), m);
-                            context.assertTrue(msgAccepted.get(), "An earlier message was not yet accepted+settled,"
-                                                                    + " should not have recieved message 5 yet!");
-
-                            // Got the last message, lets finish the test.
-                            LOG.trace("Got msg 5, completing async");
-                            async.complete();
-                            connection.disconnect();
-                            break;
-                        }
-                    }
-                })
-                .flow(4)
-                .open();
         });
     }
 
@@ -367,10 +253,157 @@ public class ProtonClientTest extends MockServerTestBase {
             context.assertNotNull(remoteTarget, "Client did not set a link target");
             context.assertNull(remoteTarget.getAddress(), "Unexpected target address");
 
-            receiver.flow(10).open();
+            receiver.open();
         });
         serverConnection.openHandler(result -> {
             serverConnection.open();
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testReceiveMultipleMessagesWithLowerPrefetch(TestContext context) {
+        Async async = context.async();
+        connect(context, connection -> {
+            connection.open();
+            AtomicInteger counter = new AtomicInteger(0);
+
+            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.five_messages.toString());
+            receiver.setPrefetch(1) //Set prefetch to 1 credit. Test verifies receiver gets multiple messages, i.e credit is being replenished.
+            .handler((d, m) -> {
+                int count = counter.incrementAndGet();
+
+                validateMessage(context, count, String.valueOf(count), m);
+
+                if(count == 5) {
+                    // Got the last message, lets finish the test.
+                    LOG.trace("Got msg 5, completing async");
+                    async.complete();
+                    connection.disconnect();
+                }
+            })
+            .open();
+        });
+    }
+
+    @Test(timeout = 2000)
+    public void testDelayedInitialCreditWithPrefetchDisabled(TestContext context) {
+        Async async = context.async();
+        connect(context, connection -> {
+            connection.open();
+            AtomicInteger counter = new AtomicInteger(0);
+            AtomicBoolean initialCreditGranted = new AtomicBoolean();
+            AtomicBoolean additionalCreditGranted = new AtomicBoolean();
+            final int delay = 250;
+            final long startTime = System.currentTimeMillis();
+
+            // Create receiver with prefetch disabled
+            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.two_messages.toString());
+            receiver.handler((d, m) -> {
+                    int count = counter.incrementAndGet();
+                    switch (count) {
+                        case 1: {
+                            validateMessage(context, count, String.valueOf(count), m);
+
+                            context.assertTrue(initialCreditGranted.get(), "Initial credit not yet granted, so we"
+                                                                    + " should not have received message 1 yet!");
+
+                            // Verify lack of initial credit results in delayed receipt of first message.
+                            context.assertTrue(System.currentTimeMillis() > startTime + delay,
+                                                "Message received before expected time delay elapsed!");
+
+                            LOG.trace("Got msg 1");
+
+                            // We only issued 1 credit, so we should not get more
+                            // messages until more credit is flowed, use the
+                            // callback for this msg to do that after further delay
+                            vertx.setTimer(delay, x -> {
+                                LOG.trace("Granting additional credit");
+                                additionalCreditGranted.set(true);
+                                receiver.flow(1);
+                            });
+                            break;
+                        }
+                        case 2: {
+                            validateMessage(context, count, String.valueOf(count), m);
+                            context.assertTrue(additionalCreditGranted.get(), "Additional credit not yet granted, so we"
+                                                                    + " should not have received message " + count + " yet!");
+
+                            context.assertTrue(System.currentTimeMillis() > startTime + (delay * 2),
+                                                "Message received before expected time delay elapsed!");
+
+                            // Got the last message, lets finish the test.
+                            LOG.trace("Got msg 2, completing async");
+                            async.complete();
+                            connection.disconnect();
+                            break;
+                        }
+                    }
+                })
+                .setPrefetch(0) //Turn off automatic prefetch / credit handling
+                .open();
+
+            // Explicitly grant an initial credit after a delay. Handler will then grant more.
+            vertx.setTimer(delay, x -> {
+                LOG.trace("Flowing initial credit");
+                initialCreditGranted.set(true);
+                receiver.flow(1);
+            });
+        });
+    }
+
+    @Test(timeout = 20000)
+    public void testImmediateInitialCreditWithPrefetchDisabled(TestContext context) {
+        Async async = context.async();
+        connect(context, connection -> {
+            connection.open();
+            AtomicInteger counter = new AtomicInteger(0);
+            AtomicBoolean creditGranted = new AtomicBoolean();
+            ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.five_messages.toString());
+
+            receiver.handler((d, m) -> {
+                    int count = counter.incrementAndGet();
+                    switch (count) {
+                        case 1: // Fall-through
+                        case 2: // Fall-through
+                        case 3: {
+                            validateMessage(context, count, String.valueOf(count), m);
+                            break;
+                        }
+                        case 4: {
+                            validateMessage(context, count, String.valueOf(count), m);
+
+                            // We only issued 4 credits, so we should not get
+                            // more messages until more credit is flowed, use
+                            // the callback for this msg to do that
+                            vertx.setTimer(1000, x -> {
+                                LOG.trace("Flowing more credit");
+                                creditGranted.set(true);
+                                receiver.flow(1);
+                            });
+
+                            // Check that we haven't processed any more messages before then
+                            vertx.setTimer(500, x -> {
+                                LOG.trace("Checking msg 5 not received yet");
+                                context.assertEquals(4, counter.get());
+                            });
+                            break;
+                        }
+                        case 5: {
+                            validateMessage(context, count, String.valueOf(count), m);
+                            context.assertTrue(creditGranted.get(), "Additional credit not yet granted, so we"
+                                                                    + " should not have received message 5 yet!");
+
+                            // Got the last message, lets finish the test.
+                            LOG.trace("Got msg 5, completing async");
+                            async.complete();
+                            connection.disconnect();
+                            break;
+                        }
+                    }
+                })
+                .setPrefetch(0) //Turn off prefetch and related automatic credit handling
+                .flow(4) // Explicitly grant initial credit of 4. Handler will grant more later.
+                .open();
         });
     }
 
@@ -402,7 +435,7 @@ public class ProtonClientTest extends MockServerTestBase {
                 // Expect a receiver link, then close the session after opening it.
                 serverConnection.receiverOpenHandler(serverReceiver -> {
                     LOG.trace("Server receiver open");
-                    serverReceiver.flow(10).open();
+                    serverReceiver.open();
 
                     context.assertTrue(sessionFuture.succeeded(), "Session future not [yet] succeeded");
                     LOG.trace("Server session close");

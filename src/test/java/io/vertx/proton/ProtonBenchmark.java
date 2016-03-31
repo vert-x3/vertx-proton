@@ -113,7 +113,7 @@ public class ProtonBenchmark extends MockServerTestBase {
                     .handler((d, m)->{
                         counter.incrementAndGet();
                     })
-                    .flow(credits)
+                    .setPrefetch(credits)
                     .open();
 
                 sender.sendQueueDrainHandler(s -> {
