@@ -1,0 +1,95 @@
+= Vert.x Proton
+
+This component faciliates AMQP integrations for Vert.x by providing a thin wrapper around the
+link:http://qpid.apache.org/[Apache Qpid] Proton AMQP 1.0 protocol engine.
+
+== Using Vert.x Proton
+
+To use Vert.x Proton, add the following dependency to the _dependencies_ section of your build descriptor:
+
+* Maven (in your `pom.xml`):
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+  <groupId>io.vertx</groupId>
+  <artifactId>vertx-proton</artifactId>
+  <version>1.0-SNAPSHOT</version>
+</dependency>
+----
+
+* Gradle (in your `build.gradle` file):
+
+[source,groovy,subs="+attributes"]
+----
+compile io.vertx:vertx-proton:1.0-SNAPSHOT
+----
+
+=== Creating a connection
+
+Here is an example of connecting and then opening a connection, which can then be used
+to create senders and receivers.
+
+[source,java]
+----
+ProtonClient client = ProtonClient.create(vertx);
+
+// Connect, then use the event loop thread to process things thereafter
+client.connect("hostname", 5672, "username", "password", connectResult -> {
+    if (connectResult.succeeded()) {
+        connectResult.result().setContainer("my-container/client-id")
+        .openHandler(openResult -> {
+            if(openResult.succeeded()) {
+                ProtonConnection conn = openResult.result();
+                // Create senders, receivers etc..
+            }
+        })
+        .open();
+    }
+});
+----
+
+=== Creating a sender
+
+Here is an example of creating a sender and sending a message with it. The onUpdated handler
+provided in the send call is invoked when disposition updates are received for the delivery,
+with the example using this to print the delivery state and whether the delivery was settled.
+
+[source,java]
+----
+connection.createSender("myQueue").openHandler(openResult -> {
+    if(openResult.succeeded()) {
+        ProtonSender sender = openResult.result();
+
+        Message message = message();
+        message.setBody(new AmqpValue("Hello World"));
+
+        // Send message, providing an onUpdated deliveryHandler, print updates
+        sender.send(message, delivery -> {
+            System.out.println(String.format("The message was received by the server:"
+                                             + " remote state=%s, remotely settled=%s",
+                                             delivery.getRemoteState(), delivery.remotelySettled()));
+        });
+    }
+})
+.open();
+----
+
+=== Creating a receiver
+
+Here is an example of creating a receiver, and setting a message handler to process the incoming
+messages and their related delivery.
+
+[source,java]
+----
+connection.createReceiver("myQueue")
+.handler((delivery, msg) -> {
+    Section body = msg.getBody();
+    if (body instanceof AmqpValue) {
+        System.out.println("Received message with content: " + ((AmqpValue) body).getValue());
+    }
+    // By default, the receiver automatically accepts (and settles) the delivery
+    // when the handler returns if no other disposition has already been applied.
+})
+.open();
+----
