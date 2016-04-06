@@ -6,6 +6,7 @@ package io.vertx.proton.impl;
 import static io.vertx.proton.ProtonHelper.future;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -77,6 +78,16 @@ public class ProtonConnectionImpl implements ProtonConnection {
         this.connection.setContext(this);
         this.connection.setContainer("vert.x-"+UUID.randomUUID());
         this.connection.setHostname(hostname);
+
+        Map<Symbol, Object> props = createInitialPropertiesMap();
+        connection.setProperties(props);
+    }
+
+    private LinkedHashMap<Symbol, Object> createInitialPropertiesMap() {
+        LinkedHashMap <Symbol, Object> props = new LinkedHashMap<Symbol, Object>();
+        props.put(ProtonMetaDataSupportImpl.PRODUCT_KEY, ProtonMetaDataSupportImpl.PRODUCT);
+        props.put(ProtonMetaDataSupportImpl.VERSION_KEY, ProtonMetaDataSupportImpl.VERSION);
+        return props;
     }
 
     /////////////////////////////////////////////////////////////////////////////
@@ -84,8 +95,16 @@ public class ProtonConnectionImpl implements ProtonConnection {
     // Delegated state tracking
     //
     /////////////////////////////////////////////////////////////////////////////
-    public ProtonConnectionImpl setProperties(Map<Symbol, Object> properties) {
-        connection.setProperties(properties);
+
+    @Override
+    public ProtonConnectionImpl setProperties(final Map<Symbol, Object> properties) {
+        LinkedHashMap<Symbol, Object> newProps = null;
+        if(properties != null) {
+            newProps = createInitialPropertiesMap();
+            newProps.putAll(properties);
+        }
+
+        connection.setProperties(newProps);
         return this;
     }
 
@@ -159,6 +178,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
         return connection.getRemoteOfferedCapabilities();
     }
 
+    @Override
     public Map<Symbol, Object> getRemoteProperties() {
         return connection.getRemoteProperties();
     }

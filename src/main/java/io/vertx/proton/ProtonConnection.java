@@ -2,6 +2,10 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+
+import java.util.Map;
+
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 
 /**
@@ -51,6 +55,26 @@ public interface ProtonConnection {
    * @return the (unopened) sender.
    */
   ProtonSender createSender(String address);
+
+  /**
+   * Sets the connection properties map to be sent to the remote peer in our Open frame.
+   *
+   * If non-null, the given map will be copied and augmented with the default map
+   * containing "product" and "version" entries if not present in the given properties.
+   * If null, no properties map will be sent.
+   *
+   * @param properties the properties map, or null to request not sending any properties map
+   * @return the connection
+   */
+  ProtonConnection setProperties(Map<Symbol, Object> properties);
+
+  /**
+   * Returns the connection properties map if sent by the remote peer in its Open frame.
+   * May be null.
+   *
+   * @return the remote connection properties map, or null if no map was sent.
+   */
+  Map<Symbol, Object> getRemoteProperties();
 
   /**
    * Allows querying (once the connection has remotely opened) whether the peer

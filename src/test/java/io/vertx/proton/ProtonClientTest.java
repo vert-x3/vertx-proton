@@ -11,9 +11,11 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.impl.ProtonMetaDataSupportImpl;
 import io.vertx.proton.impl.ProtonServerImpl;
 
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
@@ -23,6 +25,8 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -568,6 +572,148 @@ public class ProtonClientTest extends MockServerTestBase {
                 protonServer.close();
             }
         }
+    }
+
+    @Test(timeout = 20000)
+    public void testConnectionPropertiesDefault(TestContext context) throws Exception {
+        ConPropValidator defaultExpectedPropsHandler = new ProductVersionConPropValidator(ProtonMetaDataSupportImpl.PRODUCT, ProtonMetaDataSupportImpl.VERSION);
+
+        doConnectionPropertiesTestImpl(context, false, null, defaultExpectedPropsHandler, null, defaultExpectedPropsHandler);
+    }
+
+    @Test(timeout = 20000)
+    public void testConnectionPropertiesSetNonDefaultWithoutProductVersion(TestContext context) throws Exception {
+        Symbol clientCustomProp = Symbol.valueOf("custom-client-prop-key");
+        String clientCustomPropValue = "custom-client-prop-value";
+
+        Symbol serverCustomProp = Symbol.valueOf("custom-server-prop-key");
+        String serverCustomPropValue = "custom-server-prop-value";
+
+        LinkedHashMap <Symbol, Object> clientProps = new LinkedHashMap<Symbol, Object>();
+        clientProps.put(clientCustomProp, clientCustomPropValue);
+
+        LinkedHashMap <Symbol, Object> serverProps = new LinkedHashMap<Symbol, Object>();
+        serverProps.put(serverCustomProp, serverCustomPropValue);
+
+        final ConPropValidator serverExpectedPropsHandler = (c, props) -> {
+            new ProductVersionConPropValidator(ProtonMetaDataSupportImpl.PRODUCT, ProtonMetaDataSupportImpl.VERSION).validate(c, props);
+
+            context.assertTrue(props.containsKey(clientCustomProp), "custom client prop not present");
+            context.assertEquals(clientCustomPropValue, props.get(clientCustomProp), "unexpected custom client prop value");
+        };
+
+        final ConPropValidator clientExpectedPropsHandler = (c, props) -> {
+            new ProductVersionConPropValidator(ProtonMetaDataSupportImpl.PRODUCT, ProtonMetaDataSupportImpl.VERSION).validate(c, props);
+
+            context.assertTrue(props.containsKey(serverCustomProp), "custom server prop not present");
+            context.assertEquals(serverCustomPropValue, props.get(serverCustomProp), "unexpected custom server prop value");
+        };
+
+        doConnectionPropertiesTestImpl(context, true, clientProps, serverExpectedPropsHandler, serverProps, clientExpectedPropsHandler);
+    }
+
+    @Test(timeout = 20000)
+    public void testConnectionPropertiesSetWithCustomProductVersion(TestContext context) throws Exception {
+        String customProduct = "custom-product";
+        String customVersion = "0.1.2.3.custom";
+
+        LinkedHashMap <Symbol, Object> props = new LinkedHashMap<Symbol, Object>();
+        props.put(ProtonMetaDataSupportImpl.PRODUCT_KEY, customProduct);
+        props.put(ProtonMetaDataSupportImpl.VERSION_KEY, customVersion);
+
+        ConPropValidator expectedPropsHandler = new ProductVersionConPropValidator(customProduct, customVersion);
+
+        doConnectionPropertiesTestImpl(context, true, props, expectedPropsHandler, props, expectedPropsHandler);
+    }
+
+    @Test(timeout = 20000)
+    public void testConnectionPropertiesSetExplicitNull(TestContext context) throws Exception {
+
+        final ConPropValidator nullExpectedPropsHandler = (c, props) -> {
+            context.assertNull(props, "expected no properties map");
+        };
+
+        doConnectionPropertiesTestImpl(context, true, null, nullExpectedPropsHandler, null, nullExpectedPropsHandler);
+    }
+
+    public void doConnectionPropertiesTestImpl(TestContext context, boolean setProperties,
+                                               Map<Symbol, Object> clientGivenProps, ConPropValidator serverExpectedPropsHandler,
+                                               Map<Symbol, Object> serverGivenProps, ConPropValidator clientExpectedPropsHandler) throws Exception {
+        server.close();
+        Async serverAsync = context.async();
+        Async clientAsync = context.async();
+
+        ProtonServer protonServer = null;
+        try {
+            protonServer = createServer((serverConnection) -> {
+                serverConnection.openHandler(x -> {
+                    if(setProperties) {
+                        serverConnection.setProperties(serverGivenProps);
+                    }
+
+                    serverExpectedPropsHandler.validate(context, serverConnection.getRemoteProperties());
+
+                    serverConnection.open();
+
+                    serverAsync.complete();
+                });
+            });
+
+            //===== Client Handling  =====
+
+            ProtonClient client = ProtonClient.create(vertx);
+            client.connect("localhost", protonServer.actualPort(), res -> {
+                context.assertTrue(res.succeeded());
+
+                ProtonConnection clientConnection =  res.result();
+                if(setProperties) {
+                    clientConnection.setProperties(clientGivenProps);
+                }
+                clientConnection.openHandler(x -> {
+                    context.assertTrue(x.succeeded());
+
+                    LOG.trace("Client connection opened");
+                    clientExpectedPropsHandler.validate(context, clientConnection.getRemoteProperties());
+                    clientAsync.complete();
+                })
+                .open();
+            });
+
+            serverAsync.awaitSuccess();
+            clientAsync.awaitSuccess();
+        } finally {
+            if (protonServer != null) {
+                protonServer.close();
+            }
+        }
+    }
+
+    private interface ConPropValidator {
+        void validate(TestContext context, Map<Symbol, Object> props);
+    }
+
+    private class ProductVersionConPropValidator implements ConPropValidator {
+        private String expectedProduct;
+        private String expectedVersion;
+
+        public ProductVersionConPropValidator(String expectedProduct, String expectedVersion) {
+            this.expectedProduct = expectedProduct;
+            this.expectedVersion = expectedVersion;
+        }
+
+        @Override
+        public void validate(TestContext context, Map<Symbol, Object> props) {
+            context.assertNotNull(props, "no properties map provided");
+
+            context.assertTrue(props.containsKey(ProtonMetaDataSupportImpl.PRODUCT_KEY), "product not present");
+            context.assertNotNull(props.get(ProtonMetaDataSupportImpl.VERSION_KEY), "unexpected product");
+            context.assertEquals(expectedProduct, props.get(ProtonMetaDataSupportImpl.PRODUCT_KEY), "unexpected product");
+
+            context.assertTrue(props.containsKey(ProtonMetaDataSupportImpl.VERSION_KEY), "version not present");
+            context.assertNotNull(props.get(ProtonMetaDataSupportImpl.VERSION_KEY), "unexpected version");
+            context.assertEquals(expectedVersion, props.get(ProtonMetaDataSupportImpl.VERSION_KEY), "unexpected version");
+        }
+
     }
 
     private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException, ExecutionException {
