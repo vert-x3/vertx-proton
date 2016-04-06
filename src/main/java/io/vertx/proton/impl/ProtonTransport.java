@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 class ProtonTransport extends BaseHandler {
-    private static Logger LOG = LoggerFactory.getLogger(ProtonTransport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProtonTransport.class);
 
     private final Connection connection;
     private final Vertx vertx;

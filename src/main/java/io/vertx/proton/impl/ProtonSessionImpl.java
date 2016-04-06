@@ -31,7 +31,7 @@ import org.apache.qpid.proton.engine.Session;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ProtonSessionImpl implements ProtonSession {
-    private static Logger LOG = LoggerFactory.getLogger(ProtonSessionImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProtonSessionImpl.class);
 
     private final Session session;
     private int autoLinkCounter =0;

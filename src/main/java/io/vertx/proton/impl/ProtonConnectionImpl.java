@@ -38,7 +38,7 @@ import io.vertx.proton.ProtonSession;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ProtonConnectionImpl implements ProtonConnection {
-    private static Logger LOG = LoggerFactory.getLogger(ProtonConnectionImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProtonConnectionImpl.class);
 
     public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
 
