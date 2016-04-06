@@ -1,5 +1,7 @@
 package io.vertx.proton.sasl.impl;
 
+import java.nio.charset.StandardCharsets;
+
 public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
 
     public static final String MECH_NAME = "PLAIN";
@@ -28,8 +30,8 @@ public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
             password = "";
         }
 
-        byte[] usernameBytes = username.getBytes();
-        byte[] passwordBytes = password.getBytes();
+        byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
+        byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
         byte[] data = new byte[usernameBytes.length + passwordBytes.length + 2];
         System.arraycopy(usernameBytes, 0, data, 1, usernameBytes.length);
         System.arraycopy(passwordBytes, 0, data, 2 + usernameBytes.length, passwordBytes.length);
