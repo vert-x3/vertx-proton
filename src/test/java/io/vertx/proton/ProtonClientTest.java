@@ -272,7 +272,7 @@ public class ProtonClientTest extends MockServerTestBase {
             AtomicInteger counter = new AtomicInteger(0);
 
             ProtonReceiver receiver = connection.createReceiver(MockServer.Addresses.five_messages.toString());
-            receiver.setPrefetch(1) //Set prefetch to 1 credit. Test verifies receiver gets multiple messages, i.e credit is being replenished.
+            receiver.setPrefetch(2) //Set prefetch to 2 credit. Test verifies receiver gets multiple messages, i.e credit is being replenished.
             .handler((d, m) -> {
                 int count = counter.incrementAndGet();
 

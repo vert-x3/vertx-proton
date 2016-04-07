@@ -126,7 +126,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
             if(prefetch > 0) {
                 // Replenish credit if prefetch is configured.
                 //TODO: batch credit replenish, optionally flush if exceeding a given threshold?
-                flow(prefetch, false);
+                flow(1, false);
             }
         }
     }
