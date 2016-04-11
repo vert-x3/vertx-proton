@@ -61,28 +61,21 @@ public interface ProtonHelper {
   }
 
   /**
-   * Create an ErrorCondition with the given name/condition and description.
+   * Create an ErrorCondition with the given error condition value (which will be converted to the required Symbol type)
+   * and error description string.
    *
-   * @param name
-   *          the name of the error condition
+   * See the AMQP specification
+   * <a href="http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-transport-v1.0-os.html#type-amqp-error">error
+   * sections</a> for details of various standard error condition values.
+   *
+   * @param condition
+   *          the error condition value, to be converted to a Symbol
    * @param description
-   *          description of the error
+   *          String description of the error, may be null
    * @return the condition
    */
   public static ErrorCondition condition(String name, String description) {
     return new ErrorCondition(Symbol.valueOf(name), description);
-  }
-
-  /**
-   * Create an ErrorCondition with the given name/condition and no description.
-   *
-   * @param name
-   *          the name of the error condition
-   * @return the condition
-   */
-  public static ErrorCondition condition(String name) {
-    //TODO: just delete?
-    return new ErrorCondition(Symbol.valueOf(name), null);
   }
 
   /**
