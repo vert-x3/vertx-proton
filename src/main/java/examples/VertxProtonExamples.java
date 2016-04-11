@@ -41,7 +41,7 @@ public class VertxProtonExamples {
 
         // Send message, providing an onUpdated delivery handler that prints updates
         sender.send(message, delivery -> {
-          System.out.println(String.format("Message was received by the server: remote state=%s, remotely settled=%s",
+          System.out.println(String.format("Message received by server: remote state=%s, remotely settled=%s",
                                            delivery.getRemoteState(), delivery.remotelySettled()));
         });
       }
