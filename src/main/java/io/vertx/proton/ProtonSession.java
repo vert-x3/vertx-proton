@@ -9,25 +9,103 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
  */
 public interface ProtonSession {
 
-  void setIncomingCapacity(int bytes);
+  /**
+   * Creates a receiver used to consumer messages from the given node address.
+   *
+   * @param address
+   *          The source address to attach the consumer to.
+   *
+   * @return the (unopened) consumer.
+   */
+  ProtonReceiver createReceiver(String address);
 
-  abstract ErrorCondition getRemoteCondition();
-
-  int getIncomingCapacity();
-
-  abstract void setCondition(ErrorCondition condition);
-
-  abstract ErrorCondition getCondition();
-
-  ProtonSession open();
-
-  ProtonSession close();
-
-  ProtonSession openHandler(Handler<AsyncResult<ProtonSession>> openHandler);
-
-  ProtonSession closeHandler(Handler<AsyncResult<ProtonSession>> closeHandler);
-
+  /**
+   * Creates a sender used to send messages to the given node address. If no address (i.e null) is specified then a
+   * sender will be established to the 'anonymous relay' and each message must specify its destination address.
+   *
+   * @param address
+   *          The target address to attach to, or null to attach to the anonymous relay.
+   *
+   * @return the (unopened) sender.
+   */
   ProtonSender createSender(String address);
 
-  ProtonReceiver createReceiver(String address);
+  /**
+   * Opens the AMQP session, i.e. allows the Begin frame to be emitted. Typically used after any additional
+   * configuration is performed on the object.
+   *
+   * For locally initiated sessions, the {@link #openHandler(Handler)} may be used to handle the peer sending their
+   * Begin frame.
+   *
+   * @return the session
+   */
+  ProtonSession open();
+
+  /**
+   * Closed the AMQP session, i.e. allows the End frame to be emitted.
+   *
+   * If the closure is being locally initiated, the {@link #closeHandler(Handler)} may be used to handle the peer
+   * sending their End frame.
+   *
+   * @return the session
+   */
+  ProtonSession close();
+
+  /**
+   * Sets the incoming capacity in bytes, used to govern session-level flow control.
+   *
+   * @param capacity
+   *          capacity in bytes
+   */
+  void setIncomingCapacity(int capacity);
+
+  /**
+   * Gets the incoming capacity in bytes, used to govern session-level flow control.
+   *
+   * @return capacity in bytes
+   */
+  int getIncomingCapacity();
+
+  /**
+   * Sets the local ErrorCondition object.
+   *
+   * @param condition
+   *          the condition to set
+   * @return the link
+   */
+  void setCondition(ErrorCondition condition);
+
+  /**
+   * Gets the local ErrorCondition object.
+   *
+   * @return the condition
+   */
+  ErrorCondition getCondition();
+
+  /**
+   * Gets the remote ErrorCondition object.
+   *
+   * @return the condition
+   */
+  ErrorCondition getRemoteCondition();
+
+  /**
+   * Sets a handler for when an AMQP Begin frame is received from the remote peer.
+   *
+   * Typically used by clients, servers rely on {@link ProtonConnection#sessionOpenHandler(Handler)}.
+   *
+   * @param remoteOpenHandler
+   *          the handler
+   * @return the session
+   */
+  ProtonSession openHandler(Handler<AsyncResult<ProtonSession>> remoteOpenHandler);
+
+  /**
+   * Sets a handler for when an AMQP End frame is received from the remote peer.
+   *
+   * @param remoteCloseHandler
+   *          the handler
+   * @return the session
+   */
+  ProtonSession closeHandler(Handler<AsyncResult<ProtonSession>> remoteCloseHandler);
 }

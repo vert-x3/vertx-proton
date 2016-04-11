@@ -14,26 +14,25 @@ import org.apache.qpid.proton.amqp.transport.ErrorCondition;
  */
 public interface ProtonConnection {
 
-  ProtonConnection setHostname(String hostname);
-
-  ProtonConnection setContainer(String container);
-
-  ProtonConnection setCondition(ErrorCondition condition);
-
-  ErrorCondition getCondition();
-
-  String getContainer();
-
-  String getHostname();
-
-  ErrorCondition getRemoteCondition();
-
-  String getRemoteContainer();
-
-  String getRemoteHostname();
-
+  /**
+   * Opens the AMQP connection, i.e. allows the Open frame to be emitted. Typically used after any additional
+   * configuration is performed on the connection object.
+   *
+   * For locally initiated connections, the {@link #openHandler(Handler)} may be used to handle the peer sending their
+   * Open frame.
+   *
+   * @return the connection
+   */
   ProtonConnection open();
 
+  /**
+   * Closes the AMQP connection, i.e. allows the Close frame to be emitted.
+   *
+   * For locally initiated connections, the {@link #closeHandler(Handler)} may be used to handle the peer sending their
+   * Close frame (if they haven't already).
+   *
+   * @return the connection
+   */
   ProtonConnection close();
 
   /**
@@ -56,6 +55,22 @@ public interface ProtonConnection {
    * @return the (unopened) sender.
    */
   ProtonSender createSender(String address);
+
+  /**
+   * Sets the container id value advertised to peers in the AMQP Open frame. Sometimes used as a 'client-id' by clients.
+   *
+   * @param hostname
+   *          the container id to set
+   * @return the connection
+   */
+  ProtonConnection setContainer(String container);
+
+  /**
+   * Gets the container id value requested of/advertised to peers in the AMQP Open frame.
+   *
+   * @return the container id
+   */
+  String getContainer();
 
   /**
    * Sets the connection properties map to be sent to the remote peer in our Open frame.
@@ -91,20 +106,130 @@ public interface ProtonConnection {
    */
   ProtonSession createSession();
 
+  /**
+   * Disconnects the underlying transport connection.
+   */
   void disconnect();
 
+  /**
+   * Gets whether the underlying transport is disconnected.
+   *
+   * @return whether the underlying transport is disconnected.
+   */
   boolean isDisconnected();
 
-  ProtonConnection openHandler(Handler<AsyncResult<ProtonConnection>> openHandler);
+  /**
+   * Sets the hostname value requested of/advertised to peers in the AMQP Open frame.
+   *
+   * @param hostname
+   *          the hostname to set
+   * @return the connection
+   */
+  ProtonConnection setHostname(String hostname);
 
-  ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> closeHandler);
+  /**
+   * Gets the hostname value requested of/advertised to peers in the AMQP Open frame.
+   *
+   * @return the hostname
+   */
+  String getHostname();
 
-  ProtonConnection disconnectHandler(Handler<ProtonConnection> disconnectHandler);
+  /**
+   * Returns the container value requested by/advertised by remote peer in their AMQP Open frame.
+   *
+   * @return the container id
+   */
+  String getRemoteContainer();
 
+  /**
+   * Returns the container value requested by/advertised by remote peer in their AMQP Open frame.
+   *
+   * @return the container id
+   */
+  String getRemoteHostname();
+
+  /**
+   * Sets the local ErrorCondition object.
+   *
+   * @param condition
+   *          the condition to set
+   * @return the connection
+   */
+  ProtonConnection setCondition(ErrorCondition condition);
+
+  /**
+   * Gets the local ErrorCondition object.
+   *
+   * @return the condition
+   */
+  ErrorCondition getCondition();
+
+  /**
+   * Gets the remote ErrorCondition object.
+   *
+   * @return the condition
+   */
+  ErrorCondition getRemoteCondition();
+
+  /**
+   * Sets a handler for when an AMQP Open frame is received from the remote peer.
+   *
+   * @param remoteOpenHandler
+   *          the handler
+   * @return the connection
+   */
+  ProtonConnection openHandler(Handler<AsyncResult<ProtonConnection>> remoteOpenHandler);
+
+  /**
+   * Sets a handler for when an AMQP Close frame is received from the remote peer.
+   *
+   * @param remoteCloseHandler
+   *          the handler
+   * @return the connection
+   */
+  ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> remoteCloseHandler);
+
+  /**
+   * Sets a handler for when an AMQP Begin frame is received from the remote peer.
+   *
+   * Used to process remotely initiated Sessions. Locally initiated sessions have their own handler invoked instead.
+   * Typically used by servers.
+   *
+   * @param remoteSessionOpenHandler
+   *          the handler
+   * @return the connection
+   */
   ProtonConnection sessionOpenHandler(Handler<ProtonSession> remoteSessionOpenHandler);
 
+  /**
+   * Sets a handler for when an AMQP Attach frame is received from the remote peer for a sending link.
+   *
+   * Used to process remotely initiated sending link. Locally initiated links have their own handler invoked instead.
+   * Typically used by servers.
+   *
+   * @param remoteSenderOpenHandler
+   *          the handler
+   * @return the connection
+   */
   ProtonConnection senderOpenHandler(Handler<ProtonSender> remoteSenderOpenHandler);
 
+  /**
+   * Sets a handler for when an AMQP Attach frame is received from the remote peer for a receiving link.
+   *
+   * Used to process remotely initiated receiving link. Locally initiated links have their own handler invoked instead.
+   * Typically used by servers.
+   *
+   * @param remoteReceiverOpenHandler
+   *          the handler
+   * @return the connection
+   */
   ProtonConnection receiverOpenHandler(Handler<ProtonReceiver> remoteReceiverOpenHandler);
+
+  /**
+   * Sets a handler for when the underlying transport connection disconnects.
+   *
+   * @return the connection
+   */
+  ProtonConnection disconnectHandler(Handler<ProtonConnection> disconnectHandler);
 
 }

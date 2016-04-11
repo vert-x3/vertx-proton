@@ -7,6 +7,14 @@ import java.lang.IllegalStateException;
  */
 public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
 
+  /**
+   * Sets the handler to process messages as they arrive. Should be set before opening unless prefetch is disabled and
+   * credit is being manually controlled.
+   *
+   * @param handler
+   *          the handler to process messages
+   * @return the receiver
+   */
   ProtonReceiver handler(ProtonMessageHandler handler);
 
   /**
@@ -21,6 +29,12 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    */
   ProtonReceiver setPrefetch(int messages);
 
+  /**
+   * Get the current prefetch value.
+   *
+   * @return the prefetch
+   * @see #setPrefetch(int)
+   */
   int getPrefetch();
 
   /**
@@ -35,10 +49,16 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    */
   ProtonReceiver setAutoAccept(boolean autoAccept);
 
+  /**
+   * Get whether the receiver is auto accepting.
+   *
+   * @return whether deliveries are being auto accepted after handling if no disposition was applied
+   * @see #setAutoAccept(boolean)
+   */
   boolean isAutoAccept();
 
   /**
-   * Grants the number of message credits to the sender.
+   * Grants the given number of message credits to the sender.
    *
    * For use when {@link #setPrefetch(int)} has been used to disable automatic prefetch credit handling.
    *

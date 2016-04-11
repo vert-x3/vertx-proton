@@ -87,5 +87,14 @@ public interface ProtonSaslMechanism extends Comparable<ProtonSaslMechanism> {
    */
   String getPassword();
 
+  /**
+   * Checks whether a given mechanism is suitable for use in light of the available credentials.
+   *
+   * @param username
+   *          the username
+   * @param password
+   *          the password
+   * @return whether mechanism is applicable
+   */
   boolean isApplicable(String username, String password);
 }
