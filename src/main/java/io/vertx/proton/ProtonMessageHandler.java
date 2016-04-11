@@ -9,5 +9,5 @@ import org.apache.qpid.proton.message.Message;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public interface ProtonMessageHandler {
-    void handle(ProtonDelivery delivery, Message message);
+  void handle(ProtonDelivery delivery, Message message);
 }

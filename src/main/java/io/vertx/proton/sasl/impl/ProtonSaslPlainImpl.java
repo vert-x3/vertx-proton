@@ -4,47 +4,47 @@ import java.nio.charset.StandardCharsets;
 
 public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
 
-    public static final String MECH_NAME = "PLAIN";
+  public static final String MECH_NAME = "PLAIN";
 
-    @Override
-    public int getPriority() {
-        return PRIORITY.LOWER.getValue();
+  @Override
+  public int getPriority() {
+    return PRIORITY.LOWER.getValue();
+  }
+
+  @Override
+  public String getName() {
+    return MECH_NAME;
+  }
+
+  @Override
+  public byte[] getInitialResponse() {
+
+    String username = getUsername();
+    String password = getPassword();
+
+    if (username == null) {
+      username = "";
     }
 
-    @Override
-    public String getName() {
-        return MECH_NAME;
+    if (password == null) {
+      password = "";
     }
 
-    @Override
-    public byte[] getInitialResponse() {
+    byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
+    byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
+    byte[] data = new byte[usernameBytes.length + passwordBytes.length + 2];
+    System.arraycopy(usernameBytes, 0, data, 1, usernameBytes.length);
+    System.arraycopy(passwordBytes, 0, data, 2 + usernameBytes.length, passwordBytes.length);
+    return data;
+  }
 
-        String username = getUsername();
-        String password = getPassword();
+  @Override
+  public byte[] getChallengeResponse(byte[] challenge) {
+    return EMPTY;
+  }
 
-        if (username == null) {
-            username = "";
-        }
-
-        if (password == null) {
-            password = "";
-        }
-
-        byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
-        byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
-        byte[] data = new byte[usernameBytes.length + passwordBytes.length + 2];
-        System.arraycopy(usernameBytes, 0, data, 1, usernameBytes.length);
-        System.arraycopy(passwordBytes, 0, data, 2 + usernameBytes.length, passwordBytes.length);
-        return data;
-    }
-
-    @Override
-    public byte[] getChallengeResponse(byte[] challenge) {
-        return EMPTY;
-    }
-
-    @Override
-    public boolean isApplicable(String username, String password) {
-        return username != null && username.length() > 0 && password != null && password.length() > 0;
-    }
+  @Override
+  public boolean isApplicable(String username, String password) {
+    return username != null && username.length() > 0 && password != null && password.length() > 0;
+  }
 }

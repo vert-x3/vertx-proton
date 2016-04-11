@@ -10,13 +10,16 @@ public interface ProtonDelivery {
   /**
    * Updates the DeliveryState, and optionally settle the delivery as well.
    *
-   * @param state the delivery state to apply
-   * @param settle whether to {@link #settle()} the delivery at the same time
+   * @param state
+   *          the delivery state to apply
+   * @param settle
+   *          whether to {@link #settle()} the delivery at the same time
    * @return itself
    */
   ProtonDelivery disposition(DeliveryState state, boolean settle);
 
   DeliveryState getLocalState();
+
   DeliveryState getRemoteState();
 
   ProtonDelivery settle();

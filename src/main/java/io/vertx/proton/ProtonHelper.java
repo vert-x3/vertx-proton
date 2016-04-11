@@ -23,64 +23,64 @@ import java.nio.charset.StandardCharsets;
  */
 public interface ProtonHelper {
 
-    public static Message message() {
-        return Proton.message();
+  public static Message message() {
+    return Proton.message();
+  }
+
+  public static ErrorCondition condition(String name) {
+    return new ErrorCondition(Symbol.valueOf(name), null);
+  }
+
+  public static ErrorCondition condition(String name, String description) {
+    return new ErrorCondition(Symbol.valueOf(name), description);
+  }
+
+  public static Message message(String body) {
+    Message value = message();
+    value.setBody(new AmqpValue(body));
+    return value;
+  }
+
+  public static Message message(String address, String body) {
+    Message value = message(body);
+    value.setAddress(address);
+    return value;
+  }
+
+  public static byte[] tag(String tag) {
+    return tag.getBytes(StandardCharsets.UTF_8);
+  }
+
+  static <T> AsyncResult<T> future(T value, ErrorCondition err) {
+    if (err.getCondition() != null) {
+      return Future.failedFuture(err.toString());
+    } else {
+      return Future.succeededFuture(value);
     }
+  }
 
-    public  static ErrorCondition condition(String name) {
-        return new ErrorCondition(Symbol.valueOf(name), null);
-    }
+  public static ProtonDelivery accepted(ProtonDelivery delivery, boolean settle) {
+    delivery.disposition(Accepted.getInstance(), settle);
+    return delivery;
+  }
 
-    public  static ErrorCondition condition(String name, String description) {
-        return new ErrorCondition(Symbol.valueOf(name), description);
-    }
+  public static ProtonDelivery rejected(ProtonDelivery delivery, boolean settle) {
+    delivery.disposition(new Rejected(), settle);
+    return delivery;
+  }
 
-    public  static Message message(String body) {
-        Message value = message();
-        value.setBody(new AmqpValue(body));
-        return value;
-    }
+  public static ProtonDelivery released(ProtonDelivery delivery, boolean settle) {
+    delivery.disposition(Released.getInstance(), settle);
+    return delivery;
+  }
 
-    public  static Message message(String address, String body) {
-        Message value = message(body);
-        value.setAddress(address);
-        return value;
-    }
+  public static ProtonDelivery modified(ProtonDelivery delivery, boolean settle, boolean deliveryFailed,
+                                        boolean undeliverableHere) {
+    Modified modified = new Modified();
+    modified.setDeliveryFailed(deliveryFailed);
+    modified.setUndeliverableHere(undeliverableHere);
 
-    public static byte[] tag(String tag) {
-        return tag.getBytes(StandardCharsets.UTF_8);
-    }
-
-
-    static <T> AsyncResult<T> future(T value, ErrorCondition err) {
-        if (err.getCondition() != null) {
-            return Future.failedFuture(err.toString());
-        } else {
-            return Future.succeededFuture(value);
-        }
-    }
-
-    public static ProtonDelivery accepted(ProtonDelivery delivery, boolean settle) {
-        delivery.disposition(Accepted.getInstance(), settle);
-        return delivery;
-    }
-
-    public static ProtonDelivery rejected(ProtonDelivery delivery, boolean settle) {
-        delivery.disposition(new Rejected(), settle);
-        return delivery;
-    }
-
-    public static ProtonDelivery released(ProtonDelivery delivery, boolean settle) {
-        delivery.disposition(Released.getInstance(), settle);
-        return delivery;
-    }
-
-    public static ProtonDelivery modified(ProtonDelivery delivery, boolean settle, boolean deliveryFailed, boolean undeliverableHere) {
-        Modified modified = new Modified();
-        modified.setDeliveryFailed(deliveryFailed);
-        modified.setUndeliverableHere(undeliverableHere);
-
-        delivery.disposition(modified, settle);
-        return delivery;
-    }
+    delivery.disposition(modified, settle);
+    return delivery;
+  }
 }

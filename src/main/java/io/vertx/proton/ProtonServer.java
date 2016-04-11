@@ -9,13 +9,13 @@ import io.vertx.proton.impl.ProtonServerImpl;
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
 public interface ProtonServer {
-  
+
   static ProtonServer create(Vertx vertx) {
     return new ProtonServerImpl(vertx);
   }
 
   static ProtonServer create(Vertx vertx, ProtonServerOptions options) {
-      return new ProtonServerImpl(vertx, options);
+    return new ProtonServerImpl(vertx, options);
   }
 
   int actualPort();

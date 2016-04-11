@@ -28,8 +28,8 @@
  *
  * === Creating a connection
  *
- * Here is an example of connecting and then opening a connection, which can then be used
- * to create senders and receivers.
+ * Here is an example of connecting and then opening a connection, which can then be used to create senders and
+ * receivers.
  *
  * [source,java]
  * ----
@@ -38,9 +38,9 @@
  *
  * === Creating a sender
  * 
- * Here is an example of creating a sender and sending a message with it. The onUpdated handler
- * provided in the send call is invoked when disposition updates are received for the delivery,
- * with the example using this to print the delivery state and whether the delivery was settled.
+ * Here is an example of creating a sender and sending a message with it. The onUpdated handler provided in the send
+ * call is invoked when disposition updates are received for the delivery, with the example using this to print the
+ * delivery state and whether the delivery was settled.
  *
  * [source,java]
  * ----
@@ -49,8 +49,8 @@
  * 
  * === Creating a receiver
  * 
- * Here is an example of creating a receiver, and setting a message handler to process the incoming
- * messages and their related delivery.
+ * Here is an example of creating a receiver, and setting a message handler to process the incoming messages and their
+ * related delivery.
  *
  * [source,java]
  * ----
