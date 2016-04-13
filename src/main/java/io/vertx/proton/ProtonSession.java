@@ -71,8 +71,9 @@ public interface ProtonSession {
    *
    * @param capacity
    *          capacity in bytes
+   * @return the session
    */
-  void setIncomingCapacity(int capacity);
+  ProtonSession setIncomingCapacity(int capacity);
 
   /**
    * Gets the incoming capacity in bytes, used to govern session-level flow control.
@@ -86,9 +87,9 @@ public interface ProtonSession {
    *
    * @param condition
    *          the condition to set
-   * @return the link
+   * @return the session
    */
-  void setCondition(ErrorCondition condition);
+  ProtonSession setCondition(ErrorCondition condition);
 
   /**
    * Gets the local ErrorCondition object.

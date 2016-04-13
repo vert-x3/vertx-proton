@@ -72,8 +72,9 @@ public class ProtonSessionImpl implements ProtonSession {
   }
 
   @Override
-  public void setIncomingCapacity(int bytes) {
+  public ProtonSession setIncomingCapacity(int bytes) {
     session.setIncomingCapacity(bytes);
+    return this;
   }
 
   public int getOutgoingBytes() {
@@ -103,8 +104,9 @@ public class ProtonSessionImpl implements ProtonSession {
   }
 
   @Override
-  public void setCondition(ErrorCondition condition) {
+  public ProtonSession setCondition(ErrorCondition condition) {
     session.setCondition(condition);
+    return this;
   }
 
   @Override
