@@ -15,7 +15,18 @@
 */
 package io.vertx.proton;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.NetClientOptions;
+import io.vertx.core.net.PemKeyCertOptions;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.core.net.PfxOptions;
+import io.vertx.core.net.TrustOptions;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonClient} connect operations.
@@ -51,5 +62,268 @@ public class ProtonClientOptions extends NetClientOptions {
     return this;
   }
 
-  // TODO: Use a delegate? Override methods to change return type?
+  @Override
+  public ProtonClientOptions setSendBufferSize(int sendBufferSize) {
+    super.setSendBufferSize(sendBufferSize);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setReceiveBufferSize(int receiveBufferSize) {
+    super.setReceiveBufferSize(receiveBufferSize);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setReuseAddress(boolean reuseAddress) {
+    super.setReuseAddress(reuseAddress);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTrafficClass(int trafficClass) {
+    super.setTrafficClass(trafficClass);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTcpNoDelay(boolean tcpNoDelay) {
+    super.setTcpNoDelay(tcpNoDelay);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTcpKeepAlive(boolean tcpKeepAlive) {
+    super.setTcpKeepAlive(tcpKeepAlive);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setSoLinger(int soLinger) {
+    super.setSoLinger(soLinger);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setUsePooledBuffers(boolean usePooledBuffers) {
+    super.setUsePooledBuffers(usePooledBuffers);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setIdleTimeout(int idleTimeout) {
+    super.setIdleTimeout(idleTimeout);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setSsl(boolean ssl) {
+    super.setSsl(ssl);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setKeyStoreOptions(JksOptions options) {
+    super.setKeyStoreOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setPfxKeyCertOptions(PfxOptions options) {
+    super.setPfxKeyCertOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setPemKeyCertOptions(PemKeyCertOptions options) {
+    super.setPemKeyCertOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTrustStoreOptions(JksOptions options) {
+    super.setTrustStoreOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setPemTrustOptions(PemTrustOptions options) {
+    super.setPemTrustOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setPfxTrustOptions(PfxOptions options) {
+    super.setPfxTrustOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions addEnabledCipherSuite(String suite) {
+    super.addEnabledCipherSuite(suite);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions addCrlPath(String crlPath) throws NullPointerException {
+    super.addCrlPath(crlPath);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions addCrlValue(Buffer crlValue) throws NullPointerException {
+    super.addCrlValue(crlValue);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTrustAll(boolean trustAll) {
+    super.setTrustAll(trustAll);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setConnectTimeout(int connectTimeout) {
+    super.setConnectTimeout(connectTimeout);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setReconnectAttempts(int attempts) {
+    super.setReconnectAttempts(attempts);
+    return this;
+  }
+
+  @Override
+  public int getReconnectAttempts() {
+    return super.getReconnectAttempts();
+  }
+
+  @Override
+  public ProtonClientOptions setReconnectInterval(long interval) {
+    super.setReconnectInterval(interval);
+    return this;
+  }
+
+  @Override
+  public long getReconnectInterval() {
+    return super.getReconnectInterval();
+  }
+
+  @Override
+  public boolean isTrustAll() {
+    return super.isTrustAll();
+  }
+
+  @Override
+  public int getConnectTimeout() {
+    return super.getConnectTimeout();
+  }
+
+  @Override
+  public boolean isTcpNoDelay() {
+    return super.isTcpNoDelay();
+  }
+
+  @Override
+  public boolean isTcpKeepAlive() {
+    return super.isTcpKeepAlive();
+  }
+
+  @Override
+  public int getSoLinger() {
+    return super.getSoLinger();
+  }
+
+  @Override
+  public boolean isUsePooledBuffers() {
+    return super.isUsePooledBuffers();
+  }
+
+  @Override
+  public int getIdleTimeout() {
+    return super.getIdleTimeout();
+  }
+
+  @Override
+  public boolean isSsl() {
+    return super.isSsl();
+  }
+
+  @Override
+  public KeyCertOptions getKeyCertOptions() {
+    return super.getKeyCertOptions();
+  }
+
+  @Override
+  public TrustOptions getTrustOptions() {
+    return super.getTrustOptions();
+  }
+
+  @Override
+  public Set<String> getEnabledCipherSuites() {
+    return super.getEnabledCipherSuites();
+  }
+
+  @Override
+  public List<String> getCrlPaths() {
+    return super.getCrlPaths();
+  }
+
+  @Override
+  public List<Buffer> getCrlValues() {
+    return super.getCrlValues();
+  }
+
+  @Override
+  public int getSendBufferSize() {
+    return super.getSendBufferSize();
+  }
+
+  @Override
+  public int getReceiveBufferSize() {
+    return super.getReceiveBufferSize();
+  }
+
+  @Override
+  public boolean isReuseAddress() {
+    return super.isReuseAddress();
+  }
+
+  @Override
+  public int getTrafficClass() {
+    return super.getTrafficClass();
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+
+    int result = super.hashCode();
+    result = prime * result + Arrays.hashCode(allowedSaslMechanisms);
+
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+
+    if (getClass() != obj.getClass()){
+      return false;
+    }
+
+    if (!super.equals(obj)) {
+      return false;
+    }
+
+    ProtonClientOptions other = (ProtonClientOptions) obj;
+    if (!Arrays.equals(allowedSaslMechanisms, other.allowedSaslMechanisms)){
+      return false;
+    }
+
+    return true;
+  }
 }
