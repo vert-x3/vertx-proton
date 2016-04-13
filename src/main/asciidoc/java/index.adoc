@@ -1,6 +1,6 @@
 = Vert.x Proton
 
-This component faciliates AMQP integrations for Vert.x by providing a thin wrapper around the
+This component facilitates AMQP integrations for Vert.x by providing a thin wrapper around the
 link:http://qpid.apache.org/[Apache Qpid] Proton AMQP 1.0 protocol engine.
 
 == Using Vert.x Proton
