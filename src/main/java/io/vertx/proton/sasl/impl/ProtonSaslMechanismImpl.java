@@ -37,8 +37,9 @@ public abstract class ProtonSaslMechanismImpl implements ProtonSaslMechanism {
   }
 
   @Override
-  public void setUsername(String value) {
+  public ProtonSaslMechanism setUsername(String value) {
     this.username = value;
+    return this;
   }
 
   @Override
@@ -47,8 +48,9 @@ public abstract class ProtonSaslMechanismImpl implements ProtonSaslMechanism {
   }
 
   @Override
-  public void setPassword(String value) {
+  public ProtonSaslMechanism setPassword(String value) {
     this.password = value;
+    return this;
   }
 
   @Override

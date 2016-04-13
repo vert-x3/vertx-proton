@@ -76,8 +76,9 @@ public interface ProtonSaslMechanism extends Comparable<ProtonSaslMechanism> {
    *
    * @param username
    *          The user name given.
+   * @return the mechanism.
    */
-  void setUsername(String username);
+  ProtonSaslMechanism setUsername(String username);
 
   /**
    * Returns the configured user name value for this Mechanism.
@@ -92,8 +93,9 @@ public interface ProtonSaslMechanism extends Comparable<ProtonSaslMechanism> {
    *
    * @param username
    *          The user name given.
+   * @return the mechanism.
    */
-  void setPassword(String username);
+  ProtonSaslMechanism setPassword(String username);
 
   /**
    * Returns the configured password value for this Mechanism.
