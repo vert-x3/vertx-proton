@@ -24,7 +24,7 @@ import org.apache.qpid.proton.amqp.transport.Target;
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
  */
-public interface ProtonLink<T extends ProtonLink> {
+public interface ProtonLink<T extends ProtonLink<T>> {
 
   /**
    * Opens the AMQP link, i.e. allows the Attach frame to be emitted. Typically used after any additional configuration

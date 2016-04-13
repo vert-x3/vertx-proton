@@ -32,7 +32,7 @@ import org.apache.qpid.proton.engine.Link;
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
-abstract class ProtonLinkImpl<T extends ProtonLink> implements ProtonLink<T> {
+abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> {
 
   protected final Link link;
   private Handler<AsyncResult<T>> openHandler;
