@@ -17,6 +17,9 @@ package io.vertx.proton;
 
 import io.vertx.core.net.NetClientOptions;
 
+/**
+ * Options for configuring {@link io.vertx.proton.ProtonClient} connect operations.
+ */
 public class ProtonClientOptions extends NetClientOptions {
 
   private String[] allowedSaslMechanisms = null;
