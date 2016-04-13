@@ -15,18 +15,13 @@
 */
 package io.vertx.proton;
 
-import java.util.List;
-import java.util.Set;
-
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.net.JksOptions;
-import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.PfxOptions;
-import io.vertx.core.net.TrustOptions;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
@@ -148,30 +143,15 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
-  public int getAcceptBacklog() {
-    return super.getAcceptBacklog();
-  }
-
-  @Override
   public ProtonServerOptions setAcceptBacklog(int acceptBacklog) {
     super.setAcceptBacklog(acceptBacklog);
     return this;
   }
 
   @Override
-  public int getPort() {
-    return super.getPort();
-  }
-
-  @Override
   public ProtonServerOptions setPort(int port) {
     super.setPort(port);
     return this;
-  }
-
-  @Override
-  public String getHost() {
-    return super.getHost();
   }
 
   @Override
@@ -182,101 +162,15 @@ public class ProtonServerOptions extends NetServerOptions {
 
   @Override
   @Deprecated
-  public boolean isClientAuthRequired() {
-    return super.isClientAuthRequired();
-  }
-
-  @Override
-  @Deprecated
   public ProtonServerOptions setClientAuthRequired(boolean clientAuthRequired) {
     super.setClientAuthRequired(clientAuthRequired);
     return this;
   }
 
   @Override
-  public ClientAuth getClientAuth() {
-    return super.getClientAuth();
-  }
-
-  @Override
   public ProtonServerOptions setClientAuth(ClientAuth clientAuth) {
     super.setClientAuth(clientAuth);
     return this;
-  }
-
-  @Override
-  public boolean isTcpNoDelay() {
-    return super.isTcpNoDelay();
-  }
-
-  @Override
-  public boolean isTcpKeepAlive() {
-    return super.isTcpKeepAlive();
-  }
-
-  @Override
-  public int getSoLinger() {
-    return super.getSoLinger();
-  }
-
-  @Override
-  public boolean isUsePooledBuffers() {
-    return super.isUsePooledBuffers();
-  }
-
-  @Override
-  public int getIdleTimeout() {
-    return super.getIdleTimeout();
-  }
-
-  @Override
-  public boolean isSsl() {
-    return super.isSsl();
-  }
-
-  @Override
-  public KeyCertOptions getKeyCertOptions() {
-    return super.getKeyCertOptions();
-  }
-
-  @Override
-  public TrustOptions getTrustOptions() {
-    return super.getTrustOptions();
-  }
-
-  @Override
-  public Set<String> getEnabledCipherSuites() {
-    return super.getEnabledCipherSuites();
-  }
-
-  @Override
-  public List<String> getCrlPaths() {
-    return super.getCrlPaths();
-  }
-
-  @Override
-  public List<Buffer> getCrlValues() {
-    return super.getCrlValues();
-  }
-
-  @Override
-  public int getSendBufferSize() {
-    return super.getSendBufferSize();
-  }
-
-  @Override
-  public int getReceiveBufferSize() {
-    return super.getReceiveBufferSize();
-  }
-
-  @Override
-  public boolean isReuseAddress() {
-    return super.isReuseAddress();
-  }
-
-  @Override
-  public int getTrafficClass() {
-    return super.getTrafficClass();
   }
 
   @Override
