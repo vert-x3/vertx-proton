@@ -39,13 +39,16 @@ public class ProtonClientOptions extends NetClientOptions {
    *
    * @param mechanisms
    *          the restricted mechanism(s) or null to clear the restriction.
+   * @return a reference to this, so the API can be used fluently
    */
-  public void setAllowedSaslMechanisms(final String... saslMechanisms) {
+  public ProtonClientOptions setAllowedSaslMechanisms(final String... saslMechanisms) {
     if (saslMechanisms == null || saslMechanisms.length == 0) {
       this.allowedSaslMechanisms = null;
     } else {
       this.allowedSaslMechanisms = saslMechanisms;
     }
+
+    return this;
   }
 
   // TODO: Use a delegate? Override methods to change return type?
