@@ -136,9 +136,10 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   }
 
   @Override
-  public void sendQueueDrainHandler(Handler<ProtonSender> drainHandler) {
+  public ProtonSender sendQueueDrainHandler(Handler<ProtonSender> drainHandler) {
     this.drainHandler = drainHandler;
     fireLinkFlow();
+    return this;
   }
 
   @Override
