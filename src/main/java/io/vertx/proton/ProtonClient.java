@@ -62,7 +62,8 @@ public interface ProtonClient {
    * @param connectionHandler
    *          handler that will process the result, giving either the (unopened) ProtonConnection or failure cause.
    */
-  void connect(String host, int port, String username, String password, Handler<AsyncResult<ProtonConnection>> handler);
+  void connect(String host, int port, String username, String password,
+               Handler<AsyncResult<ProtonConnection>> connectionHandler);
 
   /**
    * Connect to the given host and port, without credentials.
@@ -82,6 +83,8 @@ public interface ProtonClient {
   /**
    * Connect to the given host and port, with credentials (if required by server peer).
    *
+   * @param options
+   *          the options to apply
    * @param host
    *          the host to connect to
    * @param port
@@ -94,5 +97,5 @@ public interface ProtonClient {
    *          handler that will process the result, giving either the (unopened) ProtonConnection or failure cause.
    */
   void connect(ProtonClientOptions options, String host, int port, String username, String password,
-               Handler<AsyncResult<ProtonConnection>> handler);
+               Handler<AsyncResult<ProtonConnection>> connectionHandler);
 }

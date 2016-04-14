@@ -110,7 +110,7 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    *
    * @param target
    *          the target
-   * @return
+   * @return the link
    */
   T setTarget(Target target);
 
@@ -133,7 +133,7 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    *
    * @param source
    *          the source
-   * @return
+   * @return the link
    */
   T setSource(Source source);
 

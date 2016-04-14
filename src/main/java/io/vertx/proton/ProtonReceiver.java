@@ -58,7 +58,7 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    *
    * True by default.
    *
-   * @param autoSettle
+   * @param autoAccept
    *          whether deliveries should be auto accepted after handling if no disposition was applied
    * @return the receiver
    */
@@ -77,7 +77,7 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    *
    * For use when {@link #setPrefetch(int)} has been used to disable automatic prefetch credit handling.
    *
-   * @param messages
+   * @param credits
    *          the credits to flow
    * @return the receiver
    * @throws IllegalStateException

@@ -74,7 +74,7 @@ public interface ProtonConnection {
   /**
    * Sets the container id value advertised to peers in the AMQP Open frame. Sometimes used as a 'client-id' by clients.
    *
-   * @param hostname
+   * @param container
    *          the container id to set
    * @return the connection
    */

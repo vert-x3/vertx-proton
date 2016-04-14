@@ -101,10 +101,6 @@ public interface ProtonServer {
    * Start listening on the host and port configured in the options used when creating the server, with the result
    * handler called when the operation completes.
    *
-   * @param port
-   *          the port to listen on (may be 0 to auto-select port)
-   * @param host
-   *          the host interface to listen on (may be "0.0.0.0" to indicate all interfaces).
    * @param handler
    *          the result handler
    * @return the server

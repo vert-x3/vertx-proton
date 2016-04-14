@@ -85,8 +85,8 @@ public interface ProtonHelper {
    *          String description of the error, may be null
    * @return the condition
    */
-  public static ErrorCondition condition(String name, String description) {
-    return new ErrorCondition(Symbol.valueOf(name), description);
+  public static ErrorCondition condition(String condition, String description) {
+    return new ErrorCondition(Symbol.valueOf(condition), description);
   }
 
   /**

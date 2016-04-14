@@ -44,7 +44,7 @@ public class ProtonClientOptions extends NetClientOptions {
    * Set a restricted mechanism(s) that the client may use during the SASL negotiation. If null or empty argument is
    * given, no restriction is applied and any supported mechanism can be used.
    *
-   * @param mechanisms
+   * @param saslMechanisms
    *          the restricted mechanism(s) or null to clear the restriction.
    * @return a reference to this, so the API can be used fluently
    */

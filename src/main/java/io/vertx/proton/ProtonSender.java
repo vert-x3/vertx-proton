@@ -82,9 +82,8 @@ public interface ProtonSender extends ProtonLink<ProtonSender> {
    *
    * @param handler
    *          the handler to process messages
-   * @return the receiver
    */
-  void sendQueueDrainHandler(Handler<ProtonSender> drainHandler);
+  void sendQueueDrainHandler(Handler<ProtonSender> handler);
 
   /**
    * Sets whether sent deliveries should be automatically locally-settled once they have become remotely-settled by the
