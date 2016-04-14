@@ -37,7 +37,7 @@
   </licenses>
 
   <properties>
-    <stack.version>3.2.1</stack.version>
+    <stack.version>3.3.0-SNAPSHOT</stack.version>
     <activemq.version>5.13.1</activemq.version>
     <proton.version>0.12.0</proton.version>
   </properties>
