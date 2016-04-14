@@ -3,6 +3,11 @@
 This component facilitates AMQP integrations for Vert.x by providing a thin wrapper around the
 link:http://qpid.apache.org/[Apache Qpid] Proton AMQP 1.0 protocol engine.
 
+WARNING: this module has the tech preview status, this means the API can change between versions. It also
+         exposes Proton classes directly because it is not an abstraction layer of an AMQP client, it is rather
+         an integration layer to make Proton integrated with Vert.x and its threading model as well as
+         networking layer.
+
 == Using Vert.x Proton
 
 To use Vert.x Proton, add the following dependency to the _dependencies_ section of your build descriptor:
