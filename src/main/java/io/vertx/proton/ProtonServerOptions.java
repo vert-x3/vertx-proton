@@ -22,6 +22,7 @@ import io.vertx.core.net.NetServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.PfxOptions;
+import io.vertx.core.net.SSLEngine;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
@@ -181,5 +182,22 @@ public class ProtonServerOptions extends NetServerOptions {
   @Override
   public boolean equals(Object obj) {
     return super.equals(obj);
+  }
+
+  @Override
+  public ProtonServerOptions setUseAlpn(boolean useAlpn) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ProtonServerOptions setSslEngine(SSLEngine sslEngine) {
+    super.setSslEngine(sslEngine);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions addEnabledSecureTransportProtocol(String protocol) {
+    super.addEnabledSecureTransportProtocol(protocol);
+    return this;
   }
 }

@@ -23,6 +23,8 @@ import io.vertx.core.net.NetClientOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.PfxOptions;
+import io.vertx.core.net.SSLEngine;
+import io.vertx.core.net.TCPSSLOptions;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonClient} connect operations.
@@ -226,5 +228,28 @@ public class ProtonClientOptions extends NetClientOptions {
     }
 
     return true;
+  }
+
+  @Override
+  public ProtonClientOptions setSslEngine(SSLEngine sslEngine) {
+    super.setSslEngine(sslEngine);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setUseAlpn(boolean useAlpn) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ProtonClientOptions addEnabledSecureTransportProtocol(String protocol) {
+    super.addEnabledSecureTransportProtocol(protocol);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setHostnameVerificationAlgorithm(String hostnameVerificationAlgorithm) {
+    super.setHostnameVerificationAlgorithm(hostnameVerificationAlgorithm);
+    return this;
   }
 }
