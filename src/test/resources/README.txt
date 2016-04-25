@@ -61,3 +61,12 @@ keytool -storetype pkcs12 -keystore other-ca-pkcs12.truststore -storepass passwo
 keytool -storetype pkcs12 -keystore other-ca-pkcs12.truststore -storepass password -alias other-ca -delete
 keytool -storetype pkcs12 -keystore other-ca-pkcs12.truststore -storepass password -keypass password -importcert -alias other-ca -file other-ca.crt -noprompt
 
+# Create a key pair for the broker with an unexpected hostname, and sign it with the CA:
+# --------------------------------------------------------------------------------------
+keytool -storetype pkcs12 -keystore broker-wrong-host-pkcs12.keystore -storepass password -keypass password -alias broker-wrong-host -genkey -dname "O=Server,CN=wronghost" -validity 9999 -ext bc=ca:false -ext eku=sA
+
+keytool -storetype pkcs12 -keystore broker-wrong-host-pkcs12.keystore -storepass password -alias broker-wrong-host -certreq -file broker-wrong-host.csr
+keytool -storetype pkcs12 -keystore ca-pkcs12.keystore -storepass password -alias ca -gencert -rfc -infile broker-wrong-host.csr -outfile broker-wrong-host.crt -validity 9999 -ext bc=ca:false -ext eku=sA
+
+keytool -storetype pkcs12 -keystore broker-wrong-host-pkcs12.keystore -storepass password -keypass password -importcert -alias ca -file ca.crt -noprompt
+keytool -storetype pkcs12 -keystore broker-wrong-host-pkcs12.keystore -storepass password -keypass password -importcert -alias broker-wrong-host -file broker-wrong-host.crt

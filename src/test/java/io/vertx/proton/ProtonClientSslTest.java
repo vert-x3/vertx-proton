@@ -40,9 +40,12 @@ public class ProtonClientSslTest {
 
   private static final String PASSWORD = "password";
   private static final String KEYSTORE = "src/test/resources/broker-pkcs12.keystore";
+  private static final String WRONG_HOST_KEYSTORE = "src/test/resources/broker-wrong-host-pkcs12.keystore";
   private static final String TRUSTSTORE = "src/test/resources/client-pkcs12.truststore";
   private static final String KEYSTORE_CLIENT = "src/test/resources/client-pkcs12.keystore";
   private static final String OTHER_CA_TRUSTSTORE = "src/test/resources/other-ca-pkcs12.truststore";
+  private static final String VERIFY_HTTPS = "HTTPS";
+  private static final String NO_VERIFY = "";
 
   private Vertx vertx;
   private ProtonServer protonServer;
@@ -227,6 +230,68 @@ public class ProtonClientSslTest {
         context.assertFalse(res.succeeded());
       }
       async.complete();
+    });
+
+    async.awaitSuccess();
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectWithHostnameVerification(TestContext context) throws Exception {
+    doHostnameVerificationTestImpl(context, true);
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectWithoutHostnameVerification(TestContext context) throws Exception {
+    doHostnameVerificationTestImpl(context, false);
+  }
+
+  private void doHostnameVerificationTestImpl(TestContext context, boolean verifyHost) throws Exception {
+
+    Async async = context.async();
+
+    // Create a server that accept a connection and expects a client connection+session+receiver
+    ProtonServerOptions serverOptions = new ProtonServerOptions();
+    serverOptions.setSsl(true);
+    PfxOptions serverPfxOptions = new PfxOptions().setPath(WRONG_HOST_KEYSTORE).setPassword(PASSWORD);
+    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+
+    protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
+
+    // Connect the client and open a receiver to verify the connection works
+    ProtonClientOptions clientOptions = new ProtonClientOptions();
+    clientOptions.setSsl(true);
+    PfxOptions clientPfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(PASSWORD);
+    clientOptions.setPfxTrustOptions(clientPfxOptions);
+
+    // Verify/update the hostname verification settings
+    if (!verifyHost) {
+      clientOptions.setHostnameVerificationAlgorithm(NO_VERIFY);
+    } else {
+      clientOptions.setHostnameVerificationAlgorithm(VERIFY_HTTPS);
+    }
+
+    ProtonClient client = ProtonClient.create(vertx);
+    client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
+      if (verifyHost) {
+        // Expect connect to fail as server cert hostname doesn't match.
+        context.assertFalse(res.succeeded(), "expected connect to fail");
+        LOG.trace("Connect failed");
+        async.complete();
+      } else {
+        // Expect connect to succeed as verification is disabled
+        context.assertTrue(res.succeeded(), "expected connect to succeed");
+        LOG.trace("Connect succeeded");
+        ProtonConnection connection = res.result();
+        connection.open();
+
+        ProtonReceiver receiver = connection.createReceiver("some-address");
+
+        receiver.openHandler(recvResult -> {
+          context.assertTrue(recvResult.succeeded());
+          LOG.trace("Client receiver open");
+          async.complete();
+        }).open();
+      }
     });
 
     async.awaitSuccess();
