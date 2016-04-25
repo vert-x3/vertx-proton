@@ -24,7 +24,6 @@ import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.PfxOptions;
 import io.vertx.core.net.SSLEngine;
-import io.vertx.core.net.TCPSSLOptions;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonClient} connect operations.
@@ -40,6 +39,11 @@ public class ProtonClientOptions extends NetClientOptions {
    */
   public String[] getAllowedSaslMechanisms() {
     return allowedSaslMechanisms;
+  }
+
+  public ProtonClientOptions() {
+    super();
+    setHostnameVerificationAlgorithm("HTTPS");
   }
 
   /**

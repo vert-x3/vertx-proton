@@ -264,10 +264,10 @@ public class ProtonClientSslTest {
     clientOptions.setPfxTrustOptions(clientPfxOptions);
 
     // Verify/update the hostname verification settings
+    context.assertEquals(VERIFY_HTTPS, clientOptions.getHostnameVerificationAlgorithm(),
+        "expected host verification to be on by default");
     if (!verifyHost) {
       clientOptions.setHostnameVerificationAlgorithm(NO_VERIFY);
-    } else {
-      clientOptions.setHostnameVerificationAlgorithm(VERIFY_HTTPS);
     }
 
     ProtonClient client = ProtonClient.create(vertx);

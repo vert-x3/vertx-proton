@@ -70,4 +70,21 @@ public class ProtonClientOptionsTest {
     assertEquals("Options should have same hash code for both calls", options.hashCode(), options.hashCode());
   }
 
+  @Test
+  public void testDefaultHostnameVerificationAlgorithm() {
+    ProtonClientOptions options = new ProtonClientOptions();
+
+    assertEquals("Expected default verification algorithm to be HTTPS", "HTTPS",
+        options.getHostnameVerificationAlgorithm());
+  }
+
+  @Test
+  public void testSetGetHostnameVerificationAlgorithm() {
+    ProtonClientOptions options = new ProtonClientOptions();
+
+    options.setHostnameVerificationAlgorithm("");
+    assertEquals("Expected algorthim value not found", "", options.getHostnameVerificationAlgorithm());
+    options.setHostnameVerificationAlgorithm("HTTPS");
+    assertEquals("Expected algorthim value not found", "HTTPS", options.getHostnameVerificationAlgorithm());
+  }
 }
