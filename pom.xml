@@ -38,8 +38,8 @@
 
   <properties>
     <stack.version>3.3.0-SNAPSHOT</stack.version>
-    <activemq.version>5.13.1</activemq.version>
-    <proton.version>0.12.0</proton.version>
+    <activemq.version>5.13.2</activemq.version>
+    <proton.version>0.12.2</proton.version>
   </properties>
 
   <scm>
