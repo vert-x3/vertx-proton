@@ -62,6 +62,7 @@ class ProtonTransport extends BaseHandler {
     this.netClient = netClient;
     this.socket = socket;
     transport.setMaxFrameSize(1024 * 32); // TODO: make configurable
+    transport.setEmitFlowEventOnSend(false); // TODO: make configurable
     if (authenticator != null) {
       authenticator.init(transport);
     }
