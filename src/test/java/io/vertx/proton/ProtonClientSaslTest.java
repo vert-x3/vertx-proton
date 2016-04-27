@@ -93,7 +93,7 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
 
     // Now restrict the allows SASL mechanisms to ANONYMOUS, then expect connect to succeed as it wont use the invalid
     // credentials
-    options.setAllowedSaslMechanisms(ProtonSaslAnonymousImpl.MECH_NAME);
+    options.addEnabledSaslMechanism(ProtonSaslAnonymousImpl.MECH_NAME);
     doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", true);
   }
 

@@ -15,7 +15,6 @@
 */
 package io.vertx.proton.impl;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.security.sasl.SaslException;
@@ -54,7 +53,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    *          The password provide credentials to the remote peer, or null if there is none.
    * @param allowedSaslMechanisms
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
-   *          server, or null if no restriction.
+   *          server, or null/empty if no restriction.
    * @param socket
    *          The socket associated with the connection this SASL process is for
    * @param handler
@@ -62,26 +61,14 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    * @param connection
    *          The connection the SASL process is for
    */
-  public ProtonSaslClientAuthenticatorImpl(String username, String password, String[] allowedSaslMechanisms,
+  public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms,
       NetSocket socket, Handler<AsyncResult<ProtonConnection>> handler, ProtonConnectionImpl connection) {
     this.handler = handler;
     this.socket = socket;
     this.connection = connection;
     this.username = username;
     this.password = password;
-    if (allowedSaslMechanisms != null) {
-      Set<String> mechs = new HashSet<String>();
-      for (int i = 0; i < allowedSaslMechanisms.length; i++) {
-        String mech = allowedSaslMechanisms[i];
-        if (!mech.trim().isEmpty()) {
-          mechs.add(mech);
-        }
-      }
-
-      if (!mechs.isEmpty()) {
-        this.mechanismsRestriction = mechs;
-      }
-    }
+    this.mechanismsRestriction = allowedSaslMechanisms;
   }
 
   @Override

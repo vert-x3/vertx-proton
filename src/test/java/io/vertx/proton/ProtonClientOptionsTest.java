@@ -31,9 +31,9 @@ public class ProtonClientOptionsTest {
   @Test
   public void testDifferentObjectsEqual() {
     ProtonClientOptions options1 = new ProtonClientOptions();
-    options1.setAllowedSaslMechanisms("PLAIN");
+    options1.addEnabledSaslMechanism("PLAIN");
     ProtonClientOptions options2 = new ProtonClientOptions();
-    options2.setAllowedSaslMechanisms("PLAIN");
+    options2.addEnabledSaslMechanism("PLAIN");
 
     assertNotSame("Options should be different objects", options1, options2);
     assertEquals("Options should be equal", options1, options2);
@@ -42,9 +42,9 @@ public class ProtonClientOptionsTest {
   @Test
   public void testDifferentObjectsNotEqual() {
     ProtonClientOptions options1 = new ProtonClientOptions();
-    options1.setAllowedSaslMechanisms("PLAIN");
+    options1.addEnabledSaslMechanism("PLAIN");
     ProtonClientOptions options2 = new ProtonClientOptions();
-    options2.setAllowedSaslMechanisms("ANONYMOUS");
+    options2.addEnabledSaslMechanism("ANONYMOUS");
 
     assertNotSame("Options should be different objects", options1, options2);
     assertNotEquals("Options should not be equal", options1, options2);
@@ -53,9 +53,9 @@ public class ProtonClientOptionsTest {
   @Test
   public void testEqualObjectsReturnSameHashCode() {
     ProtonClientOptions options1 = new ProtonClientOptions();
-    options1.setAllowedSaslMechanisms("PLAIN");
+    options1.addEnabledSaslMechanism("PLAIN");
     ProtonClientOptions options2 = new ProtonClientOptions();
-    options2.setAllowedSaslMechanisms("PLAIN");
+    options2.addEnabledSaslMechanism("PLAIN");
 
     assertNotSame("Options should be different objects", options1, options2);
     assertEquals("Options should be equal", options1, options2);
@@ -63,9 +63,21 @@ public class ProtonClientOptionsTest {
   }
 
   @Test
+  public void testAddGetEnabledSaslMechanisms() {
+    ProtonClientOptions options = new ProtonClientOptions();
+
+    assertTrue("Enabled mechanisms should be empty", options.getEnabledSaslMechanisms().isEmpty());
+
+    options.addEnabledSaslMechanism("PLAIN");
+
+    assertFalse("Enabled mechanisms should not be empty", options.getEnabledSaslMechanisms().isEmpty());
+    assertTrue("Enabled mechanisms should contain PLAIN", options.getEnabledSaslMechanisms().contains("PLAIN"));
+  }
+
+  @Test
   public void testHashCodeReturnsSameValueOnRepeatedCall() {
     ProtonClientOptions options = new ProtonClientOptions();
-    options.setAllowedSaslMechanisms("PLAIN");
+    options.addEnabledSaslMechanism("PLAIN");
 
     assertEquals("Options should have same hash code for both calls", options.hashCode(), options.hashCode());
   }

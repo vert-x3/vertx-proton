@@ -39,7 +39,7 @@ public class ProtonSaslMechanismFinderImpl {
    *          the password, or null if there is none
    * @param mechRestrictions
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
-   *          server, or null if there is no restriction
+   *          server, or null/empty if there is no restriction
    * @param remoteMechanisms
    *          list of mechanism names that are supported by the remote peer.
    *
@@ -55,7 +55,7 @@ public class ProtonSaslMechanismFinderImpl {
       ProtonSaslMechanismFactory factory = findMechanismFactory(remoteMechanism);
       if (factory != null) {
         ProtonSaslMechanism mech = factory.createMechanism();
-        if (mechRestrictions != null && !mechRestrictions.contains(remoteMechanism)) {
+        if (mechRestrictions != null && !mechRestrictions.isEmpty() && !mechRestrictions.contains(remoteMechanism)) {
           LOG.trace("Skipping {0} mechanism because it is not in the configured mechanisms restriction set",
               remoteMechanism);
         } else if (mech.isApplicable(username, password)) {

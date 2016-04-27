@@ -15,7 +15,9 @@
 */
 package io.vertx.proton;
 
-import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.JksOptions;
@@ -30,16 +32,7 @@ import io.vertx.core.net.SSLEngine;
  */
 public class ProtonClientOptions extends NetClientOptions {
 
-  private String[] allowedSaslMechanisms = null;
-
-  /**
-   * Get the mechanisms the client is currently restricted to use.
-   *
-   * @return the mechanisms, or null if there is no restriction in place
-   */
-  public String[] getAllowedSaslMechanisms() {
-    return allowedSaslMechanisms;
-  }
+  private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
 
   public ProtonClientOptions() {
     super();
@@ -47,20 +40,24 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   /**
-   * Set a restricted mechanism(s) that the client may use during the SASL negotiation. If null or empty argument is
-   * given, no restriction is applied and any supported mechanism can be used.
+   * Get the mechanisms the client should be restricted to use.
    *
-   * @param saslMechanisms
-   *          the restricted mechanism(s) or null to clear the restriction.
+   * @return the mechanisms, or null/empty set if there is no restriction in place
+   */
+  public Set<String> getEnabledSaslMechanisms() {
+    return enabledSaslMechanisms;
+  }
+
+  /**
+   * Adds a mechanism name that the client may use during SASL negotiation.
+   *
+   * @param saslMechanism
+   *          the sasl mechanism name .
    * @return a reference to this, so the API can be used fluently
    */
-  public ProtonClientOptions setAllowedSaslMechanisms(final String... saslMechanisms) {
-    if (saslMechanisms == null || saslMechanisms.length == 0) {
-      this.allowedSaslMechanisms = null;
-    } else {
-      this.allowedSaslMechanisms = saslMechanisms;
-    }
-
+  public ProtonClientOptions addEnabledSaslMechanism(String saslMechanism) {
+    Objects.requireNonNull(saslMechanism, "Mechanism must not be null");
+    enabledSaslMechanisms.add(saslMechanism);
     return this;
   }
 
@@ -207,7 +204,7 @@ public class ProtonClientOptions extends NetClientOptions {
     final int prime = 31;
 
     int result = super.hashCode();
-    result = prime * result + Arrays.hashCode(allowedSaslMechanisms);
+    result = prime * result + Objects.hashCode(enabledSaslMechanisms);
 
     return result;
   }
@@ -227,7 +224,7 @@ public class ProtonClientOptions extends NetClientOptions {
     }
 
     ProtonClientOptions other = (ProtonClientOptions) obj;
-    if (!Arrays.equals(allowedSaslMechanisms, other.allowedSaslMechanisms)){
+    if (!Objects.equals(enabledSaslMechanisms, other.enabledSaslMechanisms)){
       return false;
     }
 
