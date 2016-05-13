@@ -112,7 +112,7 @@ public class MockServer {
           sender.open();
         }
         default:
-          sender.setCondition(condition("amqp:not-found", "unknown address")).close();
+          sender.setCondition(condition(AmqpError.NOT_FOUND, "unknown address")).close();
         }
       }
     });

@@ -72,12 +72,32 @@ public interface ProtonHelper {
   }
 
   /**
-   * Create an ErrorCondition with the given error condition value (which will be converted to the required Symbol type)
-   * and error description string.
+   * Create an ErrorCondition with the given error condition value and error description string.
    *
    * See the AMQP specification
    * <a href="http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-transport-v1.0-os.html#type-amqp-error">error
    * sections</a> for details of various standard error condition values.
+   *
+   * For useful condition value constants, see {@link org.apache.qpid.proton.amqp.transport.AmqpError AmqpError},
+   * {@link org.apache.qpid.proton.amqp.transport.ConnectionError ConnectionError},
+   * {@link org.apache.qpid.proton.amqp.transport.SessionError SessionError} and
+   * {@link org.apache.qpid.proton.amqp.transport.LinkError LinkError}.
+   *
+   * @param condition
+   *          the error condition value
+   * @param description
+   *          String description of the error, may be null
+   * @return the condition
+   */
+  public static ErrorCondition condition(Symbol condition, String description) {
+    return new ErrorCondition(condition, description);
+  }
+
+  /**
+   * Create an ErrorCondition with the given error condition value (which will be converted to the required Symbol type)
+   * and error description string.
+   *
+   * See {@link #condition(Symbol, String)} for more details.
    *
    * @param condition
    *          the error condition value, to be converted to a Symbol
@@ -86,7 +106,7 @@ public interface ProtonHelper {
    * @return the condition
    */
   public static ErrorCondition condition(String condition, String description) {
-    return new ErrorCondition(Symbol.valueOf(condition), description);
+    return condition(Symbol.valueOf(condition), description);
   }
 
   /**
