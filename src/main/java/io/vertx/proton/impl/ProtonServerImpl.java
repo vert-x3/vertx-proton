@@ -38,16 +38,28 @@ public class ProtonServerImpl implements ProtonServer {
   private final Vertx vertx;
   private final NetServer server;
   private Handler<ProtonConnection> handler;
+  private final ProtonSaslAuthenticator authenticator;
   private boolean advertiseAnonymousRelayCapability = true;
 
-  public ProtonServerImpl(Vertx vertx) {
+  private ProtonServerImpl(Vertx vertx, NetServer server, ProtonSaslAuthenticator authenticator) {
     this.vertx = vertx;
-    this.server = this.vertx.createNetServer();
+    this.server = server;
+    this.authenticator = authenticator;
+  }
+  public ProtonServerImpl(Vertx vertx) {
+    this(vertx, vertx.createNetServer(), null);
+  }
+
+  public ProtonServerImpl(Vertx vertx, ProtonSaslAuthenticator authenticator) {
+    this(vertx, vertx.createNetServer(), authenticator);
   }
 
   public ProtonServerImpl(Vertx vertx, ProtonServerOptions options) {
-    this.vertx = vertx;
-    this.server = this.vertx.createNetServer(options);
+    this(vertx, vertx.createNetServer(options), null);
+  }
+
+  public ProtonServerImpl(Vertx vertx, ProtonServerOptions options, ProtonSaslAuthenticator authenticator) {
+    this(vertx, vertx.createNetServer(options), authenticator);
   }
 
   public int actualPort() {
@@ -126,7 +138,11 @@ public class ProtonServerImpl implements ProtonServer {
           connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
         }
 
-        connection.bindServer(netSocket, new ProtonSaslServerAuthenticatorImpl(handler, connection));
+        ProtonSaslAuthenticator connectionAuthenticator = authenticator;
+        if(connectionAuthenticator == null) {
+          connectionAuthenticator = new ProtonSaslServerAuthenticatorImpl(handler, connection);
+        }
+        connection.bindServer(netSocket, connectionAuthenticator);
       }
     });
     return this;

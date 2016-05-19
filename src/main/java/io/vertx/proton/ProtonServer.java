@@ -18,6 +18,7 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.proton.impl.ProtonSaslAuthenticator;
 import io.vertx.proton.impl.ProtonServerImpl;
 
 /**
@@ -34,6 +35,19 @@ public interface ProtonServer {
    */
   static ProtonServer create(Vertx vertx) {
     return new ProtonServerImpl(vertx);
+  }
+
+  /**
+   * Create a ProtonServer instance with the given Vertx instance and SASL authenticator.
+   *
+   * @param vertx
+   *          the vertx instance to use
+   * @param authenticator
+   *          server SASL authenticator to use
+   * @return the server instance
+   */
+  static ProtonServer create(Vertx vertx, ProtonSaslAuthenticator authenticator) {
+    return new ProtonServerImpl(vertx, authenticator);
   }
 
   /**
