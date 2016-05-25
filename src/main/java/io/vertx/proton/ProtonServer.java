@@ -38,19 +38,6 @@ public interface ProtonServer {
   }
 
   /**
-   * Create a ProtonServer instance with the given Vertx instance and SASL authenticator.
-   *
-   * @param vertx
-   *          the vertx instance to use
-   * @param authenticator
-   *          server SASL authenticator to use
-   * @return the server instance
-   */
-  static ProtonServer create(Vertx vertx, ProtonSaslAuthenticator authenticator) {
-    return new ProtonServerImpl(vertx, authenticator);
-  }
-
-  /**
    * Create a ProtonServer instance with the given Vertx instance and options.
    *
    * @param vertx
@@ -78,6 +65,14 @@ public interface ProtonServer {
    * @return the handler
    */
   Handler<ProtonConnection> connectHandler();
+
+  /**
+   * Sets authenticator to be used by Proton server.
+   *
+   * @param authenticator to be used for connection authentication.
+   * @return configured server
+     */
+  ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator);
 
   /**
    * Gets the actual port being listened on.

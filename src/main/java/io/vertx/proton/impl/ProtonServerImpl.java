@@ -38,28 +38,17 @@ public class ProtonServerImpl implements ProtonServer {
   private final Vertx vertx;
   private final NetServer server;
   private Handler<ProtonConnection> handler;
-  private final ProtonSaslAuthenticator authenticator;
+  private ProtonSaslAuthenticator authenticator;
   private boolean advertiseAnonymousRelayCapability = true;
 
-  private ProtonServerImpl(Vertx vertx, NetServer server, ProtonSaslAuthenticator authenticator) {
-    this.vertx = vertx;
-    this.server = server;
-    this.authenticator = authenticator;
-  }
   public ProtonServerImpl(Vertx vertx) {
-    this(vertx, vertx.createNetServer(), null);
-  }
-
-  public ProtonServerImpl(Vertx vertx, ProtonSaslAuthenticator authenticator) {
-    this(vertx, vertx.createNetServer(), authenticator);
+    this.vertx = vertx;
+    this.server = this.vertx.createNetServer();
   }
 
   public ProtonServerImpl(Vertx vertx, ProtonServerOptions options) {
-    this(vertx, vertx.createNetServer(options), null);
-  }
-
-  public ProtonServerImpl(Vertx vertx, ProtonServerOptions options, ProtonSaslAuthenticator authenticator) {
-    this(vertx, vertx.createNetServer(options), authenticator);
+    this.vertx = vertx;
+    this.server = this.vertx.createNetServer(options);
   }
 
   public int actualPort() {
@@ -120,6 +109,11 @@ public class ProtonServerImpl implements ProtonServer {
 
   public Handler<ProtonConnection> connectHandler() {
     return handler;
+  }
+
+  public ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator) {
+    this.authenticator = authenticator;
+    return this;
   }
 
   public ProtonServerImpl connectHandler(Handler<ProtonConnection> handler) {

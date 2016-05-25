@@ -16,38 +16,36 @@
 package io.vertx.proton.impl;
 
 import io.vertx.core.Vertx;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonServer;
 import org.apache.qpid.proton.engine.Transport;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
-import java.util.concurrent.Callable;
-
-import static com.jayway.awaitility.Awaitility.await;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-
+@RunWith(VertxUnitRunner.class)
 public class ProtonServerImplTest {
 
-    @Test
-    public void shouldInvokePassedAuthenticator() throws InterruptedException {
-        // Given
+    @Test(timeout = 20000)
+    public void testConnectionOpenResultReturnsConnection(TestContext context) {
+        Async async = context.async();
         Vertx vertx = Vertx.vertx();
-        ProtonSaslAuthenticator authenticator = mock(ProtonSaslAuthenticator.class);
-        ProtonServer.create(vertx, authenticator).connectHandler(protonConnection -> {}).listen(9999);
-
-        // When
-        ProtonClient.create(vertx).connect("localhost", 9999, protonConnectionAsyncResult -> {});
-
-        // Then
-        await().until(new Callable<Boolean>() {
+        ProtonServer.create(vertx).saslAuthenticator(new ProtonSaslAuthenticator() {
             @Override
-            public Boolean call() throws Exception {
-                verify(authenticator).init(any(Transport.class));
-                return true;
+            public void init(Transport transport) {
+                async.complete();
             }
-        });
+
+            @Override
+            public boolean process() {
+                return false;
+            }
+        }).connectHandler(protonConnection -> {}).listen(server ->
+                ProtonClient.create(vertx).connect("localhost", server.result().actualPort(),
+                        protonConnectionAsyncResult -> {})
+        );
     }
 
 }
