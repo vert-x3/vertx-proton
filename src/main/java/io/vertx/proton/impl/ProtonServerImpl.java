@@ -25,10 +25,10 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;
-import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
+import org.apache.qpid.proton.engine.Transport;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -38,7 +38,8 @@ public class ProtonServerImpl implements ProtonServer {
   private final Vertx vertx;
   private final NetServer server;
   private Handler<ProtonConnection> handler;
-  private ProtonSaslAuthenticator authenticator;
+  // default authenticator, anonymous
+  private ProtonSaslAuthenticator authenticator = new ProtonSaslServerAuthenticatorImpl();
   private boolean advertiseAnonymousRelayCapability = true;
 
   public ProtonServerImpl(Vertx vertx) {
@@ -112,32 +113,46 @@ public class ProtonServerImpl implements ProtonServer {
   }
 
   public ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator) {
-    this.authenticator = authenticator;
+    if (authenticator == null) {
+      // restore the default authenticator
+      this.authenticator = new ProtonSaslServerAuthenticatorImpl();
+    } else {
+      this.authenticator = authenticator;
+    }
     return this;
   }
 
   public ProtonServerImpl connectHandler(Handler<ProtonConnection> handler) {
     this.handler = handler;
-    server.connectHandler(new Handler<NetSocket>() {
-      @Override
-      public void handle(NetSocket netSocket) {
-        String hostname = null;
-        try {
-          hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-        }
-
-        ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
-        if (advertiseAnonymousRelayCapability) {
-          connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
-        }
-
-        ProtonSaslAuthenticator connectionAuthenticator = authenticator;
-        if(connectionAuthenticator == null) {
-          connectionAuthenticator = new ProtonSaslServerAuthenticatorImpl(handler, connection);
-        }
-        connection.bindServer(netSocket, connectionAuthenticator);
+    server.connectHandler(netSocket -> {
+      String hostname = null;
+      try {
+        hostname = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
       }
+
+      ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
+      if (advertiseAnonymousRelayCapability) {
+        connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
+      }
+
+      connection.bindServer(netSocket, new ProtonSaslAuthenticator () {
+
+        @Override
+        public void init(Transport transport) {
+          authenticator.init(transport);
+        }
+
+        @Override
+        public boolean process() {
+          boolean result = authenticator.process();
+          if (result) {
+            // if the real authenticator succeeds then pass the handling of the connection to the server
+            handler.handle(connection);
+          }
+          return result;
+        }
+      });
     });
     return this;
   }
