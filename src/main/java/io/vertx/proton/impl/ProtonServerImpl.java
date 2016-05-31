@@ -149,12 +149,10 @@ public class ProtonServerImpl implements ProtonServer {
             if (succeeded()) {
               handler.handle(connection);
             } else {
-              // auth failed, disconnect client
+              // auth failed, flush any pending data and disconnect client
+              connection.flush();
               connection.disconnect();
             }
-          } else {
-            // authentication is not complete, flush and wait for more data
-            connection.flush();
           }
           return result;
         }
