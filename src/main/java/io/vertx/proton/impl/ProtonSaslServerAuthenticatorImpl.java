@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.impl;
 
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Sasl.SaslOutcome;
 import org.apache.qpid.proton.engine.Transport;

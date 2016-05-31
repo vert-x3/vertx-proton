@@ -21,6 +21,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonServer;
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Transport;
 import org.junit.Test;
 import org.junit.runner.RunWith;

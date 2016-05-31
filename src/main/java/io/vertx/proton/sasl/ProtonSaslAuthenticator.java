@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package io.vertx.proton.impl;
+package io.vertx.proton.sasl;
 
 import org.apache.qpid.proton.engine.Transport;
 

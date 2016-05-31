@@ -19,6 +19,7 @@ import java.util.Set;
 
 import javax.security.sasl.SaslException;
 
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
 

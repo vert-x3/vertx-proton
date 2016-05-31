@@ -18,6 +18,7 @@ package io.vertx.proton.impl;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.amqp.Symbol;
 
 import io.vertx.core.AsyncResult;
