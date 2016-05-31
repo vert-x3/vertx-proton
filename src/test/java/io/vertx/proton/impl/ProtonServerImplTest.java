@@ -43,6 +43,11 @@ public class ProtonServerImplTest {
             public boolean process() {
                 return false;
             }
+
+            @Override
+            public boolean succeeded() {
+                return false;
+            }
         }).connectHandler(protonConnection -> {}).listen(server ->
                 ProtonClient.create(vertx).connect("localhost", server.result().actualPort(),
                         protonConnectionAsyncResult -> {})

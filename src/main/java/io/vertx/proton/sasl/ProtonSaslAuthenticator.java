@@ -28,4 +28,11 @@ public interface ProtonSaslAuthenticator {
    * @return true if the SASL handshake completed.
    */
   boolean process();
+
+  /**
+   * Once called after process finished it returns true if the authentication succeeded.
+   *
+   * @return true if auth succeeded
+   */
+  boolean succeeded();
 }

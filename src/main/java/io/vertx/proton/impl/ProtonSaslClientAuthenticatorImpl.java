@@ -44,6 +44,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
   private Handler<AsyncResult<ProtonConnection>> handler;
   private NetSocket socket;
   private ProtonConnectionImpl connection;
+  private boolean succeeded;
 
   /**
    * Create the authenticator and initialize it.
@@ -85,6 +86,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
     }
 
     boolean done = false;
+    succeeded = false;
 
     try {
       switch (sasl.getState()) {
@@ -100,6 +102,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
         break;
       case PN_SASL_PASS:
         done = true;
+        succeeded = true;
         handler.handle(Future.succeededFuture(connection));
         break;
       default:
@@ -116,6 +119,11 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
     }
 
     return done;
+  }
+
+  @Override
+  public boolean succeeded() {
+    return succeeded;
   }
 
   private void handleSaslInit() throws SecurityException {

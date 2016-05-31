@@ -18,13 +18,10 @@ package io.vertx.proton.impl;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import io.vertx.core.*;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.amqp.Symbol;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
@@ -132,7 +129,7 @@ public class ProtonServerImpl implements ProtonServer {
       } catch (UnknownHostException e) {
       }
 
-      ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
+      final ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
       if (advertiseAnonymousRelayCapability) {
         connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
       }
@@ -148,10 +145,23 @@ public class ProtonServerImpl implements ProtonServer {
         public boolean process() {
           boolean result = authenticator.process();
           if (result) {
-            // if the real authenticator succeeds then pass the handling of the connection to the server
-            handler.handle(connection);
+            // the authenticator completed
+            if (succeeded()) {
+              handler.handle(connection);
+            } else {
+              // auth failed, disconnect client
+              connection.disconnect();
+            }
+          } else {
+            // authentication is not complete, flush and wait for more data
+            connection.flush();
           }
           return result;
+        }
+
+        @Override
+        public boolean succeeded() {
+          return authenticator.succeeded();
         }
       });
     });

@@ -28,6 +28,7 @@ import io.vertx.proton.sasl.impl.ProtonSaslAnonymousImpl;
 public class ProtonSaslServerAuthenticatorImpl implements ProtonSaslAuthenticator {
 
   private Sasl sasl;
+  private boolean succeeded;
 
   @Override
   public void init(Transport transport) {
@@ -35,6 +36,7 @@ public class ProtonSaslServerAuthenticatorImpl implements ProtonSaslAuthenticato
     sasl.server();
     sasl.allowSkip(false);
     sasl.setMechanisms(ProtonSaslAnonymousImpl.MECH_NAME);
+    succeeded = false;
   }
 
   @Override
@@ -48,6 +50,7 @@ public class ProtonSaslServerAuthenticatorImpl implements ProtonSaslAuthenticato
       String chosen = remoteMechanisms[0];
       if (ProtonSaslAnonymousImpl.MECH_NAME.equals(chosen)) {
         sasl.done(SaslOutcome.PN_SASL_OK);
+        succeeded = true;
         return true;
       } else {
         sasl.done(SaslOutcome.PN_SASL_AUTH);
@@ -55,5 +58,10 @@ public class ProtonSaslServerAuthenticatorImpl implements ProtonSaslAuthenticato
     }
 
     return false;
+  }
+
+  @Override
+  public boolean succeeded() {
+    return succeeded;
   }
 }
