@@ -20,6 +20,7 @@ import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Transport;
@@ -35,7 +36,7 @@ public class ProtonServerImplTest {
         Vertx vertx = Vertx.vertx();
         ProtonServer.create(vertx).saslAuthenticator(new ProtonSaslAuthenticator() {
             @Override
-            public void init(Transport transport) {
+            public void init(ProtonConnection protonConnection, Transport transport) {
                 async.complete();
             }
 

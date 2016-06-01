@@ -127,6 +127,7 @@ public class ProtonServerImpl implements ProtonServer {
       try {
         hostname = InetAddress.getLocalHost().getHostName();
       } catch (UnknownHostException e) {
+        // ignore
       }
 
       final ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
@@ -137,8 +138,8 @@ public class ProtonServerImpl implements ProtonServer {
       connection.bindServer(netSocket, new ProtonSaslAuthenticator () {
 
         @Override
-        public void init(Transport transport) {
-          authenticator.init(transport);
+        public void init(ProtonConnection protonConnection, Transport transport) {
+          authenticator.init(protonConnection, transport);
         }
 
         @Override

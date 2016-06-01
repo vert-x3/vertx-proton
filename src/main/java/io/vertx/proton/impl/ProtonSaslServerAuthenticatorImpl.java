@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.impl;
 
+import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Sasl.SaslOutcome;
@@ -31,7 +32,7 @@ public class ProtonSaslServerAuthenticatorImpl implements ProtonSaslAuthenticato
   private boolean succeeded;
 
   @Override
-  public void init(Transport transport) {
+  public void init(ProtonConnection protonConnection, Transport transport) {
     this.sasl = transport.sasl();
     sasl.server();
     sasl.allowSkip(false);

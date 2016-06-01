@@ -63,7 +63,7 @@ public class ProtonClientImpl implements ProtonClient {
         ProtonConnectionImpl amqpConnnection = new ProtonConnectionImpl(vertx, host);
 
         ProtonSaslClientAuthenticatorImpl authenticator = new ProtonSaslClientAuthenticatorImpl(username, password,
-            options.getEnabledSaslMechanisms(), res.result(), connectHandler, amqpConnnection);
+            options.getEnabledSaslMechanisms(), res.result(), connectHandler);
         amqpConnnection.bindClient(netClient, res.result(), authenticator);
 
         // Need to flush here to get the SASL process going, or it will wait until calls on the connection are processed

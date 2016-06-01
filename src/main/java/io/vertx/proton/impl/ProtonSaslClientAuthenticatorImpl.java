@@ -43,7 +43,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
   private Set<String> mechanismsRestriction;
   private Handler<AsyncResult<ProtonConnection>> handler;
   private NetSocket socket;
-  private ProtonConnectionImpl connection;
+  private ProtonConnection connection;
   private boolean succeeded;
 
   /**
@@ -60,21 +60,19 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    *          The socket associated with the connection this SASL process is for
    * @param handler
    *          The handler to convey the result of the SASL process to
-   * @param connection
-   *          The connection the SASL process is for
    */
   public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms,
-      NetSocket socket, Handler<AsyncResult<ProtonConnection>> handler, ProtonConnectionImpl connection) {
+      NetSocket socket, Handler<AsyncResult<ProtonConnection>> handler) {
     this.handler = handler;
     this.socket = socket;
-    this.connection = connection;
     this.username = username;
     this.password = password;
     this.mechanismsRestriction = allowedSaslMechanisms;
   }
 
   @Override
-  public void init(Transport transport) {
+  public void init(ProtonConnection protonConnection, Transport transport) {
+    this.connection = protonConnection;
     this.sasl = transport.sasl();
     sasl.client();
   }
@@ -147,8 +145,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
         }
       }
     } catch (SaslException se) {
-      SecurityException sece = new SecurityException("Exception while processing SASL init.", se);
-      throw sece;
+      throw new SecurityException("Exception while processing SASL init.", se);
     }
   }
 
@@ -161,8 +158,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
         sasl.send(response, 0, response.length);
       }
     } catch (SaslException se) {
-      SecurityException sece = new SecurityException("Exception while processing SASL step.", se);
-      throw sece;
+      throw new SecurityException("Exception while processing SASL step.", se);
     }
   }
 }
