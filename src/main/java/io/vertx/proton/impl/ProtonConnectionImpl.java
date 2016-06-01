@@ -30,6 +30,7 @@ import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
@@ -203,6 +204,11 @@ public class ProtonConnectionImpl implements ProtonConnection {
   public boolean isAnonymousRelaySupported() {
     return anonymousRelaySupported;
   };
+
+  @Override
+  public Record attachments() {
+    return connection.attachments();
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   //
@@ -378,5 +384,4 @@ public class ProtonConnectionImpl implements ProtonConnection {
       }
     }
   }
-
 }

@@ -20,6 +20,7 @@ import io.vertx.core.Handler;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
+import org.apache.qpid.proton.engine.Record;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -97,6 +98,13 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    * @return whether the link is locally open.
    */
   boolean isOpen();
+
+  /**
+   * Retrieves the attachments record, upon which application items can be set/retrieved.
+   *
+   * @return the attachments
+   */
+  Record attachments();
 
   /**
    * Gets the current local target config.

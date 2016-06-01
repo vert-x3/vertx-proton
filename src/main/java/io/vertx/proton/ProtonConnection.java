@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.engine.Record;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -86,6 +87,13 @@ public interface ProtonConnection {
    * @return the container id
    */
   String getContainer();
+
+  /**
+   * Retrieves the attachments record, upon which application items can be set/retrieved.
+   *
+   * @return the attachments
+   */
+  Record attachments();
 
   /**
    * Sets the connection properties map to be sent to the remote peer in our Open frame.

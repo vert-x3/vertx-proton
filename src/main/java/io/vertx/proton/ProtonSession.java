@@ -18,6 +18,7 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.engine.Record;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -65,6 +66,13 @@ public interface ProtonSession {
    * @return the session
    */
   ProtonSession close();
+
+  /**
+   * Retrieves the attachments record, upon which application items can be set/retrieved.
+   *
+   * @return the attachments
+   */
+  Record attachments();
 
   /**
    * Sets the incoming capacity in bytes, used to govern session-level flow control.
