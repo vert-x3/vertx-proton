@@ -13,13 +13,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package io.vertx.proton.impl;
+package io.vertx.proton.sasl;
 
+import io.vertx.core.net.NetSocket;
+import io.vertx.proton.ProtonConnection;
 import org.apache.qpid.proton.engine.Transport;
 
 public interface ProtonSaslAuthenticator {
 
-  void init(Transport transport);
+  void init(NetSocket socket, ProtonConnection protonConnection, Transport transport);
 
   /**
    * Process the SASL authentication cycle until such time as an outcome is determined. This should be called by the
@@ -28,4 +30,11 @@ public interface ProtonSaslAuthenticator {
    * @return true if the SASL handshake completed.
    */
   boolean process();
+
+  /**
+   * Once called after process finished it returns true if the authentication succeeded.
+   *
+   * @return true if auth succeeded
+   */
+  boolean succeeded();
 }

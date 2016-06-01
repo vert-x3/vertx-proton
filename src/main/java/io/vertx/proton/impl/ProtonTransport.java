@@ -23,6 +23,8 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
 
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.engine.BaseHandler;
 import org.apache.qpid.proton.engine.Collector;
@@ -64,7 +66,7 @@ class ProtonTransport extends BaseHandler {
     transport.setMaxFrameSize(1024 * 32); // TODO: make configurable
     transport.setEmitFlowEventOnSend(false); // TODO: make configurable
     if (authenticator != null) {
-      authenticator.init(transport);
+      authenticator.init(this.socket, (ProtonConnection) this.connection.getContext(), transport);
     }
     this.authenticator = authenticator;
     transport.bind(connection);

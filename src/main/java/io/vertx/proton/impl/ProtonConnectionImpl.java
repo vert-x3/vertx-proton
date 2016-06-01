@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
@@ -363,7 +364,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     transport = new ProtonTransport(connection, vertx, client, socket, authenticator);
   }
 
-  void bindServer(NetSocket socket, ProtonSaslServerAuthenticatorImpl authenticator) {
+  void bindServer(NetSocket socket, ProtonSaslAuthenticator authenticator) {
     transport = new ProtonTransport(connection, vertx, null, socket, authenticator);
   }
 

@@ -18,17 +18,16 @@ package io.vertx.proton.impl;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import io.vertx.core.*;
+import io.vertx.core.net.NetSocket;
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.amqp.Symbol;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;
-import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
+import org.apache.qpid.proton.engine.Transport;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -38,6 +37,8 @@ public class ProtonServerImpl implements ProtonServer {
   private final Vertx vertx;
   private final NetServer server;
   private Handler<ProtonConnection> handler;
+  // default authenticator, anonymous
+  private ProtonSaslAuthenticator authenticator = new ProtonSaslServerAuthenticatorImpl();
   private boolean advertiseAnonymousRelayCapability = true;
 
   public ProtonServerImpl(Vertx vertx) {
@@ -110,24 +111,59 @@ public class ProtonServerImpl implements ProtonServer {
     return handler;
   }
 
+  public ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator) {
+    if (authenticator == null) {
+      // restore the default authenticator
+      this.authenticator = new ProtonSaslServerAuthenticatorImpl();
+    } else {
+      this.authenticator = authenticator;
+    }
+    return this;
+  }
+
   public ProtonServerImpl connectHandler(Handler<ProtonConnection> handler) {
     this.handler = handler;
-    server.connectHandler(new Handler<NetSocket>() {
-      @Override
-      public void handle(NetSocket netSocket) {
-        String hostname = null;
-        try {
-          hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-        }
-
-        ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
-        if (advertiseAnonymousRelayCapability) {
-          connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
-        }
-
-        connection.bindServer(netSocket, new ProtonSaslServerAuthenticatorImpl(handler, connection));
+    server.connectHandler(netSocket -> {
+      String hostname = null;
+      try {
+        hostname = InetAddress.getLocalHost().getHostName();
+      } catch (UnknownHostException e) {
+        // ignore
       }
+
+      final ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
+      if (advertiseAnonymousRelayCapability) {
+        connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
+      }
+
+      connection.bindServer(netSocket, new ProtonSaslAuthenticator () {
+
+        @Override
+        public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+          authenticator.init(socket, protonConnection, transport);
+        }
+
+        @Override
+        public boolean process() {
+          boolean result = authenticator.process();
+          if (result) {
+            // the authenticator completed
+            if (succeeded()) {
+              handler.handle(connection);
+            } else {
+              // auth failed, flush any pending data and disconnect client
+              connection.flush();
+              connection.disconnect();
+            }
+          }
+          return result;
+        }
+
+        @Override
+        public boolean succeeded() {
+          return authenticator.succeeded();
+        }
+      });
     });
     return this;
   }
