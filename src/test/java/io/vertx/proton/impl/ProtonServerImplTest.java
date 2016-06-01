@@ -24,7 +24,8 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
-import io.vertx.proton.sasl.impl.ProtonSaslAnonymousImpl;
+
+import java.nio.charset.StandardCharsets;
 
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
@@ -36,6 +37,10 @@ import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
 public class ProtonServerImplTest {
+
+  private static final String GOOD_USER = "GOOD_USER";
+  private static final String BAD_USER = "BAD_USER";
+  private static final String PASSWD = "GOOD_PASSWORD";
 
   private Vertx vertx;
 
@@ -80,9 +85,9 @@ public class ProtonServerImplTest {
   public void testCustomAuthenticatorFailsAuthentication(TestContext context) {
     Async connectedAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticator(new TestAuthenticator(false)).connectHandler(protonConnection -> {
+    ProtonServer.create(vertx).saslAuthenticator(new TestAuthenticator()).connectHandler(protonConnection -> {
       context.fail("Handler should not be called for connection that failed authentication");
-    }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(),
+    }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(), BAD_USER, PASSWD,
         protonConnectionAsyncResult -> {
           context.assertFalse(protonConnectionAsyncResult.succeeded());
           connectedAsync.complete();
@@ -96,12 +101,12 @@ public class ProtonServerImplTest {
     Async connectedAsync = context.async();
     Async authenticatedAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticator(new TestAuthenticator(true)).connectHandler(protonConnection -> {
+    ProtonServer.create(vertx).saslAuthenticator(new TestAuthenticator()).connectHandler(protonConnection -> {
       // Verify the expected auth detail was recorded in the connection attachments, just using a String here.
       String authValue = protonConnection.attachments().get(TestAuthenticator.AUTH_KEY, String.class);
       context.assertEquals(TestAuthenticator.AUTH_VALUE, authValue);
       authenticatedAsync.complete();
-    }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(),
+    }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(), GOOD_USER, PASSWD,
         protonConnectionAsyncResult -> {
           context.assertTrue(protonConnectionAsyncResult.succeeded());
           protonConnectionAsyncResult.result().disconnect();
@@ -115,15 +120,11 @@ public class ProtonServerImplTest {
   private final class TestAuthenticator implements ProtonSaslAuthenticator {
     public static final String AUTH_KEY = "MY_AUTH_KEY";
     public static final String AUTH_VALUE = "MY_AUTH_VALUE";
+    private static final String PLAIN = "PLAIN";
 
     private Sasl sasl;
-    private boolean succeed;
     private boolean succeeded;
     ProtonConnection protonConnection;
-
-    public TestAuthenticator(boolean succeed) {
-      this.succeed = succeed;
-    }
 
     @Override
     public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
@@ -131,14 +132,21 @@ public class ProtonServerImplTest {
       this.sasl = transport.sasl();
       sasl.server();
       sasl.allowSkip(false);
-      sasl.setMechanisms(ProtonSaslAnonymousImpl.MECH_NAME);
+      sasl.setMechanisms(PLAIN);
     }
 
     @Override
     public boolean process() {
       String[] remoteMechanisms = sasl.getRemoteMechanisms();
       if (remoteMechanisms.length > 0) {
-        if (succeed) {
+        String chosenMech = remoteMechanisms[0];
+
+        boolean success = false;
+        if (PLAIN.equals(chosenMech)) {
+          success = evaluatePlainResponse(sasl);
+        }
+
+        if (success) {
           succeeded = true;
           sasl.done(SaslOutcome.PN_SASL_OK);
           // Record any desired kind of auth detail in the connection attachments, just using a String here.
@@ -146,6 +154,7 @@ public class ProtonServerImplTest {
         } else {
           sasl.done(SaslOutcome.PN_SASL_AUTH);
         }
+
         return true;
       }
 
@@ -155,6 +164,55 @@ public class ProtonServerImplTest {
     @Override
     public boolean succeeded() {
       return succeeded;
+    }
+
+    private boolean evaluatePlainResponse(Sasl sasl) {
+      byte[] response = new byte[sasl.pending()];
+      sasl.recv(response, 0, response.length);
+
+      // Per https://tools.ietf.org/html/rfc4616 the PLAIN message format is: [authzid] UTF8NUL authcid UTF8NUL passwd
+      // Break initial response into its constituent parts.
+      int authzidTerminatorPos = findNullPosition(response, 0);
+      if (authzidTerminatorPos < 0) {
+        // Invalid PLAIN encoding, authzid null terminator not found
+        return false;
+      }
+
+      int authcidTerminatorPos = findNullPosition(response, authzidTerminatorPos + 1);
+      if (authcidTerminatorPos < 0) {
+        // Invalid PLAIN encoding, authcid null terminator not found
+        return false;
+      }
+
+      if (authcidTerminatorPos == response.length - 1) {
+        // Invalid PLAIN encoding, no password present
+        return false;
+      }
+
+      // Grab the authcid and password (ignoring authzid if present)
+      String authcid = new String(response, authzidTerminatorPos + 1, authcidTerminatorPos - authzidTerminatorPos - 1,
+          StandardCharsets.UTF_8);
+      String passwd = new String(response, authcidTerminatorPos + 1, response.length - authcidTerminatorPos - 1,
+          StandardCharsets.UTF_8);
+
+      // Now verify the given credentials
+      if (GOOD_USER.equals(authcid) && PASSWD.equals(passwd)) {
+        // Success
+        return true;
+      }
+
+      return false;
+    }
+
+    private int findNullPosition(byte[] response, int startPosition) {
+      int position = startPosition;
+      while (position < response.length) {
+        if (response[position] == (byte) 0) {
+          return position;
+        }
+        position++;
+      }
+      return -1;
     }
   }
 
