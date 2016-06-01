@@ -38,6 +38,7 @@ public class ProtonServerImpl implements ProtonServer {
   private final Vertx vertx;
   private final NetServer server;
   private Handler<ProtonConnection> handler;
+  private ProtonSaslAuthenticator authenticator;
   private boolean advertiseAnonymousRelayCapability = true;
 
   public ProtonServerImpl(Vertx vertx) {
@@ -110,6 +111,11 @@ public class ProtonServerImpl implements ProtonServer {
     return handler;
   }
 
+  public ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator) {
+    this.authenticator = authenticator;
+    return this;
+  }
+
   public ProtonServerImpl connectHandler(Handler<ProtonConnection> handler) {
     this.handler = handler;
     server.connectHandler(new Handler<NetSocket>() {
@@ -126,7 +132,11 @@ public class ProtonServerImpl implements ProtonServer {
           connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
         }
 
-        connection.bindServer(netSocket, new ProtonSaslServerAuthenticatorImpl(handler, connection));
+        ProtonSaslAuthenticator connectionAuthenticator = authenticator;
+        if(connectionAuthenticator == null) {
+          connectionAuthenticator = new ProtonSaslServerAuthenticatorImpl(handler, connection);
+        }
+        connection.bindServer(netSocket, connectionAuthenticator);
       }
     });
     return this;

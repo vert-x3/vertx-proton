@@ -363,7 +363,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     transport = new ProtonTransport(connection, vertx, client, socket, authenticator);
   }
 
-  void bindServer(NetSocket socket, ProtonSaslServerAuthenticatorImpl authenticator) {
+  void bindServer(NetSocket socket, ProtonSaslAuthenticator authenticator) {
     transport = new ProtonTransport(connection, vertx, null, socket, authenticator);
   }
 
