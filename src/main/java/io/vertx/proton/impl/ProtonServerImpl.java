@@ -19,6 +19,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import io.vertx.core.*;
+import io.vertx.core.net.NetSocket;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.amqp.Symbol;
 
@@ -138,8 +139,8 @@ public class ProtonServerImpl implements ProtonServer {
       connection.bindServer(netSocket, new ProtonSaslAuthenticator () {
 
         @Override
-        public void init(ProtonConnection protonConnection, Transport transport) {
-          authenticator.init(protonConnection, transport);
+        public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+          authenticator.init(socket, protonConnection, transport);
         }
 
         @Override

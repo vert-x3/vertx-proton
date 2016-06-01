@@ -15,12 +15,13 @@
 */
 package io.vertx.proton.sasl;
 
+import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import org.apache.qpid.proton.engine.Transport;
 
 public interface ProtonSaslAuthenticator {
 
-  void init(ProtonConnection protonConnection, Transport transport);
+  void init(NetSocket socket, ProtonConnection protonConnection, Transport transport);
 
   /**
    * Process the SASL authentication cycle until such time as an outcome is determined. This should be called by the

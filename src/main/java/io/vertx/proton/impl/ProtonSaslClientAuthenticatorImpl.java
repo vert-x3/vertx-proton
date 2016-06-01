@@ -56,22 +56,19 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    * @param allowedSaslMechanisms
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
    *          server, or null/empty if no restriction.
-   * @param socket
-   *          The socket associated with the connection this SASL process is for
    * @param handler
    *          The handler to convey the result of the SASL process to
    */
-  public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms,
-      NetSocket socket, Handler<AsyncResult<ProtonConnection>> handler) {
+  public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms, Handler<AsyncResult<ProtonConnection>> handler) {
     this.handler = handler;
-    this.socket = socket;
     this.username = username;
     this.password = password;
     this.mechanismsRestriction = allowedSaslMechanisms;
   }
 
   @Override
-  public void init(ProtonConnection protonConnection, Transport transport) {
+  public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+    this.socket = socket;
     this.connection = protonConnection;
     this.sasl = transport.sasl();
     sasl.client();

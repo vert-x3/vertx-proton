@@ -16,6 +16,7 @@
 package io.vertx.proton.impl;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.net.NetSocket;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -36,7 +37,7 @@ public class ProtonServerImplTest {
         Vertx vertx = Vertx.vertx();
         ProtonServer.create(vertx).saslAuthenticator(new ProtonSaslAuthenticator() {
             @Override
-            public void init(ProtonConnection protonConnection, Transport transport) {
+            public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
                 async.complete();
             }
 
