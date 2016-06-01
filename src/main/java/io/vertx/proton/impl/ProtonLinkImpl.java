@@ -28,6 +28,7 @@ import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
+import org.apache.qpid.proton.engine.Record;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -50,6 +51,11 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   @Override
   public ProtonSessionImpl getSession() {
     return (ProtonSessionImpl) this.link.getSession().getContext();
+  }
+
+  @Override
+  public Record attachments() {
+    return link.attachments();
   }
 
   @Override

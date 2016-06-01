@@ -35,6 +35,7 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
@@ -220,6 +221,11 @@ public class ProtonSessionImpl implements ProtonSession {
     s.setQoS(ProtonQoS.AT_LEAST_ONCE);
 
     return s;
+  }
+
+  @Override
+  public Record attachments() {
+    return session.attachments();
   }
 
   /////////////////////////////////////////////////////////////////////////////

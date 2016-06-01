@@ -20,6 +20,7 @@ import io.vertx.proton.ProtonDelivery;
 
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.engine.Delivery;
+import org.apache.qpid.proton.engine.Record;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -54,6 +55,11 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
   @Override
   public boolean remotelySettled() {
     return delivery.remotelySettled();
+  }
+
+  @Override
+  public Record attachments() {
+    return delivery.attachments();
   }
 
   @Override

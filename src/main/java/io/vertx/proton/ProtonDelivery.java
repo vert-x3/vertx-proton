@@ -16,6 +16,7 @@
 package io.vertx.proton;
 
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.engine.Record;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -60,6 +61,13 @@ public interface ProtonDelivery {
    * @return whether the delivery is remotely settled
    */
   boolean remotelySettled();
+
+  /**
+   * Retrieves the attachments record, upon which application items can be set/retrieved.
+   *
+   * @return the attachments
+   */
+  Record attachments();
 
   /**
    * Gets the delivery tag for this delivery
