@@ -20,12 +20,17 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.JdkSSLEngineOptions;
 import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.NetClientOptions;
+import io.vertx.core.net.OpenSSLEngineOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.PfxOptions;
-import io.vertx.core.net.SSLEngine;
+import io.vertx.core.net.ProxyOptions;
+import io.vertx.core.net.SSLEngineOptions;
+import io.vertx.core.net.TrustOptions;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonClient} connect operations.
@@ -232,12 +237,6 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   @Override
-  public ProtonClientOptions setSslEngine(SSLEngine sslEngine) {
-    super.setSslEngine(sslEngine);
-    return this;
-  }
-
-  @Override
   public ProtonClientOptions setUseAlpn(boolean useAlpn) {
     throw new UnsupportedOperationException();
   }
@@ -251,6 +250,54 @@ public class ProtonClientOptions extends NetClientOptions {
   @Override
   public ProtonClientOptions setHostnameVerificationAlgorithm(String hostnameVerificationAlgorithm) {
     super.setHostnameVerificationAlgorithm(hostnameVerificationAlgorithm);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setKeyCertOptions(KeyCertOptions options) {
+    super.setKeyCertOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setLogActivity(boolean logEnabled) {
+    super.setLogActivity(logEnabled);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setMetricsName(String metricsName) {
+    super.setMetricsName(metricsName);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setProxyOptions(ProxyOptions proxyOptions) {
+    super.setProxyOptions(proxyOptions);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTrustOptions(TrustOptions options) {
+    super.setTrustOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setJdkSslEngineOptions(JdkSSLEngineOptions sslEngineOptions) {
+    super.setJdkSslEngineOptions(sslEngineOptions);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setOpenSslEngineOptions(OpenSSLEngineOptions sslEngineOptions) {
+    super.setOpenSslEngineOptions(sslEngineOptions);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setSslEngineOptions(SSLEngineOptions sslEngineOptions) {
+    super.setSslEngineOptions(sslEngineOptions);
     return this;
   }
 }

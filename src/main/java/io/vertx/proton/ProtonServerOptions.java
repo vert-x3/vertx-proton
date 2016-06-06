@@ -17,12 +17,16 @@ package io.vertx.proton;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
+import io.vertx.core.net.JdkSSLEngineOptions;
 import io.vertx.core.net.JksOptions;
+import io.vertx.core.net.KeyCertOptions;
 import io.vertx.core.net.NetServerOptions;
+import io.vertx.core.net.OpenSSLEngineOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.core.net.PfxOptions;
-import io.vertx.core.net.SSLEngine;
+import io.vertx.core.net.SSLEngineOptions;
+import io.vertx.core.net.TrustOptions;
 
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
@@ -190,14 +194,38 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
-  public ProtonServerOptions setSslEngine(SSLEngine sslEngine) {
-    super.setSslEngine(sslEngine);
+  public ProtonServerOptions addEnabledSecureTransportProtocol(String protocol) {
+    super.addEnabledSecureTransportProtocol(protocol);
     return this;
   }
 
   @Override
-  public ProtonServerOptions addEnabledSecureTransportProtocol(String protocol) {
-    super.addEnabledSecureTransportProtocol(protocol);
+  public ProtonServerOptions setJdkSslEngineOptions(JdkSSLEngineOptions sslEngineOptions) {
+    super.setJdkSslEngineOptions(sslEngineOptions);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setKeyCertOptions(KeyCertOptions options) {
+    super.setKeyCertOptions(options);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setOpenSslEngineOptions(OpenSSLEngineOptions sslEngineOptions) {
+    super.setOpenSslEngineOptions(sslEngineOptions);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setSslEngineOptions(SSLEngineOptions sslEngineOptions) {
+    super.setSslEngineOptions(sslEngineOptions);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setTrustOptions(TrustOptions options) {
+    super.setTrustOptions(options);
     return this;
   }
 }
