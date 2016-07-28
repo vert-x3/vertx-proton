@@ -252,6 +252,8 @@ public interface ProtonConnection {
    * Sets a handler for when the underlying transport connection disconnects.
    *
    * @return the connection
+   * @param disconnectHandler
+   *          the handler
    */
   ProtonConnection disconnectHandler(Handler<ProtonConnection> disconnectHandler);
 

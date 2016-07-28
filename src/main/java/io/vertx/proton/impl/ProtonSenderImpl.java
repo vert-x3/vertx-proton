@@ -36,6 +36,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   private boolean anonymousSender;
   private boolean autoSettle;
   private int tag = 1;
+  private boolean autoDrained = true;
 
   ProtonSenderImpl(Sender sender) {
     super(sender);
@@ -138,14 +139,34 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   @Override
   public ProtonSender sendQueueDrainHandler(Handler<ProtonSender> drainHandler) {
     this.drainHandler = drainHandler;
-    fireLinkFlow();
+    handleLinkFlow();
     return this;
   }
 
   @Override
-  void fireLinkFlow() {
+  void handleLinkFlow() {
     if (link.getRemoteCredit() > 0 && drainHandler != null) {
       drainHandler.handle(this);
     }
+
+    if(autoDrained && getDrain()) {
+      drained();
+    }
+  }
+
+  @Override
+  public boolean isAutoDrained() {
+    return autoDrained;
+  }
+
+  @Override
+  public ProtonSender setAutoDrained(boolean autoDrained) {
+    this.autoDrained = autoDrained;
+    return this;
+  }
+
+  @Override
+  public int drained() {
+    return super.drained();
   }
 }

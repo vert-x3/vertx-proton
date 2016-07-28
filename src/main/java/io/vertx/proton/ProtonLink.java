@@ -180,4 +180,30 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    * @return the condition
    */
   ErrorCondition getRemoteCondition();
+
+  /**
+   * Retrieves the current amount of credit.
+   *
+   * For a receiver link, the value returned will still include the credits that will be used by any queued
+   * incoming messages, use {@link #getQueued()} to assess the number of credits that will be used by queued messages.
+   *
+   * @return the number of credits
+   */
+  int getCredit();
+
+  /**
+   * Retrieves the current value of link 'drain' flag.
+   *
+   * @return when the link drain flag is set.
+   */
+  boolean getDrain();
+
+  /**
+   * Retrieves the current number of queued messages.
+   *
+   * For a receiver link, this is the number of messages that have already arrived locally but not yet been processed.
+   *
+   * @return the number of queues messages
+   */
+  int getQueued();
 }

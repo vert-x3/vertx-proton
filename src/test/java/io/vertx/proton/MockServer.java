@@ -16,6 +16,7 @@
 package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -41,7 +42,7 @@ public class MockServer {
 
   enum Addresses {
     command, drop, echo, // Echos message back to consumer at address "echo"
-    two_messages, five_messages
+    no_messages, two_messages, five_messages
   }
 
   enum Commands {
@@ -49,10 +50,18 @@ public class MockServer {
   }
 
   public MockServer(Vertx vertx) throws ExecutionException, InterruptedException {
+    this(vertx, null);
+  }
+
+  public MockServer(Vertx vertx, Handler<ProtonConnection> connectionHandler) throws ExecutionException, InterruptedException {
+    if(connectionHandler == null) {
+      connectionHandler = (connection) -> processConnection(vertx, connection);
+    }
+
     ProtonServerOptions protonServerOptions = new ProtonServerOptions();
     protonServerOptions.setReuseAddress(reuseAddress);
     server = ProtonServer.create(vertx, protonServerOptions);
-    server.connectHandler((connection) -> processConnection(vertx, connection));
+    server.connectHandler(connectionHandler);
     FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
     server.listen(bindPort, handler);
     handler.get();
@@ -108,8 +117,10 @@ public class MockServer {
           }
           break;
         }
-        case drop: {
+        case drop: // fall through
+        case no_messages: {
           sender.open();
+          break;
         }
         default:
           sender.setCondition(condition(AmqpError.NOT_FOUND, "unknown address")).close();

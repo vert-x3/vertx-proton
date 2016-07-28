@@ -138,7 +138,7 @@ class ProtonTransport extends BaseHandler {
       }
       case LINK_FLOW: {
         ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
-        link.fireLinkFlow();
+        link.handleLinkFlow();
         break;
       }
       case DELIVERY: {

@@ -63,10 +63,12 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
     return link.getCondition();
   }
 
+  @Override
   public int getCredit() {
     return link.getCredit();
   }
 
+  @Override
   public boolean getDrain() {
     return link.getDrain();
   }
@@ -128,6 +130,7 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
     return link.getUnsettled();
   }
 
+  @Override
   public int getQueued() {
     return link.getQueued();
   }
@@ -137,7 +140,9 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   }
 
   public int drained() {
-    return link.drained();
+    int drained = link.drained();
+    getSession().getConnectionImpl().flush();
+    return drained;
   }
 
   public boolean detached() {
@@ -252,6 +257,5 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
     }
   }
 
-  void fireLinkFlow() {
-  }
+  abstract void handleLinkFlow();
 }

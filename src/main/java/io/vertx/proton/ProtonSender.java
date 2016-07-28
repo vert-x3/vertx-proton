@@ -16,6 +16,7 @@
 package io.vertx.proton;
 
 import io.vertx.core.Handler;
+
 import org.apache.qpid.proton.message.Message;
 
 /**
@@ -105,4 +106,37 @@ public interface ProtonSender extends ProtonLink<ProtonSender> {
    * @see #setAutoSettle(boolean)
    */
   boolean isAutoSettle();
+
+  /**
+   * Sets whether the link is automatically marked {@link #drained()} after the send queue drain handler callback
+   * returns if the receiving peer requested that credit be drained, as indicated by the value of the
+   * {@link #getDrain()} flag.
+   *
+   * True by default.
+   *
+   * @param autoDrained
+   *          whether the link will automatically be drained after the send queue drain handler fires in drain mode
+   * @return the sender
+   */
+  ProtonSender setAutoDrained(boolean autoDrained);
+
+  /**
+   * Get whether the link will automatically be marked drained after the send queue drain handler fires in drain mode.
+   *
+   * @return whether the link will automatically be drained after the send queue drain handler fires in drain mode
+   * @see #setAutoDrained(boolean)
+   */
+  boolean isAutoDrained();
+
+  /**
+   * Manually mark the link drained, such that if the receiver has requested the link be drained (as indicated by the
+   * value of the {@link #getDrain()} flag) then any remaining credit is discarded and if necessary notice sent to the
+   * receiver indicating it has been.
+   *
+   * For use when {@link #isAutoDrained()} is false.
+   *
+   * @return the number of credits actually discarded
+   * @see #setAutoDrained(boolean)
+   */
+  int drained();
 }

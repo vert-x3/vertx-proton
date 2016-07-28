@@ -15,15 +15,21 @@
 */
 package io.vertx.proton.impl;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Session;
 import org.junit.Test;
+
+import io.vertx.proton.ProtonReceiver;
 
 public class ProtonReceiverImplTest {
 
@@ -45,5 +51,82 @@ public class ProtonReceiverImplTest {
     attachments.set(key, Connection.class, conn);
     assertNotNull("Expected attachment to be returned", attachments.get(key, Connection.class));
     assertSame("Expected attachment to be given object", conn, attachments.get(key, Connection.class));
+  }
+
+  @Test
+  public void testDrainWithoutDisablingPrefetchThrowsISE() {
+    Connection conn = Connection.Factory.create();
+    Session sess = conn.session();
+    Receiver r = sess.receiver("name");
+
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+
+    try {
+      receiver.drain(0, h-> {});
+      fail("should have thrown due to prefetch still being enabled");
+    } catch (IllegalStateException ise) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testDrainWithoutHandlerThrowsIAE() {
+    Connection conn = Connection.Factory.create();
+    Session sess = conn.session();
+    Receiver r = sess.receiver("name");
+
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+
+    receiver.setPrefetch(0);
+    try {
+      receiver.drain(0, null);
+      fail("should have thrown due to lack of handler");
+    } catch (IllegalArgumentException iae) {
+      // Expected
+    }
+  }
+
+  @Test
+  public void testDrainWithExistingDrainOutstandingThrowsISE() {
+    ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null);
+    ProtonReceiver receiver = conn.createReceiver("address");
+
+    AtomicBoolean drain1complete = new AtomicBoolean();
+
+    receiver.setPrefetch(0);
+    receiver.flow(1);
+    receiver.drain(0, h -> {
+      drain1complete.set(true);
+    });
+
+    try {
+      receiver.drain(0, h2-> {});
+      fail("should have thrown due to outstanding drain operation");
+    } catch (IllegalStateException ise) {
+      // Expected
+      assertFalse("first drain should not have been completed", drain1complete.get());
+    }
+  }
+
+  @Test
+  public void testFlowWithExistingDrainOutstandingThrowsISE() {
+    ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null);
+    ProtonReceiver receiver = conn.createReceiver("address");
+
+    AtomicBoolean drain1complete = new AtomicBoolean();
+
+    receiver.setPrefetch(0);
+    receiver.flow(1);
+    receiver.drain(0, h -> {
+      drain1complete.set(true);
+    });
+
+    try {
+      receiver.flow(1);
+      fail("should have thrown due to outstanding drain operation");
+    } catch (IllegalStateException ise) {
+      // Expected
+      assertFalse("drain should not have been completed", drain1complete.get());
+    }
   }
 }
