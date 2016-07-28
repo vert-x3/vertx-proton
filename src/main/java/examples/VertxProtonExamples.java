@@ -21,6 +21,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.docgen.Source;
 import io.vertx.proton.ProtonClient;
@@ -72,5 +73,24 @@ public class VertxProtonExamples {
       // By default, the receiver automatically accepts (and settles) the delivery
       // when the handler returns if no other disposition has already been applied.
     }).open();
+  }
+
+  @SuppressWarnings("unused")
+  public void example4(ProtonClient client) {
+    client.connect("hostname", 5672, connectResult -> {
+      // In this case the context will be either the one used to call connect
+      // or one created during the process if there was none originally.
+      Context connectionCtx = Vertx.currentContext();
+    });
+  }
+
+  public void example5(Vertx vertx, ProtonClient client) {
+    Context myContext = vertx.getOrCreateContext();
+
+    myContext.runOnContext(x -> {
+      client.connect("hostname", 5672, connectResult -> {
+        // In this case the context will be 'myContext' from earlier
+      });
+    });
   }
 }
