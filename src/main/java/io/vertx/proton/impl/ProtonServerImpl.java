@@ -21,6 +21,8 @@ import java.net.UnknownHostException;
 import io.vertx.core.*;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
+
 import org.apache.qpid.proton.amqp.Symbol;
 
 import io.vertx.core.net.NetServer;
@@ -38,7 +40,7 @@ public class ProtonServerImpl implements ProtonServer {
   private final NetServer server;
   private Handler<ProtonConnection> handler;
   // default authenticator, anonymous
-  private ProtonSaslAuthenticator authenticator = new ProtonSaslServerAuthenticatorImpl();
+  private ProtonSaslAuthenticatorFactory authenticatorFactory = new DefaultAuthenticatorFactory();
   private boolean advertiseAnonymousRelayCapability = true;
 
   public ProtonServerImpl(Vertx vertx) {
@@ -51,15 +53,18 @@ public class ProtonServerImpl implements ProtonServer {
     this.server = this.vertx.createNetServer(options);
   }
 
+  @Override
   public int actualPort() {
     return server.actualPort();
   }
 
+  @Override
   public ProtonServerImpl listen(int i) {
     server.listen(i);
     return this;
   }
 
+  @Override
   public ProtonServerImpl listen() {
     server.listen();
     return this;
@@ -69,11 +74,13 @@ public class ProtonServerImpl implements ProtonServer {
     return server.isMetricsEnabled();
   }
 
+  @Override
   public ProtonServerImpl listen(int port, String host, Handler<AsyncResult<ProtonServer>> handler) {
     server.listen(port, host, convertHandler(handler));
     return this;
   }
 
+  @Override
   public ProtonServerImpl listen(Handler<AsyncResult<ProtonServer>> handler) {
     server.listen(convertHandler(handler));
     return this;
@@ -89,38 +96,45 @@ public class ProtonServerImpl implements ProtonServer {
     };
   }
 
+  @Override
   public ProtonServerImpl listen(int i, String s) {
     server.listen(i, s);
     return this;
   }
 
+  @Override
   public ProtonServerImpl listen(int i, Handler<AsyncResult<ProtonServer>> handler) {
     server.listen(i, convertHandler(handler));
     return this;
   }
 
+  @Override
   public void close() {
     server.close();
   }
 
+  @Override
   public void close(Handler<AsyncResult<Void>> handler) {
     server.close(handler);
   }
 
+  @Override
   public Handler<ProtonConnection> connectHandler() {
     return handler;
   }
 
-  public ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator) {
-    if (authenticator == null) {
-      // restore the default authenticator
-      this.authenticator = new ProtonSaslServerAuthenticatorImpl();
+  @Override
+  public ProtonServer saslAuthenticatorFactory(ProtonSaslAuthenticatorFactory authenticatorFactory) {
+    if (authenticatorFactory == null) {
+      // restore the default
+      this.authenticatorFactory = new DefaultAuthenticatorFactory();
     } else {
-      this.authenticator = authenticator;
+      this.authenticatorFactory = authenticatorFactory;
     }
     return this;
   }
 
+  @Override
   public ProtonServerImpl connectHandler(Handler<ProtonConnection> handler) {
     this.handler = handler;
     server.connectHandler(netSocket -> {
@@ -135,6 +149,8 @@ public class ProtonServerImpl implements ProtonServer {
       if (advertiseAnonymousRelayCapability) {
         connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
       }
+
+      final ProtonSaslAuthenticator authenticator = authenticatorFactory.create();
 
       connection.bindServer(netSocket, new ProtonSaslAuthenticator () {
 
@@ -172,4 +188,10 @@ public class ProtonServerImpl implements ProtonServer {
     this.advertiseAnonymousRelayCapability = advertiseAnonymousRelayCapability;
   }
 
+  private static class DefaultAuthenticatorFactory implements ProtonSaslAuthenticatorFactory {
+    @Override
+    public ProtonSaslAuthenticator create() {
+      return new ProtonSaslServerAuthenticatorImpl();
+    }
+  }
 }

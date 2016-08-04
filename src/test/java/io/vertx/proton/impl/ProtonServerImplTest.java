@@ -24,8 +24,10 @@ import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
@@ -60,20 +62,25 @@ public class ProtonServerImplTest {
   public void testCustomAuthenticatorHasInitCalled(TestContext context) {
     Async initCalledAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticator(new ProtonSaslAuthenticator() {
+    ProtonServer.create(vertx).saslAuthenticatorFactory(new ProtonSaslAuthenticatorFactory() {
       @Override
-      public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
-        initCalledAsync.complete();
-      }
+      public ProtonSaslAuthenticator create() {
+        return new ProtonSaslAuthenticator() {
+          @Override
+          public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+            initCalledAsync.complete();
+          }
 
-      @Override
-      public boolean process() {
-        return false;
-      }
+          @Override
+          public boolean process() {
+            return false;
+          }
 
-      @Override
-      public boolean succeeded() {
-        return false;
+          @Override
+          public boolean succeeded() {
+            return false;
+          }
+        };
       }
     }).connectHandler(protonConnection -> {
     }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(),
@@ -85,7 +92,7 @@ public class ProtonServerImplTest {
   public void testCustomAuthenticatorFailsAuthentication(TestContext context) {
     Async connectedAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticator(new TestAuthenticator()).connectHandler(protonConnection -> {
+    ProtonServer.create(vertx).saslAuthenticatorFactory(new TestAuthenticatorFactory()).connectHandler(protonConnection -> {
       context.fail("Handler should not be called for connection that failed authentication");
     }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(), BAD_USER, PASSWD,
         protonConnectionAsyncResult -> {
@@ -101,7 +108,7 @@ public class ProtonServerImplTest {
     Async connectedAsync = context.async();
     Async authenticatedAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticator(new TestAuthenticator()).connectHandler(protonConnection -> {
+    ProtonServer.create(vertx).saslAuthenticatorFactory(new TestAuthenticatorFactory()).connectHandler(protonConnection -> {
       // Verify the expected auth detail was recorded in the connection attachments, just using a String here.
       String authValue = protonConnection.attachments().get(TestAuthenticator.AUTH_KEY, String.class);
       context.assertEquals(TestAuthenticator.AUTH_VALUE, authValue);
@@ -115,6 +122,57 @@ public class ProtonServerImplTest {
 
     authenticatedAsync.awaitSuccess();
     connectedAsync.awaitSuccess();
+  }
+
+  @Test(timeout = 20000)
+  public void testAuthenticatorCreatedPerConnection(TestContext context) {
+    Async connectedAsync = context.async();
+    Async connectedAsync2 = context.async();
+    AtomicInteger port = new AtomicInteger(-1);
+
+    final TestAuthenticatorFactory authenticatorFactory = new TestAuthenticatorFactory();
+
+    ProtonServer.create(vertx).saslAuthenticatorFactory(authenticatorFactory).connectHandler(protonConnection -> {
+      // Verify the expected auth detail was recorded in the connection attachments, just using a String here.
+      String authValue = protonConnection.attachments().get(TestAuthenticator.AUTH_KEY, String.class);
+      context.assertEquals(TestAuthenticator.AUTH_VALUE, authValue);
+    }).listen(server -> {
+      port.set(server.result().actualPort());
+      ProtonClient.create(vertx).connect("localhost", port.intValue(), GOOD_USER, PASSWD,
+          protonConnectionAsyncResult -> {
+            context.assertTrue(protonConnectionAsyncResult.succeeded());
+            protonConnectionAsyncResult.result().disconnect();
+            connectedAsync.complete();
+          });
+    });
+
+    connectedAsync.awaitSuccess();
+
+    context.assertEquals(1, authenticatorFactory.getCreateCount(), "unexpected authenticator count");
+
+    ProtonClient.create(vertx).connect("localhost", port.intValue(), GOOD_USER, PASSWD, protonConnectionAsyncResult -> {
+      context.assertTrue(protonConnectionAsyncResult.succeeded());
+      protonConnectionAsyncResult.result().disconnect();
+      connectedAsync2.complete();
+    });
+
+    connectedAsync2.awaitSuccess();
+
+    context.assertEquals(2, authenticatorFactory.getCreateCount(), "unexpected authenticator count");
+  }
+
+  private final class TestAuthenticatorFactory implements ProtonSaslAuthenticatorFactory {
+    private AtomicInteger count = new AtomicInteger(0);
+
+    @Override
+    public ProtonSaslAuthenticator create() {
+      count.incrementAndGet();
+      return new TestAuthenticator();
+    }
+
+    public int getCreateCount() {
+      return count.intValue();
+    }
   }
 
   private final class TestAuthenticator implements ProtonSaslAuthenticator {

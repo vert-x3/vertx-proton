@@ -19,6 +19,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 import io.vertx.proton.impl.ProtonServerImpl;
 
 /**
@@ -67,12 +68,12 @@ public interface ProtonServer {
   Handler<ProtonConnection> connectHandler();
 
   /**
-   * Sets authenticator to be used by Proton server.
+   * Sets the authenticator factory to be used by the server.
    *
-   * @param authenticator to be used for connection authentication.
-   * @return configured server
+   * @param authenticatorFactory the factory to be used for creating authenticators.
+   * @return the server
      */
-  ProtonServer saslAuthenticator(ProtonSaslAuthenticator authenticator);
+  ProtonServer saslAuthenticatorFactory(ProtonSaslAuthenticatorFactory authenticatorFactory);
 
   /**
    * Gets the actual port being listened on.
