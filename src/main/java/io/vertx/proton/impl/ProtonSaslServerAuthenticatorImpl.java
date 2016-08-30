@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.impl;
 
+import io.vertx.core.Handler;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
@@ -42,24 +43,25 @@ public class ProtonSaslServerAuthenticatorImpl implements ProtonSaslAuthenticato
   }
 
   @Override
-  public boolean process() {
+  public void process(Handler<Boolean> completionHandler) {
     if (sasl == null) {
       throw new IllegalStateException("Init was not called with the associated transport");
     }
 
+    boolean done = false;
     String[] remoteMechanisms = sasl.getRemoteMechanisms();
     if (remoteMechanisms.length > 0) {
       String chosen = remoteMechanisms[0];
       if (ProtonSaslAnonymousImpl.MECH_NAME.equals(chosen)) {
         sasl.done(SaslOutcome.PN_SASL_OK);
         succeeded = true;
-        return true;
       } else {
         sasl.done(SaslOutcome.PN_SASL_AUTH);
       }
+      done = true;
     }
 
-    return false;
+    completionHandler.handle(done);
   }
 
   @Override

@@ -188,9 +188,15 @@ class ProtonTransport extends BaseHandler {
       return;
     }
 
-    if (authenticator.process()) {
-      authenticator = null;
-    }
+    socket.pause();
+
+    authenticator.process(complete -> {
+      if(complete) {
+        authenticator = null;
+      }
+
+      socket.resume();
+    });
   }
 
   private void initiateIdleTimeoutChecks() {

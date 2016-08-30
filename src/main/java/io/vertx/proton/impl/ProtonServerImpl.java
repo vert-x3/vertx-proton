@@ -152,7 +152,7 @@ public class ProtonServerImpl implements ProtonServer {
 
       final ProtonSaslAuthenticator authenticator = authenticatorFactory.create();
 
-      connection.bindServer(netSocket, new ProtonSaslAuthenticator () {
+      connection.bindServer(netSocket, new ProtonSaslAuthenticator() {
 
         @Override
         public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
@@ -160,19 +160,29 @@ public class ProtonServerImpl implements ProtonServer {
         }
 
         @Override
-        public boolean process() {
-          boolean result = authenticator.process();
-          if (result) {
-            // the authenticator completed
-            if (succeeded()) {
-              handler.handle(connection);
-            } else {
-              // auth failed, flush any pending data and disconnect client
-              connection.flush();
-              connection.disconnect();
+        public void process(Handler<Boolean> completionHandler) {
+          final Context context = Vertx.currentContext();
+
+          authenticator.process(complete -> {
+            final Context callbackContext = vertx.getOrCreateContext();
+            if(context != callbackContext) {
+              throw new IllegalStateException("Callback was not made on the original context");
             }
-          }
-          return result;
+
+            if (complete) {
+              // The authenticator completed, now check success, do required post processing
+              if (succeeded()) {
+                handler.handle(connection);
+                connection.flush();
+              } else {
+                // auth failed, flush any pending data and disconnect client
+                connection.flush();
+                connection.disconnect();
+              }
+            }
+
+            completionHandler.handle(complete);
+          });
         }
 
         @Override

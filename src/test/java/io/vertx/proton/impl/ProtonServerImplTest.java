@@ -15,6 +15,8 @@
 */
 package io.vertx.proton.impl;
 
+import io.vertx.core.Context;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.NetSocket;
 import io.vertx.ext.unit.Async;
@@ -27,6 +29,7 @@ import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.qpid.proton.engine.Sasl;
@@ -43,6 +46,10 @@ public class ProtonServerImplTest {
   private static final String GOOD_USER = "GOOD_USER";
   private static final String BAD_USER = "BAD_USER";
   private static final String PASSWD = "GOOD_PASSWORD";
+
+  private static final String PLAIN = "PLAIN";
+  private static final String AUTH_KEY = "MY_AUTH_KEY";
+  private static final String AUTH_VALUE = "MY_AUTH_VALUE";
 
   private Vertx vertx;
 
@@ -72,8 +79,8 @@ public class ProtonServerImplTest {
           }
 
           @Override
-          public boolean process() {
-            return false;
+          public void process(Handler<Boolean> completionHandler) {
+            completionHandler.handle(false);
           }
 
           @Override
@@ -92,7 +99,7 @@ public class ProtonServerImplTest {
   public void testCustomAuthenticatorFailsAuthentication(TestContext context) {
     Async connectedAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticatorFactory(new TestAuthenticatorFactory()).connectHandler(protonConnection -> {
+    ProtonServer.create(vertx).saslAuthenticatorFactory(new TestPlainAuthenticatorFactory()).connectHandler(protonConnection -> {
       context.fail("Handler should not be called for connection that failed authentication");
     }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(), BAD_USER, PASSWD,
         protonConnectionAsyncResult -> {
@@ -108,10 +115,10 @@ public class ProtonServerImplTest {
     Async connectedAsync = context.async();
     Async authenticatedAsync = context.async();
 
-    ProtonServer.create(vertx).saslAuthenticatorFactory(new TestAuthenticatorFactory()).connectHandler(protonConnection -> {
+    ProtonServer.create(vertx).saslAuthenticatorFactory(new TestPlainAuthenticatorFactory()).connectHandler(protonConnection -> {
       // Verify the expected auth detail was recorded in the connection attachments, just using a String here.
-      String authValue = protonConnection.attachments().get(TestAuthenticator.AUTH_KEY, String.class);
-      context.assertEquals(TestAuthenticator.AUTH_VALUE, authValue);
+      String authValue = protonConnection.attachments().get(AUTH_KEY, String.class);
+      context.assertEquals(AUTH_VALUE, authValue);
       authenticatedAsync.complete();
     }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(), GOOD_USER, PASSWD,
         protonConnectionAsyncResult -> {
@@ -130,12 +137,12 @@ public class ProtonServerImplTest {
     Async connectedAsync2 = context.async();
     AtomicInteger port = new AtomicInteger(-1);
 
-    final TestAuthenticatorFactory authenticatorFactory = new TestAuthenticatorFactory();
+    final TestPlainAuthenticatorFactory authenticatorFactory = new TestPlainAuthenticatorFactory();
 
     ProtonServer.create(vertx).saslAuthenticatorFactory(authenticatorFactory).connectHandler(protonConnection -> {
       // Verify the expected auth detail was recorded in the connection attachments, just using a String here.
-      String authValue = protonConnection.attachments().get(TestAuthenticator.AUTH_KEY, String.class);
-      context.assertEquals(TestAuthenticator.AUTH_VALUE, authValue);
+      String authValue = protonConnection.attachments().get(AUTH_KEY, String.class);
+      context.assertEquals(AUTH_VALUE, authValue);
     }).listen(server -> {
       port.set(server.result().actualPort());
       ProtonClient.create(vertx).connect("localhost", port.intValue(), GOOD_USER, PASSWD,
@@ -161,13 +168,13 @@ public class ProtonServerImplTest {
     context.assertEquals(2, authenticatorFactory.getCreateCount(), "unexpected authenticator count");
   }
 
-  private final class TestAuthenticatorFactory implements ProtonSaslAuthenticatorFactory {
+  private final class TestPlainAuthenticatorFactory implements ProtonSaslAuthenticatorFactory {
     private AtomicInteger count = new AtomicInteger(0);
 
     @Override
     public ProtonSaslAuthenticator create() {
       count.incrementAndGet();
-      return new TestAuthenticator();
+      return new TestPlainAuthenticator();
     }
 
     public int getCreateCount() {
@@ -175,11 +182,7 @@ public class ProtonServerImplTest {
     }
   }
 
-  private final class TestAuthenticator implements ProtonSaslAuthenticator {
-    public static final String AUTH_KEY = "MY_AUTH_KEY";
-    public static final String AUTH_VALUE = "MY_AUTH_VALUE";
-    private static final String PLAIN = "PLAIN";
-
+  private final class TestPlainAuthenticator implements ProtonSaslAuthenticator {
     private Sasl sasl;
     private boolean succeeded;
     ProtonConnection protonConnection;
@@ -194,7 +197,8 @@ public class ProtonServerImplTest {
     }
 
     @Override
-    public boolean process() {
+    public void process(Handler<Boolean> processComplete) {
+      boolean done = false;
       String[] remoteMechanisms = sasl.getRemoteMechanisms();
       if (remoteMechanisms.length > 0) {
         String chosenMech = remoteMechanisms[0];
@@ -213,10 +217,10 @@ public class ProtonServerImplTest {
           sasl.done(SaslOutcome.PN_SASL_AUTH);
         }
 
-        return true;
+        done = true;
       }
 
-      return false;
+      processComplete.handle(done);
     }
 
     @Override
@@ -274,4 +278,130 @@ public class ProtonServerImplTest {
     }
   }
 
+  @Test(timeout = 20000)
+  public void testAsyncAuthenticatorSucceed(TestContext context) {
+    doTestAsyncServerAuthenticatorTestImpl(context, true);
+  }
+
+  @Test(timeout = 20000)
+  public void testAsyncAuthenticatorFail(TestContext context) {
+    doTestAsyncServerAuthenticatorTestImpl(context, false);
+  }
+
+  private void doTestAsyncServerAuthenticatorTestImpl(TestContext context, boolean passAuthentication) {
+    Async connectAsync = context.async();
+    AtomicBoolean connectedServer = new AtomicBoolean();
+
+    final long delay = 750;
+    TestAsyncAuthenticator testAsyncAuthenticator = new TestAsyncAuthenticator(delay, passAuthentication);
+    TestAsyncAuthenticatorFactory authenticatorFactory = new TestAsyncAuthenticatorFactory(testAsyncAuthenticator);
+
+    ProtonServer.create(vertx).saslAuthenticatorFactory(authenticatorFactory).connectHandler(protonConnection -> {
+      connectedServer.set(true);
+    }).listen(server -> {
+      final long startTime = System.currentTimeMillis();
+      ProtonClient.create(vertx).connect("localhost", server.result().actualPort(), GOOD_USER, PASSWD, conResult -> {
+        // Verify the process took expected time from auth delay.
+        long actual = System.currentTimeMillis() - startTime;
+        context.assertTrue(actual >= delay, "Connect completed before expected time delay elapsed! " + actual);
+
+        if (passAuthentication) {
+          context.assertTrue(conResult.succeeded(), "Expected connect to succeed");
+          conResult.result().disconnect();
+        } else {
+          context.assertFalse(conResult.succeeded(), "Expected connect to fail");
+        }
+
+        connectAsync.complete();
+      });
+    });
+
+    connectAsync.awaitSuccess();
+
+    if(passAuthentication) {
+      context.assertTrue(connectedServer.get(), "Server handler should have been called");
+    } else {
+      context.assertFalse(connectedServer.get(), "Server handler should not have been called");
+    }
+
+    context.assertEquals(1, authenticatorFactory.getCreateCount(), "unexpected authenticator creation count");
+  }
+
+  private final class TestAsyncAuthenticatorFactory implements ProtonSaslAuthenticatorFactory {
+    private ProtonSaslAuthenticator authenticator;
+    private AtomicInteger count = new AtomicInteger(0);
+
+    public TestAsyncAuthenticatorFactory(TestAsyncAuthenticator authenticator) {
+      this.authenticator = authenticator;
+    }
+
+    @Override
+    public ProtonSaslAuthenticator create() {
+      count.incrementAndGet();
+      return authenticator;
+    }
+
+    public int getCreateCount() {
+      return count.intValue();
+    }
+  }
+
+  private final class TestAsyncAuthenticator implements ProtonSaslAuthenticator {
+    private final long completionDelay;
+    private final boolean passAuth;
+
+    private Sasl sasl;
+    private boolean succeeded;
+
+    public TestAsyncAuthenticator(long completionDelay, boolean passAuth) {
+      this.completionDelay = completionDelay;
+      this.passAuth = passAuth;
+    }
+
+    @Override
+    public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+      this.sasl = transport.sasl();
+      sasl.server();
+      sasl.allowSkip(false);
+      sasl.setMechanisms(PLAIN);
+    }
+
+    @Override
+    public void process(Handler<Boolean> processComplete) {
+      String[] remoteMechanisms = sasl.getRemoteMechanisms();
+      if (remoteMechanisms.length > 0) {
+        String chosenMech = remoteMechanisms[0];
+
+        if (PLAIN.equals(chosenMech)) {
+          Context context = Vertx.currentContext();
+
+          byte[] response = new byte[sasl.pending()];
+          sasl.recv(response, 0, response.length);
+
+          // Signal process handling completed (with success/failure also in this case) only after the given delay.
+          // The timer scheduling will use the same Context for the callback automatically in this case.
+          context.owner().setTimer(completionDelay, x -> {
+            if (passAuth) {
+              succeeded = true;
+              sasl.done(SaslOutcome.PN_SASL_OK);
+            } else {
+              sasl.done(SaslOutcome.PN_SASL_AUTH);
+            }
+
+            processComplete.handle(true);
+          });
+        } else {
+          sasl.done(SaslOutcome.PN_SASL_AUTH);
+          processComplete.handle(true);
+        }
+      } else {
+        processComplete.handle(false);
+      }
+    }
+
+    @Override
+    public boolean succeeded() {
+      return succeeded;
+    }
+  }
 }

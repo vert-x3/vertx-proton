@@ -75,7 +75,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
   }
 
   @Override
-  public boolean process() {
+  public void process(Handler<Boolean> completionHandler) {
     if (sasl == null) {
       throw new IllegalStateException("Init was not called with the associated transport");
     }
@@ -113,7 +113,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
       }
     }
 
-    return done;
+    completionHandler.handle(done);
   }
 
   @Override
