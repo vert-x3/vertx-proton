@@ -63,6 +63,13 @@ public class ProtonClientOptionsTest {
   }
 
   @Test
+  public void testEqualsNull() {
+    ProtonClientOptions options = new ProtonClientOptions();
+
+    assertFalse("Options should not equal null", options.equals(null));
+  }
+
+  @Test
   public void testAddGetEnabledSaslMechanisms() {
     ProtonClientOptions options = new ProtonClientOptions();
 

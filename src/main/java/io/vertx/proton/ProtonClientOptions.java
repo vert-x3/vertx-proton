@@ -220,7 +220,7 @@ public class ProtonClientOptions extends NetClientOptions {
       return true;
     }
 
-    if (getClass() != obj.getClass()){
+    if (obj == null || getClass() != obj.getClass()){
       return false;
     }
 
