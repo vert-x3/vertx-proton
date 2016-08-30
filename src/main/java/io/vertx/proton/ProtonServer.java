@@ -18,7 +18,6 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 import io.vertx.proton.impl.ProtonServerImpl;
 
