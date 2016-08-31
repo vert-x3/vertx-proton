@@ -62,6 +62,18 @@ public interface ProtonConnection {
   ProtonReceiver createReceiver(String address);
 
   /**
+   * Creates a receiver used to consumer messages from the given node address.
+   *
+   * @param address
+   *          The source address to attach the consumer to.
+   * @param receiverOptions
+   *          The options for this receiver.
+   *
+   * @return the (unopened) consumer.
+   */
+  ProtonReceiver createReceiver(String address, ProtonLinkOptions receiverOptions);
+
+  /**
    * Creates a sender used to send messages to the given node address. If no address (i.e null) is specified then a
    * sender will be established to the 'anonymous relay' and each message must specify its destination address.
    *
@@ -71,6 +83,19 @@ public interface ProtonConnection {
    * @return the (unopened) sender.
    */
   ProtonSender createSender(String address);
+
+  /**
+   * Creates a sender used to send messages to the given node address. If no address (i.e null) is specified then a
+   * sender will be established to the 'anonymous relay' and each message must specify its destination address.
+   *
+   * @param address
+   *          The target address to attach to, or null to attach to the anonymous relay.
+   * @param senderOptions
+   *          The options for this sender.
+   *
+   * @return the (unopened) sender.
+   */
+  ProtonSender createSender(String address, ProtonLinkOptions senderOptions);
 
   /**
    * Sets the container id value advertised to peers in the AMQP Open frame. Sometimes used as a 'client-id' by clients.

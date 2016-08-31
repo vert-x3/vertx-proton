@@ -24,6 +24,7 @@ import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonQoS;
+import io.vertx.proton.ProtonLinkOptions;
 
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
@@ -150,10 +151,18 @@ public class ProtonSessionImpl implements ProtonSession {
     return "auto-" + (autoLinkCounter++);
   }
 
+  private String getOrCreateLinkName(ProtonLinkOptions linkOptions) {
+    return linkOptions.getLinkName() == null ? generateLinkName() : linkOptions.getLinkName();
+  }
+
   @Override
   public ProtonReceiver createReceiver(String address) {
-    // TODO: add options for configuring things like link name etc?
-    Receiver receiver = session.receiver(generateLinkName());
+    return createReceiver(address, new ProtonLinkOptions());
+  }
+
+  @Override
+  public ProtonReceiver createReceiver(String address, ProtonLinkOptions receiverOptions) {
+    Receiver receiver = session.receiver(getOrCreateLinkName(receiverOptions));
 
     Symbol[] outcomes = new Symbol[] { Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL,
         Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL };
@@ -188,7 +197,12 @@ public class ProtonSessionImpl implements ProtonSession {
 
   @Override
   public ProtonSender createSender(String address) {
-    Sender sender = session.sender(generateLinkName());
+    return createSender(address, new ProtonLinkOptions());
+  }
+
+  @Override
+  public ProtonSender createSender(String address, ProtonLinkOptions senderOptions) {
+    Sender sender = session.sender(getOrCreateLinkName(senderOptions));
 
     Symbol[] outcomes = new Symbol[] { Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL,
         Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL };

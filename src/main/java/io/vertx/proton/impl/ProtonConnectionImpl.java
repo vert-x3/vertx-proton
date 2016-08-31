@@ -47,6 +47,7 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
+import io.vertx.proton.ProtonLinkOptions;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -265,8 +266,18 @@ public class ProtonConnectionImpl implements ProtonConnection {
   }
 
   @Override
+  public ProtonSender createSender(String address, ProtonLinkOptions senderOptions) {
+      return getDefaultSession().createSender(address, senderOptions);
+  }
+
+  @Override
   public ProtonReceiver createReceiver(String address) {
     return getDefaultSession().createReceiver(address);
+  }
+
+  @Override
+  public ProtonReceiver createReceiver(String address, ProtonLinkOptions receiverOptions) {
+      return getDefaultSession().createReceiver(address, receiverOptions);
   }
 
   public void flush() {
