@@ -77,6 +77,7 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
     return link.getLocalState();
   }
 
+  @Override
   public String getName() {
     return link.getName();
   }

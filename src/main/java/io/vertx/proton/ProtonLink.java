@@ -206,4 +206,11 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    * @return the number of queues messages
    */
   int getQueued();
+
+  /**
+   * Retrieves the link name
+   *
+   * @return  the link name
+   */
+  String getName();
 }
