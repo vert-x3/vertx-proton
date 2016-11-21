@@ -93,7 +93,7 @@ class ProtonTransport extends BaseHandler {
     pumpInbound(ByteBuffer.wrap(buff.getBytes()));
     Event protonEvent = null;
     while ((protonEvent = collector.peek()) != null) {
-      ProtonConnectionImpl connnection = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
+      ProtonConnectionImpl conn = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
 
       Type eventType = protonEvent.getType();
       if (LOG.isTraceEnabled() && !eventType.equals(Type.TRANSPORT)) {
@@ -102,18 +102,18 @@ class ProtonTransport extends BaseHandler {
 
       switch (eventType) {
       case CONNECTION_REMOTE_OPEN: {
-        connnection.fireRemoteOpen();
+        conn.fireRemoteOpen();
         initiateIdleTimeoutChecks();
         break;
       }
       case CONNECTION_REMOTE_CLOSE: {
-        connnection.fireRemoteClose();
+        conn.fireRemoteClose();
         break;
       }
       case SESSION_REMOTE_OPEN: {
         ProtonSessionImpl session = (ProtonSessionImpl) protonEvent.getSession().getContext();
         if (session == null) {
-          connnection.fireRemoteSessionOpen(protonEvent.getSession());
+          conn.fireRemoteSessionOpen(protonEvent.getSession());
         } else {
           session.fireRemoteOpen();
         }
@@ -127,7 +127,7 @@ class ProtonTransport extends BaseHandler {
       case LINK_REMOTE_OPEN: {
         ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
         if (link == null) {
-          connnection.fireRemoteLinkOpen(protonEvent.getLink());
+          conn.fireRemoteLinkOpen(protonEvent.getLink());
         } else {
           link.fireRemoteOpen();
         }
