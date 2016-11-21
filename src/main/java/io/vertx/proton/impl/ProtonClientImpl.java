@@ -61,7 +61,7 @@ public class ProtonClientImpl implements ProtonClient {
                                 Handler<AsyncResult<ProtonConnection>> connectHandler, ProtonClientOptions options) {
     netClient.connect(port, host, res -> {
       if (res.succeeded()) {
-        ProtonConnectionImpl amqpConnnection = new ProtonConnectionImpl(vertx, host);
+        ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, host);
 
         ProtonSaslClientAuthenticatorImpl authenticator = new ProtonSaslClientAuthenticatorImpl(username, password,
                 options.getEnabledSaslMechanisms(), connectHandler);
@@ -69,11 +69,11 @@ public class ProtonClientImpl implements ProtonClient {
         ProtonTransportOptions transportOptions = new ProtonTransportOptions();
         transportOptions.setHeartbeat(options.getHeartbeat());
 
-        amqpConnnection.bindClient(netClient, res.result(), authenticator, transportOptions);
+        conn.bindClient(netClient, res.result(), authenticator, transportOptions);
 
         // Need to flush here to get the SASL process going, or it will wait until calls on the connection are processed
         // later (e.g open()).
-        amqpConnnection.flush();
+        conn.flush();
       } else {
         connectHandler.handle(Future.failedFuture(res.cause()));
       }
