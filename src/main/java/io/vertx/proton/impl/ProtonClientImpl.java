@@ -23,6 +23,7 @@ import io.vertx.core.net.NetClient;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonTransportOptions;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -64,7 +65,11 @@ public class ProtonClientImpl implements ProtonClient {
 
         ProtonSaslClientAuthenticatorImpl authenticator = new ProtonSaslClientAuthenticatorImpl(username, password,
                 options.getEnabledSaslMechanisms(), connectHandler);
-        amqpConnnection.bindClient(netClient, res.result(), authenticator);
+
+        ProtonTransportOptions transportOptions = new ProtonTransportOptions();
+        transportOptions.setHeartbeat(options.getHeartbeat());
+
+        amqpConnnection.bindClient(netClient, res.result(), authenticator, transportOptions);
 
         // Need to flush here to get the SASL process going, or it will wait until calls on the connection are processed
         // later (e.g open()).

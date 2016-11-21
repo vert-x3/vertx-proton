@@ -28,10 +28,14 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.core.net.SSLEngineOptions;
 import io.vertx.core.net.TrustOptions;
 
+import java.util.Objects;
+
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
  */
 public class ProtonServerOptions extends NetServerOptions {
+
+  private int heartbeat;
 
   @Override
   public ProtonServerOptions setSendBufferSize(int sendBufferSize) {
@@ -180,12 +184,34 @@ public class ProtonServerOptions extends NetServerOptions {
 
   @Override
   public int hashCode() {
-    return super.hashCode();
+    final int prime = 31;
+
+    int result = super.hashCode();
+    result = prime * result + this.heartbeat;
+
+    return result;
   }
 
   @Override
   public boolean equals(Object obj) {
-    return super.equals(obj);
+    if (this == obj) {
+      return true;
+    }
+
+    if (obj == null || getClass() != obj.getClass()){
+      return false;
+    }
+
+    if (!super.equals(obj)) {
+      return false;
+    }
+
+    ProtonServerOptions other = (ProtonServerOptions) obj;
+    if (this.heartbeat != other.heartbeat) {
+      return false;
+    }
+
+    return true;
   }
 
   @Override
@@ -227,5 +253,26 @@ public class ProtonServerOptions extends NetServerOptions {
   public ProtonServerOptions setTrustOptions(TrustOptions options) {
     super.setTrustOptions(options);
     return this;
+  }
+
+  /**
+   * Set the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
+   * If no frames are received within 2*heartbeat, the connection is closed
+   *
+   * @param heartbeat hearthbeat maximum delay
+   * @return  current ProtonServerOptions instance
+   */
+  public ProtonServerOptions setHeartbeat(int heartbeat) {
+    this.heartbeat = heartbeat;
+    return this;
+  }
+
+  /**
+   * Return the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
+   *
+   * @return  hearthbeat maximum delay
+   */
+  public int getHeartbeat() {
+    return this.heartbeat;
   }
 }

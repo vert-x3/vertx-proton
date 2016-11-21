@@ -39,6 +39,8 @@ public class ProtonClientOptions extends NetClientOptions {
 
   private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
 
+  private int heartbeat;
+
   public ProtonClientOptions() {
     super();
     setHostnameVerificationAlgorithm("HTTPS");
@@ -210,6 +212,7 @@ public class ProtonClientOptions extends NetClientOptions {
 
     int result = super.hashCode();
     result = prime * result + Objects.hashCode(enabledSaslMechanisms);
+    result = prime * result + this.heartbeat;
 
     return result;
   }
@@ -230,6 +233,9 @@ public class ProtonClientOptions extends NetClientOptions {
 
     ProtonClientOptions other = (ProtonClientOptions) obj;
     if (!Objects.equals(enabledSaslMechanisms, other.enabledSaslMechanisms)){
+      return false;
+    }
+    if (this.heartbeat != other.heartbeat) {
       return false;
     }
 
@@ -299,5 +305,26 @@ public class ProtonClientOptions extends NetClientOptions {
   public ProtonClientOptions setSslEngineOptions(SSLEngineOptions sslEngineOptions) {
     super.setSslEngineOptions(sslEngineOptions);
     return this;
+  }
+
+  /**
+   * Set the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
+   * If no frames are received within 2*heartbeat, the connection is closed
+   *
+   * @param heartbeat hearthbeat maximum delay
+   * @return  current ProtonClientOptions instance
+   */
+  public ProtonClientOptions setHeartbeat(int heartbeat) {
+    this.heartbeat = heartbeat;
+    return this;
+  }
+
+  /**
+   * Return the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
+   *
+   * @return  hearthbeat maximum delay
+   */
+  public int getHeartbeat() {
+    return this.heartbeat;
   }
 }
