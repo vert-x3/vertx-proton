@@ -24,6 +24,7 @@ import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
 
 import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonTransportOptions;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.engine.BaseHandler;
@@ -58,13 +59,14 @@ class ProtonTransport extends BaseHandler {
   private boolean failed;
 
   ProtonTransport(Connection connection, Vertx vertx, NetClient netClient, NetSocket socket,
-      ProtonSaslAuthenticator authenticator) {
+                  ProtonSaslAuthenticator authenticator, ProtonTransportOptions options) {
     this.connection = connection;
     this.vertx = vertx;
     this.netClient = netClient;
     this.socket = socket;
     transport.setMaxFrameSize(1024 * 32); // TODO: make configurable
     transport.setEmitFlowEventOnSend(false); // TODO: make configurable
+    transport.setIdleTimeout(2 * options.getHeartbeat());
     if (authenticator != null) {
       authenticator.init(this.socket, (ProtonConnection) this.connection.getContext(), transport);
     }

@@ -15,21 +15,24 @@
 */
 package io.vertx.proton.impl;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import io.vertx.core.*;
-import io.vertx.core.net.NetSocket;
-import io.vertx.proton.sasl.ProtonSaslAuthenticator;
-import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
-
-import org.apache.qpid.proton.amqp.Symbol;
-
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.net.NetServer;
+import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
+import io.vertx.proton.ProtonTransportOptions;
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Transport;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -43,14 +46,20 @@ public class ProtonServerImpl implements ProtonServer {
   private ProtonSaslAuthenticatorFactory authenticatorFactory = new DefaultAuthenticatorFactory();
   private boolean advertiseAnonymousRelayCapability = true;
 
+  private ProtonServerOptions options;
+
   public ProtonServerImpl(Vertx vertx) {
     this.vertx = vertx;
     this.server = this.vertx.createNetServer();
+
+    this.options = new ProtonServerOptions();
   }
 
   public ProtonServerImpl(Vertx vertx, ProtonServerOptions options) {
     this.vertx = vertx;
     this.server = this.vertx.createNetServer(options);
+
+    this.options = options;
   }
 
   @Override
@@ -152,6 +161,9 @@ public class ProtonServerImpl implements ProtonServer {
 
       final ProtonSaslAuthenticator authenticator = authenticatorFactory.create();
 
+      ProtonTransportOptions transportOptions = new ProtonTransportOptions();
+      transportOptions.setHeartbeat(this.options.getHeartbeat());
+
       connection.bindServer(netSocket, new ProtonSaslAuthenticator() {
 
         @Override
@@ -189,7 +201,8 @@ public class ProtonServerImpl implements ProtonServer {
         public boolean succeeded() {
           return authenticator.succeeded();
         }
-      });
+
+      }, transportOptions);
     });
     return this;
   }

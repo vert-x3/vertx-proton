@@ -106,4 +106,14 @@ public class ProtonClientOptionsTest {
     options.setHostnameVerificationAlgorithm("HTTPS");
     assertEquals("Expected algorthim value not found", "HTTPS", options.getHostnameVerificationAlgorithm());
   }
+
+  @Test
+  public void testHeartbeat() {
+    ProtonClientOptions options = new ProtonClientOptions();
+
+    options.setHeartbeat(1000);
+    assertEquals(options.getHeartbeat(), 1000);
+    options.setHeartbeat(2000);
+    assertNotEquals(options.getHeartbeat(), 1000);
+  }
 }

@@ -15,14 +15,22 @@
 */
 package io.vertx.proton.impl;
 
-import static io.vertx.proton.ProtonHelper.future;
-
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.net.NetClient;
+import io.vertx.core.net.NetSocket;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonLinkOptions;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonSender;
+import io.vertx.proton.ProtonServerOptions;
+import io.vertx.proton.ProtonSession;
+import io.vertx.proton.ProtonTransportOptions;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -35,19 +43,13 @@ import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
-import io.vertx.core.net.NetClient;
-import io.vertx.core.net.NetSocket;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonReceiver;
-import io.vertx.proton.ProtonSender;
-import io.vertx.proton.ProtonSession;
-import io.vertx.proton.ProtonLinkOptions;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static io.vertx.proton.ProtonHelper.future;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -371,12 +373,12 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
   }
 
-  void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator) {
-    transport = new ProtonTransport(connection, vertx, client, socket, authenticator);
+  void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator, ProtonTransportOptions transportOptions) {
+    transport = new ProtonTransport(connection, vertx, client, socket, authenticator, transportOptions);
   }
 
-  void bindServer(NetSocket socket, ProtonSaslAuthenticator authenticator) {
-    transport = new ProtonTransport(connection, vertx, null, socket, authenticator);
+  void bindServer(NetSocket socket, ProtonSaslAuthenticator authenticator, ProtonTransportOptions transportOptions) {
+    transport = new ProtonTransport(connection, vertx, null, socket, authenticator, transportOptions);
   }
 
   void fireRemoteSessionOpen(Session session) {
