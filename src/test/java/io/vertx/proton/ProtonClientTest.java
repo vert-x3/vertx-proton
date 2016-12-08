@@ -69,6 +69,39 @@ public class ProtonClientTest extends MockServerTestBase {
   }
 
   @Test(timeout = 20000)
+  public void testGetConnectionFromLink(TestContext context) {
+    Async async = context.async();
+    connect(context, connection -> {
+      // Don't need to open connection, just create the objects
+
+      //Check with the connections default session
+      ProtonSender defaultSessionSender = connection.createSender("some-address");
+      context.assertNotNull(defaultSessionSender);
+
+      // Verify the connection is returned as expected (equals and same object)
+      context.assertEquals(connection, defaultSessionSender.getSession().getConnection());
+      context.assertTrue(connection == defaultSessionSender.getSession().getConnection());
+
+      //Check with explicitly created session
+      ProtonSession session = connection.createSession();
+      context.assertNotNull(session);
+      ProtonSender sender = session.createSender("some-address");
+      context.assertNotNull(sender);
+
+      // Verify the session is returned as expected (equals and same object)
+      context.assertEquals(session, sender.getSession());
+      context.assertTrue(session == sender.getSession());
+
+      // Verify the connection is returned as expected (equals and same object)
+      context.assertEquals(connection, sender.getSession().getConnection());
+      context.assertTrue(connection == sender.getSession().getConnection());
+
+      connection.disconnect();
+      async.complete();
+    });
+  }
+
+  @Test(timeout = 20000)
   public void testClientIdentification(TestContext context) {
     Async async = context.async();
     connect(context, connection -> {

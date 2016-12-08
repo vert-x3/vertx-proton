@@ -22,6 +22,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
+import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonLinkOptions;
@@ -63,6 +64,11 @@ public class ProtonSessionImpl implements ProtonSession {
     this.session = session;
     this.session.setContext(this);
     session.setIncomingCapacity(Integer.MAX_VALUE);
+  }
+
+  @Override
+  public ProtonConnection getConnection() {
+    return getConnectionImpl();
   }
 
   public ProtonConnectionImpl getConnectionImpl() {

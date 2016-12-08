@@ -116,6 +116,13 @@ public interface ProtonSession {
   int getIncomingCapacity();
 
   /**
+   * Gets the connection this session is on.
+   *
+   * @return the connection
+   */
+  ProtonConnection getConnection();
+
+  /**
    * Sets the local ErrorCondition object.
    *
    * @param condition
