@@ -307,6 +307,12 @@ public class ProtonClientOptions extends NetClientOptions {
     return this;
   }
 
+  @Override
+  public ProtonClientOptions setLocalAddress(String localAddress) {
+    super.setLocalAddress(localAddress);
+    return this;
+  }
+
   /**
    * Set the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
    * If no frames are received within 2*heartbeat, the connection is closed
