@@ -180,9 +180,15 @@ class ProtonTransport extends BaseHandler {
       collector.pop();
     }
 
-    processSaslAuthentication();
+    if (!failed) {
+      processSaslAuthentication();
+    }
 
     flush();
+
+    if (failed) {
+      disconnect();
+    }
   }
 
   private void processSaslAuthentication() {
@@ -220,12 +226,13 @@ class ProtonTransport extends BaseHandler {
 
     // Lets push bytes from vert.x to proton engine.
     ByteBuffer inputBuffer = transport.getInputBuffer();
-    while (bytes.hasRemaining() && inputBuffer.hasRemaining()) {
+    while (bytes.hasRemaining() && inputBuffer.hasRemaining() && !failed) {
       inputBuffer.put(bytes.get());
       try {
         transport.processInput().checkIsOk();
       } catch (TransportException te) {
         failed = true;
+        LOG.trace("Exception while processing transport input", te);
       }
     }
   }

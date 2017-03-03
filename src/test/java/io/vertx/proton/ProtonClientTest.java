@@ -20,6 +20,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.net.NetServer;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -66,6 +67,33 @@ public class ProtonClientTest extends MockServerTestBase {
         async.complete();
       }).open();
     });
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectionDisconnectedDuringCreation(TestContext context) {
+    server.close();
+
+    Async connectFailsAsync = context.async();
+
+    NetServer netServer = this.vertx.createNetServer();
+    netServer.connectHandler(netSocket -> {
+      netSocket.pause();
+      vertx.setTimer(50, x -> {
+        netSocket.close();
+      });
+    });
+
+    netServer.listen(listenResult -> {
+      context.assertTrue(listenResult.succeeded());
+
+      ProtonClient.create(vertx).connect("localhost", netServer.actualPort(), connResult -> {
+        context.assertFalse(connResult.succeeded());
+        connectFailsAsync.complete();
+      });
+
+    });
+
+    connectFailsAsync.awaitSuccess();
   }
 
   @Test(timeout = 20000)

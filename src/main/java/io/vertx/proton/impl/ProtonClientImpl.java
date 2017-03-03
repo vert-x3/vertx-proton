@@ -15,10 +15,15 @@
 */
 package io.vertx.proton.impl;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxException;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonClientOptions;
@@ -31,6 +36,7 @@ import io.vertx.proton.ProtonTransportOptions;
  */
 public class ProtonClientImpl implements ProtonClient {
 
+  private static final Logger LOG = LoggerFactory.getLogger(ProtonClientImpl.class);
   private final Vertx vertx;
 
   public ProtonClientImpl(Vertx vertx) {
@@ -54,14 +60,20 @@ public class ProtonClientImpl implements ProtonClient {
   public void connect(ProtonClientOptions options, String host, int port, String username, String password,
                       Handler<AsyncResult<ProtonConnection>> handler) {
     final NetClient netClient = vertx.createNetClient(options);
-    connectNetClient(netClient, host, port, username, password, handler, options);
+    connectNetClient(netClient, host, port, username, password, new ConnectCompletionHandler(handler), options);
   }
 
   private void connectNetClient(NetClient netClient, String host, int port, String username, String password,
-                                Handler<AsyncResult<ProtonConnection>> connectHandler, ProtonClientOptions options) {
+                                ConnectCompletionHandler connectHandler, ProtonClientOptions options) {
     netClient.connect(port, host, res -> {
       if (res.succeeded()) {
         ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, host);
+        conn.disconnectHandler(h -> {
+          LOG.trace("Connection disconnected");
+          if(!connectHandler.isComplete()) {
+            connectHandler.handle(Future.failedFuture(new VertxException("Disconnected")));
+          }
+        });
 
         ProtonSaslClientAuthenticatorImpl authenticator = new ProtonSaslClientAuthenticatorImpl(username, password,
                 options.getEnabledSaslMechanisms(), connectHandler);
@@ -78,5 +90,25 @@ public class ProtonClientImpl implements ProtonClient {
         connectHandler.handle(Future.failedFuture(res.cause()));
       }
     });
+  }
+
+  static class ConnectCompletionHandler implements Handler<AsyncResult<ProtonConnection>> {
+    private AtomicBoolean completed = new AtomicBoolean();
+    private Handler<AsyncResult<ProtonConnection>> applicationConnectHandler;
+
+    ConnectCompletionHandler(Handler<AsyncResult<ProtonConnection>> applicationConnectHandler) {
+      this.applicationConnectHandler = applicationConnectHandler;
+    }
+
+    public boolean isComplete() {
+      return completed.get();
+    }
+
+    @Override
+    public void handle(AsyncResult<ProtonConnection> event) {
+      if (completed.compareAndSet(false, true)) {
+        applicationConnectHandler.handle(event);
+      }
+    }
   }
 }
