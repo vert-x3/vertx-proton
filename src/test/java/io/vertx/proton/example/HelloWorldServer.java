@@ -56,6 +56,7 @@ public class HelloWorldServer {
   private static void helloProcessConnection(Vertx vertx, ProtonConnection connection) {
     connection.openHandler(res -> {
       System.out.println("Client connected: " + connection.getRemoteContainer());
+      connection.open();
     }).closeHandler(c -> {
       System.out.println("Client closing amqp connection: " + connection.getRemoteContainer());
       connection.close();
@@ -63,8 +64,8 @@ public class HelloWorldServer {
     }).disconnectHandler(c -> {
       System.out.println("Client socket disconnected: " + connection.getRemoteContainer());
       connection.disconnect();
-    }).open();
-    connection.sessionOpenHandler(session -> session.open());
+    })
+    .sessionOpenHandler(session -> session.open());
 
     connection.receiverOpenHandler(receiver -> {
       receiver.setTarget(receiver.getRemoteTarget()) // This is rather naive, for example use only, proper
@@ -99,7 +100,7 @@ public class HelloWorldServer {
         } else {
           System.out.println("Sending message to client");
           Message m = message("Hello World from Server!");
-          sender.send(tag("m1"), m, delivery -> {
+          sender.send(m, delivery -> {
             System.out.println("The message was received by the client.");
           });
         }
