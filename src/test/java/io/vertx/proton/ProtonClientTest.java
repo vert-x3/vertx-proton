@@ -47,7 +47,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.vertx.proton.ProtonHelper.message;
-import static io.vertx.proton.ProtonHelper.tag;
 
 @RunWith(VertxUnitRunner.class)
 public class ProtonClientTest extends MockServerTestBase {
@@ -156,7 +155,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
       // Send a request to the server for him to disconnect us
       ProtonSender sender = connection.createSender(null).open();
-      sender.send(tag(""), message("command", "disconnect"));
+      sender.send(message("command", "disconnect"));
     });
   }
 
@@ -199,7 +198,7 @@ public class ProtonClientTest extends MockServerTestBase {
         async.complete();
       }).open();
 
-      connection.createSender(MockServer.Addresses.echo.toString()).open().send(tag(""), message("echo", data));
+      connection.createSender(MockServer.Addresses.echo.toString()).open().send(message("echo", data));
 
     });
   }
@@ -243,7 +242,7 @@ public class ProtonClientTest extends MockServerTestBase {
       ProtonSender sender = connection.createSender(null);
       Message messageWithNoAddress = Proton.message();
       try {
-        sender.send(tag("t1"), messageWithNoAddress);
+        sender.send(messageWithNoAddress);
         context.fail("Send should have thrown IAE due to lack of message address");
       } catch (IllegalArgumentException iae) {
         // Expected
@@ -260,7 +259,7 @@ public class ProtonClientTest extends MockServerTestBase {
       connection.open();
       ProtonSender sender = connection.createSender(MockServer.Addresses.drop.toString());
       Message messageWithNoAddress = Proton.message();
-      sender.send(tag("t1"), messageWithNoAddress);
+      sender.send(messageWithNoAddress);
       connection.disconnect();
       async.complete();
     });
@@ -289,7 +288,7 @@ public class ProtonClientTest extends MockServerTestBase {
           // to await remote sender open completing or credit to send being
           // granted. But here we will just buffer the send immediately.
           sender.open();
-          sender.send(tag("tag"), message("ignored", "content"));
+          sender.send(message("ignored", "content"));
         }).open();
       });
 
