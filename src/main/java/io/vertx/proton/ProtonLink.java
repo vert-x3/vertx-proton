@@ -39,14 +39,26 @@ public interface ProtonLink<T extends ProtonLink<T>> {
   T open();
 
   /**
-   * Closes the AMQP link, i.e. allows the Detach frame to be emitted.
+   * Closes the AMQP link, i.e. allows the Detach frame to be emitted with closed=true set.
    *
-   * If the closure is being locally initiated, the {@link #closeHandler(Handler)} may be used to handle the peer
-   * sending their Detach frame.
+   * If the closure is being locally initiated, the {@link #closeHandler(Handler)} should be used to handle the peer
+   * sending their Detach frame with closed=true (and {@link #detachHandler(Handler)} can be used to handle the peer
+   * sending their Detach frame with closed=false).
    *
    * @return the link
    */
   T close();
+
+  /**
+   * Detaches the AMQP link, i.e. allows the Detach frame to be emitted with closed=false.
+   *
+   * If the detach is being locally initiated, the {@link #detachHandler(Handler)} should be used to handle the peer
+   * sending their Detach frame with closed=false (and {@link #closeHandler(Handler)} can be used to handle the peer
+   * sending their Detach frame with closed=true).
+   *
+   * @return the link
+   */
+  T detach();
 
   /**
    * Sets a handler for when an AMQP Attach frame is received from the remote peer.
@@ -61,13 +73,22 @@ public interface ProtonLink<T extends ProtonLink<T>> {
   T openHandler(Handler<AsyncResult<T>> remoteOpenHandler);
 
   /**
-   * Sets a handler for when an AMQP Detach frame is received from the remote peer.
+   * Sets a handler for when an AMQP Detach frame with closed=true is received from the remote peer.
    *
    * @param remoteCloseHandler
    *          the handler
    * @return the link
    */
   T closeHandler(Handler<AsyncResult<T>> remoteCloseHandler);
+
+  /**
+   * Sets a handler for when an AMQP Detach frame with closed=false is received from the remote peer.
+   *
+   * @param remoteDetachHandler
+   *          the handler
+   * @return the link
+   */
+  T detachHandler(Handler<AsyncResult<Void>> remoteDetachHandler);
 
   /**
    * Gets the local QOS config.

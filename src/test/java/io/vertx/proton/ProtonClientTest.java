@@ -1002,6 +1002,121 @@ public class ProtonClientTest extends MockServerTestBase {
 
   }
 
+  @Test(timeout = 20000)
+  public void testDetachHandlingWithSender(TestContext context) throws Exception {
+    doDetachHandlingTestImpl(context, true);
+  }
+
+  @Test(timeout = 20000)
+  public void testDetachHandlingWithReceiver(TestContext context) throws Exception {
+    doDetachHandlingTestImpl(context, false);
+  }
+
+  public void doDetachHandlingTestImpl(TestContext context, boolean clientSender) throws Exception {
+    server.close();
+
+    final Async clientLinkOpenAsync = context.async();
+    final Async serverLinkOpenAsync = context.async();
+    final Async serverLinkDetachAsync = context.async();
+    final Async clientLinkDetachAsync = context.async();
+    final AtomicBoolean serverLinkCloseHandlerFired = new AtomicBoolean();
+    final AtomicBoolean clientLinkCloseHandlerFired = new AtomicBoolean();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+
+        serverConnection.sessionOpenHandler(session -> session.open());
+
+        if (clientSender) {
+          serverConnection.receiverOpenHandler(serverReceiver -> {
+            LOG.trace("Server receiver opened");
+            serverReceiver.open();
+            serverLinkOpenAsync.complete();
+
+            serverReceiver.closeHandler(res -> {
+              serverLinkCloseHandlerFired.set(true);
+            });
+
+            serverReceiver.detachHandler(res -> {
+              context.assertTrue(res.succeeded(), "expected non-errored async result");
+              serverReceiver.detach();
+              serverLinkDetachAsync.complete();
+            });
+          });
+        } else {
+          serverConnection.senderOpenHandler(serverSender -> {
+            LOG.trace("Server sender opened");
+            serverSender.open();
+            serverLinkOpenAsync.complete();
+
+            serverSender.closeHandler(res -> {
+              serverLinkCloseHandlerFired.set(true);
+            });
+
+            serverSender.detachHandler(res -> {
+              context.assertTrue(res.succeeded(), "expected non-errored async result");
+              serverSender.detach();
+              serverLinkDetachAsync.complete();
+            });
+          });
+        }
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.openHandler(x -> {
+          LOG.trace("Client connection opened");
+          final ProtonLink<?> link;
+          if (clientSender) {
+            link = connection.createSender(null);
+          } else {
+            link = connection.createReceiver("some-address");
+          }
+
+          link.closeHandler(clientLink -> {
+            clientLinkCloseHandlerFired.set(true);
+          });
+
+          link.detachHandler(clientLink -> {
+            LOG.trace("Client link detached");
+            clientLinkDetachAsync.complete();
+          });
+
+          link.openHandler(y -> {
+            LOG.trace("Client link opened");
+            clientLinkOpenAsync.complete();
+
+            link.detach();
+          });
+          link.open();
+
+        }).open();
+      });
+
+      serverLinkOpenAsync.awaitSuccess();
+      clientLinkOpenAsync.awaitSuccess();
+
+      serverLinkDetachAsync.awaitSuccess();
+      clientLinkDetachAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
+
+    context.assertFalse(serverLinkCloseHandlerFired.get(), "server link close handler should not have fired");
+    context.assertFalse(clientLinkCloseHandlerFired.get(), "client link close handler should not have fired");
+  }
+
   private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException,
                                                                                  ExecutionException {
     ProtonServer server = ProtonServer.create(vertx);

@@ -133,6 +133,11 @@ class ProtonTransport extends BaseHandler {
         }
         break;
       }
+      case LINK_REMOTE_DETACH: {
+        ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
+        link.fireRemoteDetach();
+        break;
+      }
       case LINK_REMOTE_CLOSE: {
         ProtonLinkImpl<?> link = (ProtonLinkImpl<?>) protonEvent.getLink().getContext();
         link.fireRemoteClose();
@@ -173,7 +178,6 @@ class ProtonTransport extends BaseHandler {
       case LINK_INIT:
       case LINK_LOCAL_OPEN:
       case LINK_LOCAL_DETACH:
-      case LINK_REMOTE_DETACH:
       case LINK_LOCAL_CLOSE:
       case LINK_FINAL:
       }

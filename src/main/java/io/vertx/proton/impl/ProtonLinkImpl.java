@@ -38,6 +38,7 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   protected final Link link;
   private Handler<AsyncResult<T>> openHandler;
   private Handler<AsyncResult<T>> closeHandler;
+  private Handler<AsyncResult<Void>> detachHandler;
 
   ProtonLinkImpl(Link link) {
     this.link = link;
@@ -182,6 +183,7 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
     return self();
   }
 
+  @Override
   public T detach() {
     link.detach();
     getSession().getConnectionImpl().flush();
@@ -197,6 +199,12 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   @Override
   public T closeHandler(Handler<AsyncResult<T>> closeHandler) {
     this.closeHandler = closeHandler;
+    return self();
+  }
+
+  @Override
+  public T detachHandler(Handler<AsyncResult<Void>> detachHandler) {
+    this.detachHandler = detachHandler;
     return self();
   }
 
@@ -249,6 +257,12 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   void fireRemoteOpen() {
     if (openHandler != null) {
       openHandler.handle(ProtonHelper.future(self(), getRemoteCondition()));
+    }
+  }
+
+  void fireRemoteDetach() {
+    if (detachHandler != null) {
+      detachHandler.handle(ProtonHelper.future(null, getRemoteCondition()));
     }
   }
 
