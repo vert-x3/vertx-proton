@@ -88,7 +88,7 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    *          the handler
    * @return the link
    */
-  T detachHandler(Handler<AsyncResult<Void>> remoteDetachHandler);
+  T detachHandler(Handler<AsyncResult<T>> remoteDetachHandler);
 
   /**
    * Gets the local QOS config.
