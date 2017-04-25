@@ -174,6 +174,18 @@ public class ProtonClientTest extends MockServerTestBase {
   }
 
   @Test(timeout = 20000)
+  public void testSetVirtualHostOnConnect(TestContext context) {
+    Async async = context.async();
+    ProtonClientOptions options = new ProtonClientOptions()
+      .setVirtualHost("example.com");
+    connect(context, options, connection -> {
+      context.assertFalse(connection.isDisconnected());
+      context.assertEquals("example.com", connection.getHostname());
+      async.complete();
+    });
+  }
+
+  @Test(timeout = 20000)
   public void testRequestResponse(TestContext context) {
     sendReceiveEcho(context, "Hello World");
   }
