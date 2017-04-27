@@ -116,4 +116,22 @@ public class ProtonClientOptionsTest {
     options.setHeartbeat(2000);
     assertNotEquals(options.getHeartbeat(), 1000);
   }
+
+  @Test
+  public void testVirtualHost() {
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setVirtualHost("example.com");
+    assertEquals("example.com", options.getVirtualHost());
+    options.setVirtualHost("another.example.com");
+    assertEquals("another.example.com", options.getVirtualHost());
+  }
+
+  @Test
+  public void testSniServerName() {
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setSniServerName("example.com");
+    assertEquals("example.com", options.getSniServerName());
+    options.setSniServerName("another.example.com");
+    assertEquals("another.example.com", options.getSniServerName());
+  }
 }

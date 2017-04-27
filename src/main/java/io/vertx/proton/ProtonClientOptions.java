@@ -40,6 +40,8 @@ public class ProtonClientOptions extends NetClientOptions {
   private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
 
   private int heartbeat;
+  private String virtualHost;
+  private String sniServerName;
 
   public ProtonClientOptions() {
     super();
@@ -213,6 +215,8 @@ public class ProtonClientOptions extends NetClientOptions {
     int result = super.hashCode();
     result = prime * result + Objects.hashCode(enabledSaslMechanisms);
     result = prime * result + this.heartbeat;
+    result = prime * result + (this.virtualHost != null ? this.virtualHost.hashCode() : 0);
+    result = prime * result + (this.sniServerName != null ? this.sniServerName.hashCode() : 0);
 
     return result;
   }
@@ -236,6 +240,12 @@ public class ProtonClientOptions extends NetClientOptions {
       return false;
     }
     if (this.heartbeat != other.heartbeat) {
+      return false;
+    }
+    if (!Objects.equals(this.virtualHost, other.virtualHost)) {
+      return false;
+    }
+    if (!Objects.equals(this.sniServerName, other.sniServerName)) {
       return false;
     }
 
@@ -311,6 +321,52 @@ public class ProtonClientOptions extends NetClientOptions {
   public ProtonClientOptions setLocalAddress(String localAddress) {
     super.setLocalAddress(localAddress);
     return this;
+  }
+
+  /**
+   * Override the host to use in the connection open frame and the SNI server name. The SNI server name can be changed
+   * explicitly using {@link #setSniServerName(String)}. By default, the hostname specified in
+   * {@link ProtonClient#connect} will be used.
+   *
+   * @param virtualHost hostname to set
+   * @return  current ProtonClientOptions instance
+   */
+  public ProtonClientOptions setVirtualHost(String virtualHost) {
+    this.virtualHost = virtualHost;
+    return this;
+  }
+
+  /**
+   * Return the host override for the connection open frame.
+   *
+   * @return  the hostname
+   */
+  public String getVirtualHost() {
+    return this.virtualHost;
+  }
+
+  /**
+   * Override the host to use for the SNI server name. The SNI server name will also be set by calling
+   * @link #setVirtualHost(String)}. This method should be used only when you need to set the virtual host and SNI
+   * server name to different values. If neither the virtual host or SNI server name is set, the hostname
+   * specified in {@link ProtonClient#connect} will be used as the SNI server name.
+   *
+   * @param sniServerName hostname to set as SNI server name
+   * @return  current ProtonClientOptions instance
+   */
+  public ProtonClientOptions setSniServerName(String sniServerName) {
+    this.sniServerName = sniServerName;
+    return this;
+  }
+
+  /**
+   * Return the host override for SNI Server Name. The value can either be set from {@link #setVirtualHost(String)} or
+   * {@link #setSniServerName(String)}.
+   *
+   * @return  the hostname
+   */
+  public String getSniServerName() {
+    return this.sniServerName;
   }
 
   /**

@@ -77,4 +77,12 @@ abstract public class MockServerTestBase {
       handler.handle(res.result());
     });
   }
+
+  protected void connect(TestContext context, ProtonClientOptions options, Handler<ProtonConnection> handler) {
+    ProtonClient client = ProtonClient.create(vertx);
+    client.connect(options, "localhost", server.actualPort(), res -> {
+      context.assertTrue(res.succeeded());
+      handler.handle(res.result());
+    });
+  }
 }
