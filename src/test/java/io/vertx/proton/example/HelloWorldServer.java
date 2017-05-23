@@ -23,7 +23,6 @@ import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.message.Message;
 
 import static io.vertx.proton.ProtonHelper.message;
-import static io.vertx.proton.ProtonHelper.tag;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
