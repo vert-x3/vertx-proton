@@ -255,6 +255,18 @@ public class ProtonServerOptions extends NetServerOptions {
     return this;
   }
 
+  @Override
+  public ProtonServerOptions setLogActivity(boolean logEnabled) {
+    super.setLogActivity(logEnabled);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setSni(boolean sni) {
+    super.setSni(sni);
+    return this;
+  }
+
   /**
    * Set the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
    * If no frames are received within 2*heartbeat, the connection is closed
