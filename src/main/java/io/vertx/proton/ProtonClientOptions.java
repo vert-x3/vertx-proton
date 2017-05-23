@@ -324,9 +324,11 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   /**
-   * Override the host to use in the connection open frame and the SNI server name. The SNI server name can be changed
-   * explicitly using {@link #setSniServerName(String)}. By default, the hostname specified in
-   * {@link ProtonClient#connect} will be used.
+   * Override the hostname value used in the connection AMQP Open frame and TLS SNI server name (if TLS is in use).
+   * By default, the hostname specified in {@link ProtonClient#connect} will be used for both, with SNI performed
+   * implicit where a FQDN was specified.
+   *
+   * The SNI server name can also be overridden explicitly using {@link #setSniServerName(String)}.
    *
    * @param virtualHost hostname to set
    * @return  current ProtonClientOptions instance
@@ -337,7 +339,8 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   /**
-   * Return the host override for the connection open frame.
+   * Get the virtual host name override for the connection AMQP Open frame and TLS SNI server name (if TLS is in use)
+   * set by {@link #setVirtualHost(String)}.
    *
    * @return  the hostname
    */
@@ -346,10 +349,13 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   /**
-   * Override the host to use for the SNI server name. The SNI server name will also be set by calling
-   * @link #setVirtualHost(String)}. This method should be used only when you need to set the virtual host and SNI
-   * server name to different values. If neither the virtual host or SNI server name is set, the hostname
-   * specified in {@link ProtonClient#connect} will be used as the SNI server name.
+   * Explicitly override the hostname to use for the TLS SNI server name.
+   *
+   * If neither the {@link ProtonClientOptions#setVirtualHost(String) virtualhost} or SNI server name is explicitly
+   * overridden, the hostname specified in {@link ProtonClient#connect} will be used, with SNI performed implicitly
+   * where a FQDN was specified.
+   *
+   * This method should typically only be needed to set different values for the [virtual] hostname and SNI server name.
    *
    * @param sniServerName hostname to set as SNI server name
    * @return  current ProtonClientOptions instance
@@ -360,8 +366,7 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   /**
-   * Return the host override for SNI Server Name. The value can either be set from {@link #setVirtualHost(String)} or
-   * {@link #setSniServerName(String)}.
+   * Get the hostname override for TLS SNI Server Name set by {@link #setSniServerName(String)}.
    *
    * @return  the hostname
    */
