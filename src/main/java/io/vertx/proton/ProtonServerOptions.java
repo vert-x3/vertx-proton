@@ -28,8 +28,6 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.core.net.SSLEngineOptions;
 import io.vertx.core.net.TrustOptions;
 
-import java.util.Objects;
-
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
  */
