@@ -17,6 +17,8 @@ package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+
+import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
@@ -234,4 +236,32 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    * @return  the link name
    */
   String getName();
+
+  /**
+   * Sets the local link max message size, to be conveyed to the peer via the Attach frame
+   * when attaching the link to the session. Null or 0 means no limit.
+   *
+   * Must be called during link setup, i.e. before calling the {@link #open()} method.
+   *
+   * @param maxMessageSize
+   *            the local max message size value, or null to clear. 0 also means no limit.
+   */
+  void setMaxMessageSize(UnsignedLong maxMessageSize);
+
+  /**
+   * Gets the local link max message size.
+   *
+   * @return the local max message size, or null if none was set. 0 also means no limit.
+   *
+   * @see #setMaxMessageSize(UnsignedLong)
+   */
+  UnsignedLong getMaxMessageSize();
+
+  /**
+   * Gets the remote link max message size, as conveyed from the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * @return the remote max message size conveyed by the peer, or null if none was set. 0 also means no limit.
+   */
+  UnsignedLong getRemoteMaxMessageSize();
 }

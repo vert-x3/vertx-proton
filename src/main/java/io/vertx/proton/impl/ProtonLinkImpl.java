@@ -20,6 +20,8 @@ import io.vertx.core.Handler;
 import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonLink;
 import io.vertx.proton.ProtonQoS;
+
+import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
@@ -247,6 +249,21 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
       break;
     }
     return self();
+  }
+
+  @Override
+  public UnsignedLong getMaxMessageSize() {
+    return link.getMaxMessageSize();
+  }
+
+  @Override
+  public void setMaxMessageSize(UnsignedLong maxMessageSize) {
+    link.setMaxMessageSize(maxMessageSize);
+  }
+
+  @Override
+  public UnsignedLong getRemoteMaxMessageSize() {
+    return link.getRemoteMaxMessageSize();
   }
 
   /////////////////////////////////////////////////////////////////////////////

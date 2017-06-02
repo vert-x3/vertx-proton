@@ -29,6 +29,7 @@ import io.vertx.proton.impl.ProtonServerImpl;
 
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.messaging.Source;
@@ -1127,6 +1128,75 @@ public class ProtonClientTest extends MockServerTestBase {
 
     context.assertFalse(serverLinkCloseHandlerFired.get(), "server link close handler should not have fired");
     context.assertFalse(clientLinkCloseHandlerFired.get(), "client link close handler should not have fired");
+  }
+
+  @Test(timeout = 20000)
+  public void testMaxMessageSize(TestContext context) throws Exception {
+    server.close();
+    Async serverAsync = context.async();
+    Async clientAsync = context.async();
+
+    final UnsignedLong clientMaxMsgSize = UnsignedLong.valueOf(54321);
+    final UnsignedLong serverMaxMsgSize = UnsignedLong.valueOf(12345);
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+        serverConnection.sessionOpenHandler(session -> {
+          session.open();
+        });
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          context.assertEquals(clientMaxMsgSize, serverSender.getRemoteMaxMessageSize(),
+              "unexpected remote max message size at server");
+          context.assertNull(serverSender.getMaxMessageSize(), "Expected no value to be set");
+          serverSender.setMaxMessageSize(serverMaxMsgSize);
+          context.assertEquals(serverMaxMsgSize, serverSender.getMaxMessageSize(), "Expected value to now be set");
+
+          LOG.trace("Server sender opened");
+          serverSender.open();
+
+          serverAsync.complete();
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.openHandler(x -> {
+          LOG.trace("Client connection opened");
+          final ProtonLink<?> receiver = connection.createReceiver("some-address");
+
+          context.assertNull(receiver.getMaxMessageSize(), "Expected no value to be set");
+          receiver.setMaxMessageSize(clientMaxMsgSize);
+          context.assertEquals(clientMaxMsgSize, receiver.getMaxMessageSize(), "Expected value to now be set");
+
+          receiver.openHandler(y -> {
+            LOG.trace("Client link opened");
+            context.assertEquals(serverMaxMsgSize, receiver.getRemoteMaxMessageSize(),
+                "unexpected remote max message size at client");
+
+            clientAsync.complete();
+          });
+          receiver.open();
+
+        }).open();
+      });
+
+      serverAsync.awaitSuccess();
+      clientAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
   }
 
   private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException,
