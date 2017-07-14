@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.impl;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.vertx.core.AsyncResult;
@@ -60,7 +61,7 @@ public class ProtonClientImpl implements ProtonClient {
   public void connect(ProtonClientOptions options, String host, int port, String username, String password,
                       Handler<AsyncResult<ProtonConnection>> handler) {
     final NetClient netClient = vertx.createNetClient(options);
-    connectNetClient(netClient, host, port, username, password, new ConnectCompletionHandler(handler), options);
+    connectNetClient(netClient, host, port, username, password, new ConnectCompletionHandler(handler, netClient), options);
   }
 
   private void connectNetClient(NetClient netClient, String host, int port, String username, String password,
@@ -100,9 +101,11 @@ public class ProtonClientImpl implements ProtonClient {
   static class ConnectCompletionHandler implements Handler<AsyncResult<ProtonConnection>> {
     private AtomicBoolean completed = new AtomicBoolean();
     private Handler<AsyncResult<ProtonConnection>> applicationConnectHandler;
+    private NetClient netClient;
 
-    ConnectCompletionHandler(Handler<AsyncResult<ProtonConnection>> applicationConnectHandler) {
-      this.applicationConnectHandler = applicationConnectHandler;
+    ConnectCompletionHandler(Handler<AsyncResult<ProtonConnection>> applicationConnectHandler, NetClient netClient) {
+      this.applicationConnectHandler = Objects.requireNonNull(applicationConnectHandler);
+      this.netClient = Objects.requireNonNull(netClient);
     }
 
     public boolean isComplete() {
@@ -112,6 +115,9 @@ public class ProtonClientImpl implements ProtonClient {
     @Override
     public void handle(AsyncResult<ProtonConnection> event) {
       if (completed.compareAndSet(false, true)) {
+        if (event.failed()) {
+          netClient.close();
+        }
         applicationConnectHandler.handle(event);
       }
     }
