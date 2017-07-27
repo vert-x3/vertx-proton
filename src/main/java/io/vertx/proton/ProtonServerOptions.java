@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 the original author or authors.
+* Copyright 2016, 2017 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import io.vertx.core.net.TrustOptions;
 public class ProtonServerOptions extends NetServerOptions {
 
   private int heartbeat;
+  private int maxFrameSize;
 
   @Override
   public ProtonServerOptions setSendBufferSize(int sendBufferSize) {
@@ -186,6 +187,7 @@ public class ProtonServerOptions extends NetServerOptions {
 
     int result = super.hashCode();
     result = prime * result + this.heartbeat;
+    result = prime * result + this.maxFrameSize;
 
     return result;
   }
@@ -208,6 +210,9 @@ public class ProtonServerOptions extends NetServerOptions {
     if (this.heartbeat != other.heartbeat) {
       return false;
     }
+    if (this.maxFrameSize != other.maxFrameSize) {
+        return false;
+      }
 
     return true;
   }
@@ -266,11 +271,11 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   /**
-   * Set the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
-   * If no frames are received within 2*heartbeat, the connection is closed
+   * Sets the heart beat (in milliseconds) as maximum delay between sending frames for the remote peers.
+   * If no frames are received within 2 * heart beat, the connection is closed.
    *
-   * @param heartbeat hearthbeat maximum delay
-   * @return  current ProtonServerOptions instance
+   * @param heartbeat heart beat maximum delay
+   * @return current ProtonServerOptions instance
    */
   public ProtonServerOptions setHeartbeat(int heartbeat) {
     this.heartbeat = heartbeat;
@@ -278,11 +283,41 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   /**
-   * Return the heartbeat (in milliseconds) as maximum delay between sending frames for the remote peers.
+   * Gets the heart beat (in milliseconds) as maximum delay between sending frames for the remote peers.
    *
-   * @return  hearthbeat maximum delay
+   * @return heart beat maximum delay
    */
   public int getHeartbeat() {
     return this.heartbeat;
+  }
+
+  /**
+   * Sets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * <p>
+   * If this property is not set explicitly, a reasonable default value is used.
+   * <p>
+   * Setting this property to a negative value will result in no maximum frame size being announced at all.
+   * 
+   * @param maxFrameSize The frame size in bytes.
+   * @return This instance for setter chaining.
+   */
+  public ProtonServerOptions setMaxFrameSize(int maxFrameSize) {
+    if (maxFrameSize < 0) {
+      this.maxFrameSize = -1;
+    } else {
+      this.maxFrameSize = maxFrameSize;
+    }
+    return this;
+  }
+
+  /**
+   * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * <p>
+   * If this property is not set explicitly, a reasonable default value is used.
+   * 
+   * @return The frame size in bytes or -1 if no limit is set.
+   */
+  public int getMaxFrameSize() {
+    return maxFrameSize;
   }
 }

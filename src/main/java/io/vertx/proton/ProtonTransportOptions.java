@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 the original author or authors.
+* Copyright 2016, 2017 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,13 +21,14 @@ package io.vertx.proton;
 public class ProtonTransportOptions {
 
   private int heartbeat;
+  private int maxFrameSize;
 
   /**
-   * Set the heartbeat as maximum delay between sending frames for the remote peers.
-   * If no frames are received within 2*heartbeat, the connection is closed
+   * Set the heart beat as maximum delay between sending frames for the remote peers.
+   * If no frames are received within 2 * heart beat, the connection is closed
    *
-   * @param heartbeat hearthbeat maximum delay
-   * @return  current ProtonTransportOptions instance
+   * @param heartbeat The maximum delay in milliseconds.
+   * @return current ProtonTransportOptions instance.
    */
   public ProtonTransportOptions setHeartbeat(int heartbeat) {
     this.heartbeat = heartbeat;
@@ -35,18 +36,50 @@ public class ProtonTransportOptions {
   }
 
   /**
-   * Return the heartbeat as maximum delay between sending frames for the remote peers.
+   * Returns the heart beat as maximum delay between sending frames for the remote peers.
    *
-   * @return  hearthbeat maximum delay
+   * @return The maximum delay in milliseconds.
    */
   public int getHeartbeat() {
     return this.heartbeat;
   }
 
+  /**
+   * Sets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * <p>
+   * If this property is not set explicitly, a reasonable default value is used.
+   * <p>
+   * Setting this property to a negative value will result in no maximum frame size being announced at all.
+   * 
+   * @param maxFrameSize The frame size in bytes.
+   * @return This instance for setter chaining.
+   */
+  public ProtonTransportOptions setMaxFrameSize(int maxFrameSize) {
+    if (maxFrameSize < 0) {
+      this.maxFrameSize = -1;
+    } else {
+      this.maxFrameSize = maxFrameSize;
+    }
+    return this;
+  }
+
+  /**
+   * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * <p>
+   * If this property is not set explicitly, a reasonable default value is used.
+   * 
+   * @return The frame size in bytes or -1 if no limit is set.
+   */
+  public int getMaxFrameSize() {
+    return maxFrameSize;
+  }
+
   @Override
   public int hashCode() {
-    int result = this.heartbeat;
-
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + heartbeat;
+    result = prime * result + maxFrameSize;
     return result;
   }
 
@@ -64,6 +97,9 @@ public class ProtonTransportOptions {
     if (this.heartbeat != other.heartbeat) {
       return false;
     }
+    if (this.maxFrameSize != other.maxFrameSize) {
+        return false;
+      }
 
     return true;
   }

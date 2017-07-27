@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 the original author or authors.
+* Copyright 2016, 2017 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit;
  */
 class ProtonTransport extends BaseHandler {
   private static final Logger LOG = LoggerFactory.getLogger(ProtonTransport.class);
+  private static final int DEFAULT_MAX_FRAME_SIZE = 32 * 1024; // 32kb
 
   private final Connection connection;
   private final Vertx vertx;
@@ -64,7 +65,7 @@ class ProtonTransport extends BaseHandler {
     this.vertx = vertx;
     this.netClient = netClient;
     this.socket = socket;
-    transport.setMaxFrameSize(1024 * 32); // TODO: make configurable
+    transport.setMaxFrameSize(options.getMaxFrameSize() == 0 ? DEFAULT_MAX_FRAME_SIZE : options.getMaxFrameSize());
     transport.setEmitFlowEventOnSend(false); // TODO: make configurable
     transport.setIdleTimeout(2 * options.getHeartbeat());
     if (authenticator != null) {

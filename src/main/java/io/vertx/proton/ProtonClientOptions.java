@@ -40,6 +40,7 @@ public class ProtonClientOptions extends NetClientOptions {
   private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
 
   private int heartbeat;
+  private int maxFrameSize;
   private String virtualHost;
   private String sniServerName;
 
@@ -215,6 +216,7 @@ public class ProtonClientOptions extends NetClientOptions {
     int result = super.hashCode();
     result = prime * result + Objects.hashCode(enabledSaslMechanisms);
     result = prime * result + this.heartbeat;
+    result = prime * result + this.maxFrameSize;
     result = prime * result + (this.virtualHost != null ? this.virtualHost.hashCode() : 0);
     result = prime * result + (this.sniServerName != null ? this.sniServerName.hashCode() : 0);
 
@@ -242,6 +244,9 @@ public class ProtonClientOptions extends NetClientOptions {
     if (this.heartbeat != other.heartbeat) {
       return false;
     }
+    if (this.maxFrameSize != other.maxFrameSize) {
+        return false;
+      }
     if (!Objects.equals(this.virtualHost, other.virtualHost)) {
       return false;
     }
@@ -393,5 +398,35 @@ public class ProtonClientOptions extends NetClientOptions {
    */
   public int getHeartbeat() {
     return this.heartbeat;
+  }
+
+  /**
+   * Sets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * <p>
+   * If this property is not set explicitly, a reasonable default value is used.
+   * <p>
+   * Setting this property to a negative value will result in no maximum frame size being announced at all.
+   * 
+   * @param maxFrameSize The frame size in bytes.
+   * @return This instance for setter chaining.
+   */
+  public ProtonClientOptions setMaxFrameSize(int maxFrameSize) {
+    if (maxFrameSize < 0) {
+      this.maxFrameSize = -1;
+    } else {
+      this.maxFrameSize = maxFrameSize;
+    }
+    return this;
+  }
+
+  /**
+   * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * <p>
+   * If this property is not set explicitly, a reasonable default value is used.
+   * 
+   * @return The frame size in bytes or -1 if no limit is set.
+   */
+  public int getMaxFrameSize() {
+    return maxFrameSize;
   }
 }
