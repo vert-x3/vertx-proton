@@ -163,6 +163,7 @@ public class ProtonServerImpl implements ProtonServer {
 
       ProtonTransportOptions transportOptions = new ProtonTransportOptions();
       transportOptions.setHeartbeat(this.options.getHeartbeat());
+      transportOptions.setMaxFrameSize(this.options.getMaxFrameSize());
 
       connection.bindServer(netSocket, new ProtonSaslAuthenticator() {
 
