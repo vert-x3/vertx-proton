@@ -245,8 +245,8 @@ public class ProtonClientOptions extends NetClientOptions {
       return false;
     }
     if (this.maxFrameSize != other.maxFrameSize) {
-        return false;
-      }
+      return false;
+    }
     if (!Objects.equals(this.virtualHost, other.virtualHost)) {
       return false;
     }

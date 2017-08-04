@@ -211,8 +211,8 @@ public class ProtonServerOptions extends NetServerOptions {
       return false;
     }
     if (this.maxFrameSize != other.maxFrameSize) {
-        return false;
-      }
+      return false;
+    }
 
     return true;
   }

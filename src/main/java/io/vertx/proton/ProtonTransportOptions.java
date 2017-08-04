@@ -98,8 +98,8 @@ public class ProtonTransportOptions {
       return false;
     }
     if (this.maxFrameSize != other.maxFrameSize) {
-        return false;
-      }
+      return false;
+    }
 
     return true;
   }
