@@ -216,8 +216,9 @@ class ProtonTransport extends BaseHandler {
     // Using nano time since it is not related to the wall clock, which may change
     long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
     long deadline = transport.tick(now);
-    if (deadline > 0) {
-      long delay = deadline - now;
+    if (deadline != 0) {
+      // timer treats 0 as error, ensure value is at least 1 as there was a deadline
+      long delay = Math.max(deadline - now, 1);
       LOG.trace("IdleTimeoutCheck being initiated, initial delay: {0}", delay);
       idleTimeoutCheckTimerId = vertx.setTimer(delay, new IdleTimeoutCheck());
     }
@@ -281,8 +282,9 @@ class ProtonTransport extends BaseHandler {
           LOG.info("IdleTimeoutCheck closed the transport due to the peer exceeding our requested idle-timeout.");
           disconnect();
         } else {
-          if (deadline > 0) {
-            long delay = deadline - now;
+          if (deadline != 0) {
+            // timer treats 0 as error, ensure value is at least 1 as there was a deadline
+            long delay = Math.max(deadline - now, 1);
             checkScheduled = true;
             LOG.trace("IdleTimeoutCheck rescheduling with delay: {0}", delay);
             idleTimeoutCheckTimerId = vertx.setTimer(delay, this);
