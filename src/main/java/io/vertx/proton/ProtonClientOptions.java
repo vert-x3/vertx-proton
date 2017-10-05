@@ -328,6 +328,30 @@ public class ProtonClientOptions extends NetClientOptions {
     return this;
   }
 
+  @Override
+  public ProtonClientOptions setReusePort(boolean reusePort) {
+    super.setReusePort(reusePort);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTcpCork(boolean tcpCork) {
+    super.setTcpCork(tcpCork);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTcpFastOpen(boolean tcpFastOpen) {
+    super.setTcpFastOpen(tcpFastOpen);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setTcpQuickAck(boolean tcpQuickAck) {
+    super.setTcpQuickAck(tcpQuickAck);
+    return this;
+  }
+
   /**
    * Override the hostname value used in the connection AMQP Open frame and TLS SNI server name (if TLS is in use).
    * By default, the hostname specified in {@link ProtonClient#connect} will be used for both, with SNI performed
