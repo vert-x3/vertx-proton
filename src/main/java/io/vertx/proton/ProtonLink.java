@@ -18,11 +18,14 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Record;
+
+import java.util.Map;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -264,4 +267,61 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    * @return the remote max message size conveyed by the peer, or null if none was set. 0 also means no limit.
    */
   UnsignedLong getRemoteMaxMessageSize();
+
+
+  /**
+   * Sets the link properties, to be conveyed to the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * Must be called during link setup, i.e. before calling the {@link #open()} method.
+   *
+   * @param properties the properties of the link to be coveyed to the remote peer.
+   */
+  void setProperties(Map<Symbol, Object> properties);
+
+  /**
+   * Gets the remote link properties, as conveyed from the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * @return the remote link properties conveyed by the peer, or null if none was set.
+   */
+  Map<Symbol, Object> getRemoteProperties();
+
+
+  /**
+   * Sets the offered capabilities, to be conveyed to the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * Must be called during link setup, i.e. before calling the {@link #open()} method.
+   *
+   * @param capabilities the capabilities offered to the remote peer.
+   */
+  void setOfferedCapabilities(Symbol[] capabilities);
+
+  /**
+   * Gets the remote offered capabilities, as conveyed from the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * @return the remote offered capabilities conveyed by the peer, or null if none was set.
+   */
+  Symbol[] getRemoteOfferedCapabilities();
+
+  /**
+   * Sets the desired capabilities, to be conveyed to the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * Must be called during link setup, i.e. before calling the {@link #open()} method.
+   *
+   * @param capabilities the capabilities desired of the remote peer.
+   */
+  void setDesiredCapabilities(Symbol[] capabilities);
+
+  /**
+   * Gets the remote desired capabilities, as conveyed from the peer via the Attach frame
+   * when attaching the link to the session.
+   *
+   * @return the remote desired capabilities conveyed by the peer, or null if none was set.
+   */
+  Symbol[] getRemoteDesiredCapabilities();
+
 }

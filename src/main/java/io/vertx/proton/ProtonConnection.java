@@ -190,6 +190,45 @@ public interface ProtonConnection {
   String getRemoteContainer();
 
   /**
+   * Sets the desired connection capabilities to be sent to the remote peer in our Open frame.
+   *
+   * If non-null, the given array will be copied and augmented with any default capabilities. If null, no capabilities
+   * will be sent.
+   *
+   * @param capabilities
+   *          the capabilities, or null to request not sending any capabilities
+   * @return the connection
+   */
+  ProtonConnection setDesiredCapabilities(Symbol[] capabilities);
+
+  /**
+   * Returns the desired connection capabilities sent by the remote peer in its Open frame. May be null.
+   *
+   * @return the remote desired connection capabilities, or null if no capabilities were sent.
+   */
+  Symbol[] getRemoteDesiredCapabilities();
+
+  /**
+   * Sets the offered connection capabilities to be sent to the remote peer in our Open frame.
+   *
+   * If non-null, the given array will be copied and augmented with any default capabilities. If null, no capabilities
+   * will be sent.
+   *
+   * @param capabilities
+   *          the capabilities, or null to request not sending any capabilities
+   * @return the connection
+   */
+  ProtonConnection setOfferedCapabilities(Symbol[] capabilities);
+
+  /**
+   * Returns the offered connection capabilities sent by the remote peer in its Open frame. May be null.
+   *
+   * @return the remote offered connection capabilities, or null if no capabilities were sent.
+   */
+  Symbol[] getRemoteOfferedCapabilities();
+
+
+  /**
    * Returns the container value requested by/advertised by remote peer in their AMQP Open frame.
    *
    * @return the container id

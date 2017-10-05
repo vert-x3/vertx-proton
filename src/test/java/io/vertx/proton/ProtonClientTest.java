@@ -24,6 +24,7 @@ import io.vertx.core.net.NetServer;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.impl.ProtonConnectionImpl;
 import io.vertx.proton.impl.ProtonMetaDataSupportImpl;
 import io.vertx.proton.impl.ProtonServerImpl;
 
@@ -40,6 +41,8 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -53,6 +56,9 @@ import static io.vertx.proton.ProtonHelper.message;
 public class ProtonClientTest extends MockServerTestBase {
 
   private static Logger LOG = LoggerFactory.getLogger(ProtonClientTest.class);
+
+  private static final Symbol[] ANON_RELAY_ONLY = {ProtonConnectionImpl.ANONYMOUS_RELAY};
+  private static final Symbol[] NO_CAPABILITIES = new Symbol[0];
 
   @Test(timeout = 20000)
   public void testConnectionOpenResultReturnsConnection(TestContext context) {
@@ -1016,6 +1022,103 @@ public class ProtonClientTest extends MockServerTestBase {
   }
 
   @Test(timeout = 20000)
+  public void testDesiredAndOfferedCapabilities(TestContext context) throws Exception {
+    Symbol foo = Symbol.valueOf("foo");
+    Symbol bar = Symbol.valueOf("bar");
+    Symbol baz = Symbol.valueOf("baz");
+
+
+    doTestCapabilities(context, new Symbol[] { foo, bar }, new Symbol[] { baz },
+                       new Symbol[] { baz }, new Symbol[] { bar }, true);
+
+  }
+
+
+  @Test(timeout = 20000)
+  public void testNotSettingDesiredAndOfferedCapabilitiesRetainsAnonRelay(TestContext context) throws Exception {
+
+    Symbol foo = Symbol.valueOf("foo");
+
+
+    doTestCapabilities(context, null, new Symbol[] { foo },
+                       new Symbol[] { foo }, null, false);
+
+    doTestCapabilities(context, null, new Symbol[] { foo },
+                       new Symbol[] { foo }, null, true);
+
+  }
+
+
+  private void doTestCapabilities(TestContext context, Symbol[] clientDesired, Symbol[] clientOffered,
+                                  Symbol[] serverDesired, Symbol[] serverOffered,
+                                  boolean setServerOffered) throws Exception {
+    server.close();
+    Async serverAsync = context.async();
+    Async clientAsync = context.async();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.openHandler(x -> {
+
+          serverConnection.setDesiredCapabilities(serverDesired);
+          // if anon relay then don't overwrite with null
+          if (setServerOffered) {
+            serverConnection.setOfferedCapabilities(serverOffered);
+          }
+
+          context.assertTrue(Arrays.equals(clientOffered == null ? NO_CAPABILITIES : clientOffered,
+                                           serverConnection.getRemoteOfferedCapabilities()));
+          context.assertTrue(Arrays.equals(clientDesired == null ? NO_CAPABILITIES : clientDesired,
+                                           serverConnection.getRemoteDesiredCapabilities()));
+
+          serverConnection.open();
+
+          serverAsync.complete();
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection clientConnection = res.result();
+
+        clientConnection.setOfferedCapabilities(clientOffered);
+
+        clientConnection.setDesiredCapabilities(clientDesired);
+
+
+        clientConnection.openHandler(x -> {
+          context.assertTrue(x.succeeded());
+
+          LOG.trace("Client connection opened");
+
+          context.assertTrue(Arrays.equals(serverDesired == null ? NO_CAPABILITIES : serverDesired,
+                                           clientConnection.getRemoteDesiredCapabilities()));
+          final Symbol[] expectedServerOffered = setServerOffered ? NO_CAPABILITIES : ANON_RELAY_ONLY;
+          context.assertTrue(Arrays.equals(serverOffered == null ? expectedServerOffered : serverOffered,
+                                           clientConnection.getRemoteOfferedCapabilities()));
+
+
+
+          clientAsync.complete();
+        }).open();
+      });
+
+      serverAsync.awaitSuccess();
+      clientAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
+  }
+
+
+  @Test(timeout = 20000)
   public void testDetachHandlingWithSender(TestContext context) throws Exception {
     doDetachHandlingTestImpl(context, true);
   }
@@ -1198,6 +1301,87 @@ public class ProtonClientTest extends MockServerTestBase {
       }
     }
   }
+
+  @Test(timeout = 20000)
+  public void testLinkPropertiesAndCapabilities(TestContext context) throws Exception {
+    server.close();
+    Async serverAsync = context.async();
+    Async clientAsync = context.async();
+
+    Map<Symbol,Object> clientProperties = Collections.singletonMap(Symbol.valueOf("client"), true);
+    Map<Symbol,Object> serverProperties = Collections.singletonMap(Symbol.valueOf("server"), true);
+    Symbol cap1 = Symbol.valueOf("1");
+    Symbol cap2 = Symbol.valueOf("1");
+    Symbol cap3 = Symbol.valueOf("1");
+    Symbol cap4 = Symbol.valueOf("1");
+    Symbol[] clientDesired = { cap1, cap2 };
+    Symbol[] clientOffered = { cap3 };
+    Symbol[] serverDesried = { cap3, cap4 };
+    Symbol[] serverOffered = { cap2 };
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+        serverConnection.sessionOpenHandler(session -> {
+          session.open();
+        });
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          context.assertEquals(clientProperties, serverSender.getRemoteProperties());
+          context.assertTrue(Arrays.equals(clientDesired, serverSender.getRemoteDesiredCapabilities()));
+          context.assertTrue(Arrays.equals(clientOffered, serverSender.getRemoteOfferedCapabilities()));
+
+
+          LOG.trace("Server sender opened");
+          serverSender.setProperties(serverProperties);
+          serverSender.setDesiredCapabilities(serverDesried);
+          serverSender.setOfferedCapabilities(serverOffered);
+          serverSender.open();
+
+          serverAsync.complete();
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.openHandler(x -> {
+          LOG.trace("Client connection opened");
+          final ProtonLink<?> receiver = connection.createReceiver("some-address");
+
+          receiver.setProperties(clientProperties);
+          receiver.setDesiredCapabilities(clientDesired);
+          receiver.setOfferedCapabilities(clientOffered);
+          receiver.openHandler(y -> {
+            LOG.trace("Client link opened");
+            context.assertEquals(serverProperties, receiver.getRemoteProperties(), "Unexpected value for link properties");
+            context.assertTrue(Arrays.equals(serverDesried, receiver.getRemoteDesiredCapabilities()));
+            context.assertTrue(Arrays.equals(serverOffered, receiver.getRemoteOfferedCapabilities()));
+
+
+            clientAsync.complete();
+          });
+          receiver.open();
+
+        }).open();
+      });
+
+      serverAsync.awaitSuccess();
+      clientAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
+  }
+
 
   private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException,
                                                                                  ExecutionException {
