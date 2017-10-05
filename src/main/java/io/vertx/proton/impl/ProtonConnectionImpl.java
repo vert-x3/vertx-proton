@@ -42,9 +42,12 @@ import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static io.vertx.proton.ProtonHelper.future;
@@ -105,6 +108,10 @@ public class ProtonConnectionImpl implements ProtonConnection {
     return props;
   }
 
+  private Set<Symbol> createInitialOfferedCapabilities() {
+    return Collections.emptySet();
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   //
   // Delegated state tracking
@@ -123,6 +130,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     return this;
   }
 
+  @Override
   public ProtonConnectionImpl setOfferedCapabilities(Symbol[] capabilities) {
     connection.setOfferedCapabilities(capabilities);
     return this;
@@ -134,6 +142,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     return this;
   }
 
+  @Override
   public ProtonConnectionImpl setDesiredCapabilities(Symbol[] capabilities) {
     connection.setDesiredCapabilities(capabilities);
     return this;
@@ -180,6 +189,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     return connection.getRemoteContainer();
   }
 
+  @Override
   public Symbol[] getRemoteDesiredCapabilities() {
     return connection.getRemoteDesiredCapabilities();
   }
@@ -189,6 +199,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     return connection.getRemoteHostname();
   }
 
+  @Override
   public Symbol[] getRemoteOfferedCapabilities() {
     return connection.getRemoteOfferedCapabilities();
   }

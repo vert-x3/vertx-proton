@@ -21,6 +21,7 @@ import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonLink;
 import io.vertx.proton.ProtonQoS;
 
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
@@ -31,6 +32,7 @@ import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Link;
 import org.apache.qpid.proton.engine.Record;
+import java.util.Map;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -264,6 +266,40 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   @Override
   public UnsignedLong getRemoteMaxMessageSize() {
     return link.getRemoteMaxMessageSize();
+  }
+
+  @Override
+  public Map<Symbol, Object> getRemoteProperties() {
+    return link.getRemoteProperties();
+  }
+
+  @Override
+  public void setProperties(Map<Symbol, Object> properties) {
+    link.setProperties(properties);
+  }
+
+  @Override
+  public void setOfferedCapabilities(final Symbol[] capabilities)
+  {
+    link.setOfferedCapabilities(capabilities);
+  }
+
+  @Override
+  public Symbol[] getRemoteOfferedCapabilities()
+  {
+    return link.getRemoteOfferedCapabilities();
+  }
+
+  @Override
+  public void setDesiredCapabilities(final Symbol[] capabilities)
+  {
+    link.setDesiredCapabilities(capabilities);
+  }
+
+  @Override
+  public Symbol[] getRemoteDesiredCapabilities()
+  {
+    return link.getRemoteDesiredCapabilities();
   }
 
   /////////////////////////////////////////////////////////////////////////////
