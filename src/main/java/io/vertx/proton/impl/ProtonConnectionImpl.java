@@ -108,10 +108,6 @@ public class ProtonConnectionImpl implements ProtonConnection {
     return props;
   }
 
-  private Set<Symbol> createInitialOfferedCapabilities() {
-    return Collections.emptySet();
-  }
-
   /////////////////////////////////////////////////////////////////////////////
   //
   // Delegated state tracking

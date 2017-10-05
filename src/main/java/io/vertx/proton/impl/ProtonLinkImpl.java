@@ -279,26 +279,22 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
   }
 
   @Override
-  public void setOfferedCapabilities(final Symbol[] capabilities)
-  {
+  public void setOfferedCapabilities(final Symbol[] capabilities) {
     link.setOfferedCapabilities(capabilities);
   }
 
   @Override
-  public Symbol[] getRemoteOfferedCapabilities()
-  {
+  public Symbol[] getRemoteOfferedCapabilities() {
     return link.getRemoteOfferedCapabilities();
   }
 
   @Override
-  public void setDesiredCapabilities(final Symbol[] capabilities)
-  {
+  public void setDesiredCapabilities(final Symbol[] capabilities) {
     link.setDesiredCapabilities(capabilities);
   }
 
   @Override
-  public Symbol[] getRemoteDesiredCapabilities()
-  {
+  public Symbol[] getRemoteDesiredCapabilities() {
     return link.getRemoteDesiredCapabilities();
   }
 
