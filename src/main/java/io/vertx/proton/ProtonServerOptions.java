@@ -36,6 +36,15 @@ public class ProtonServerOptions extends NetServerOptions {
   private int heartbeat;
   private int maxFrameSize;
 
+  public ProtonServerOptions() {
+  }
+
+  public ProtonServerOptions(ProtonServerOptions other) {
+    super(other);
+    this.heartbeat = other.heartbeat;
+    this.maxFrameSize = other.maxFrameSize;
+  }
+
   @Override
   public ProtonServerOptions setSendBufferSize(int sendBufferSize) {
     super.setSendBufferSize(sendBufferSize);
