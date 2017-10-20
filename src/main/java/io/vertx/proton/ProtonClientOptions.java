@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 the original author or authors.
+* Copyright 2016, 2017 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -47,6 +47,19 @@ public class ProtonClientOptions extends NetClientOptions {
   public ProtonClientOptions() {
     super();
     setHostnameVerificationAlgorithm("HTTPS");
+  }
+
+  /**
+   * Copy constructor
+   *
+   * @param other  the options to copy
+   */
+  public ProtonClientOptions(ProtonClientOptions other) {
+    super(other);
+    this.heartbeat = other.heartbeat;
+    this.maxFrameSize = other.maxFrameSize;
+    this.virtualHost = other.virtualHost;
+    this.sniServerName = other.sniServerName;
   }
 
   /**
