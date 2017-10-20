@@ -38,7 +38,6 @@ import io.vertx.core.net.TrustOptions;
 public class ProtonClientOptions extends NetClientOptions {
 
   private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
-
   private int heartbeat;
   private int maxFrameSize;
   private String virtualHost;
@@ -56,6 +55,7 @@ public class ProtonClientOptions extends NetClientOptions {
    */
   public ProtonClientOptions(ProtonClientOptions other) {
     super(other);
+    this.enabledSaslMechanisms = new LinkedHashSet<String>(other.enabledSaslMechanisms);
     this.heartbeat = other.heartbeat;
     this.maxFrameSize = other.maxFrameSize;
     this.virtualHost = other.virtualHost;
