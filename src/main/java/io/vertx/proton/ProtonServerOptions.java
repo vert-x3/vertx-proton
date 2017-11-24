@@ -15,8 +15,10 @@
 */
 package io.vertx.proton;
 
+import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.JdkSSLEngineOptions;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.KeyCertOptions;
@@ -31,6 +33,7 @@ import io.vertx.core.net.TrustOptions;
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
  */
+@DataObject(generateConverter = true, publicConverter = false)
 public class ProtonServerOptions extends NetServerOptions {
 
   private int heartbeat;
@@ -39,10 +42,37 @@ public class ProtonServerOptions extends NetServerOptions {
   public ProtonServerOptions() {
   }
 
+  /**
+   * Copy constructor
+   *
+   * @param other  the options to copy
+   */
   public ProtonServerOptions(ProtonServerOptions other) {
     super(other);
     this.heartbeat = other.heartbeat;
     this.maxFrameSize = other.maxFrameSize;
+  }
+
+  /**
+   * Create options from JSON
+   *
+   * @param json  the JSON
+   */
+  public ProtonServerOptions(JsonObject json) {
+    super(json);
+    ProtonServerOptionsConverter.fromJson(json, this);
+  }
+
+  /**
+   * Convert to JSON
+   *
+   * @return the JSON
+   */
+  @Override
+  public JsonObject toJson() {
+    JsonObject json = super.toJson();
+    ProtonServerOptionsConverter.toJson(this, json);
+    return json;
   }
 
   @Override
@@ -306,7 +336,7 @@ public class ProtonServerOptions extends NetServerOptions {
    * If this property is not set explicitly, a reasonable default value is used.
    * <p>
    * Setting this property to a negative value will result in no maximum frame size being announced at all.
-   * 
+   *
    * @param maxFrameSize The frame size in bytes.
    * @return This instance for setter chaining.
    */
@@ -323,7 +353,7 @@ public class ProtonServerOptions extends NetServerOptions {
    * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
-   * 
+   *
    * @return The frame size in bytes or -1 if no limit is set.
    */
   public int getMaxFrameSize() {

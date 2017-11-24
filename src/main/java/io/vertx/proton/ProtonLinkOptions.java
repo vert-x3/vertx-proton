@@ -15,11 +15,38 @@
 */
 package io.vertx.proton;
 
+import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
+
 /**
  * Options for configuring link attributes.
  */
+@DataObject(generateConverter = true, publicConverter = false)
 public class ProtonLinkOptions {
     private String linkName;
+
+    public ProtonLinkOptions() {
+    }
+
+    /**
+     * Create options from JSON
+     *
+     * @param json  the JSON
+     */
+    public ProtonLinkOptions(JsonObject json) {
+      ProtonLinkOptionsConverter.fromJson(json, this);
+    }
+
+    /**
+     * Convert to JSON
+     *
+     * @return the JSON
+     */
+    public JsonObject toJson() {
+      JsonObject json = new JsonObject();
+      ProtonLinkOptionsConverter.toJson(this, json);
+      return json;
+    }
 
     public ProtonLinkOptions setLinkName(String linkName) {
         this.linkName = linkName;

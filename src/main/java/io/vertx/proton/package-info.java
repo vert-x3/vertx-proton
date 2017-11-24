@@ -58,7 +58,7 @@
  * ----
  *
  * === Creating a sender
- * 
+ *
  * Here is an example of creating a sender and sending a message with it. The onUpdated handler provided in the send
  * call is invoked when disposition updates are received for the delivery, with the example using this to print the
  * delivery state and whether the delivery was settled.
@@ -67,9 +67,9 @@
  * ----
  * {@link examples.VertxProtonExamples#example2}
  * ----
- * 
+ *
  * === Creating a receiver
- * 
+ *
  * Here is an example of creating a receiver, and setting a message handler to process the incoming messages and their
  * related delivery.
  *
@@ -120,6 +120,7 @@
  * any cross-connection interactions, should again be ensured to run on the connections own Context as outlined above.
  */
 @Document(fileName = "index.adoc")
+@io.vertx.codegen.annotations.ModuleGen(name = "vertx-proton", groupPackage = "io.vertx.proton")
 package io.vertx.proton;
 
 import io.vertx.docgen.Document;

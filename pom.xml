@@ -107,6 +107,13 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- codegen -->
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-codegen</artifactId>
+      <classifier>processor</classifier>
+    </dependency>
+
     <!-- doc -->
     <dependency>
       <groupId>io.vertx</groupId>
@@ -126,9 +133,11 @@
               <id>default-compile</id>
               <configuration>
                 <annotationProcessors>
+                  <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
                   <annotationProcessor>io.vertx.docgen.JavaDocGenProcessor</annotationProcessor>
                 </annotationProcessors>
                 <compilerArgs>
+                  <arg>-AoutputDirectory=${project.basedir}/src/main</arg>
                   <arg>-Adocgen.output=${asciidoc.dir}/java</arg>
                   <arg>-Amaven.groupId=${project.groupId}</arg>
                   <arg>-Amaven.artifactId=${project.artifactId}</arg>
