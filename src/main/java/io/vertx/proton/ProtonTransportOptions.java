@@ -15,13 +15,40 @@
 */
 package io.vertx.proton;
 
+import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonObject;
+
 /**
  * Options for configuring transport layer
  */
+@DataObject(generateConverter = true, publicConverter = false)
 public class ProtonTransportOptions {
 
   private int heartbeat;
   private int maxFrameSize;
+
+  public ProtonTransportOptions() {
+  }
+
+  /**
+   * Create options from JSON
+   *
+   * @param json  the JSON
+   */
+  public ProtonTransportOptions(JsonObject json) {
+    ProtonTransportOptionsConverter.fromJson(json, this);
+  }
+
+  /**
+   * Convert to JSON
+   *
+   * @return the JSON
+   */
+  public JsonObject toJson() {
+    JsonObject json = new JsonObject();
+    ProtonTransportOptionsConverter.toJson(this, json);
+    return json;
+  }
 
   /**
    * Set the heart beat as maximum delay between sending frames for the remote peers.
@@ -50,7 +77,7 @@ public class ProtonTransportOptions {
    * If this property is not set explicitly, a reasonable default value is used.
    * <p>
    * Setting this property to a negative value will result in no maximum frame size being announced at all.
-   * 
+   *
    * @param maxFrameSize The frame size in bytes.
    * @return This instance for setter chaining.
    */
@@ -67,7 +94,7 @@ public class ProtonTransportOptions {
    * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
-   * 
+   *
    * @return The frame size in bytes or -1 if no limit is set.
    */
   public int getMaxFrameSize() {

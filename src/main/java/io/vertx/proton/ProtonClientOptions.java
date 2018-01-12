@@ -19,7 +19,10 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import io.vertx.codegen.annotations.DataObject;
+
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.JdkSSLEngineOptions;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.KeyCertOptions;
@@ -35,6 +38,7 @@ import io.vertx.core.net.TrustOptions;
 /**
  * Options for configuring {@link io.vertx.proton.ProtonClient} connect operations.
  */
+@DataObject(generateConverter = true, publicConverter = false)
 public class ProtonClientOptions extends NetClientOptions {
 
   private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
@@ -60,6 +64,28 @@ public class ProtonClientOptions extends NetClientOptions {
     this.maxFrameSize = other.maxFrameSize;
     this.virtualHost = other.virtualHost;
     this.sniServerName = other.sniServerName;
+  }
+
+  /**
+   * Create options from JSON
+   *
+   * @param json  the JSON
+   */
+  public ProtonClientOptions(JsonObject json) {
+    super(json);
+    ProtonClientOptionsConverter.fromJson(json, this);
+  }
+
+  /**
+   * Convert to JSON
+   *
+   * @return the JSON
+   */
+  @Override
+  public JsonObject toJson() {
+     JsonObject json = super.toJson();
+     ProtonClientOptionsConverter.toJson(this, json);
+     return json;
   }
 
   /**
@@ -443,7 +469,7 @@ public class ProtonClientOptions extends NetClientOptions {
    * If this property is not set explicitly, a reasonable default value is used.
    * <p>
    * Setting this property to a negative value will result in no maximum frame size being announced at all.
-   * 
+   *
    * @param maxFrameSize The frame size in bytes.
    * @return This instance for setter chaining.
    */
@@ -460,7 +486,7 @@ public class ProtonClientOptions extends NetClientOptions {
    * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
-   * 
+   *
    * @return The frame size in bytes or -1 if no limit is set.
    */
   public int getMaxFrameSize() {
