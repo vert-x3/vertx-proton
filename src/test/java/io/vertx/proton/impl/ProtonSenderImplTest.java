@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 the original author or authors.
+* Copyright 2016, 2018 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package io.vertx.proton.impl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Record;
@@ -45,5 +46,15 @@ public class ProtonSenderImplTest {
     attachments.set(key, Connection.class, conn);
     assertNotNull("Expected attachment to be returned", attachments.get(key, Connection.class));
     assertSame("Expected attachment to be given object", conn, attachments.get(key, Connection.class));
+  }
+
+  @Test
+  public void testAutoSettleIsEnabledByDefault() {
+    Connection conn = Connection.Factory.create();
+    Session sess = conn.session();
+    Sender s = sess.sender("name");
+
+    ProtonSenderImpl sender = new ProtonSenderImpl(s);
+    assertTrue(sender.isAutoSettle());
   }
 }

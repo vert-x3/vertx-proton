@@ -34,7 +34,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
 
   private Handler<ProtonSender> drainHandler;
   private boolean anonymousSender;
-  private boolean autoSettle;
+  private boolean autoSettle = true;
   private int tag = 1;
   private boolean autoDrained = true;
 
