@@ -157,11 +157,13 @@ public class ProtonClientTest extends MockServerTestBase {
       context.assertFalse(connection.isDisconnected());
       connection.disconnectHandler(x -> {
         context.assertTrue(connection.isDisconnected());
+        LOG.trace("Client disconnect handler called");
         async.complete();
       });
 
       // Send a request to the server for him to disconnect us
       ProtonSender sender = connection.createSender(null).open();
+      LOG.trace("Sending request for remote disconnect");
       sender.send(message("command", "disconnect"));
     });
   }
@@ -172,10 +174,12 @@ public class ProtonClientTest extends MockServerTestBase {
     connect(context, connection -> {
       context.assertFalse(connection.isDisconnected());
       connection.disconnectHandler(x -> {
+        LOG.trace("Client disconnect handler called");
         context.assertTrue(connection.isDisconnected());
         async.complete();
       });
       // We will force the disconnection to the server
+      LOG.trace("Client disconnecting connection");
       connection.disconnect();
     });
   }

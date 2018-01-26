@@ -18,6 +18,9 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -31,6 +34,8 @@ import static io.vertx.proton.ProtonHelper.message;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class MockServer {
+
+  private static Logger LOG = LoggerFactory.getLogger(ProtonClientTest.class);
 
   private ProtonServer server;
   private ProtonSender echoSender;
@@ -130,7 +135,9 @@ public class MockServer {
     connection.openHandler(result -> {
       connection.setContainer("pong: " + connection.getRemoteContainer()).open();
     });
-
+    connection.disconnectHandler(x -> {
+      LOG.trace("Server connection disconnect handler called");
+    });
   }
 
   public int getProducerCredits() {
@@ -170,6 +177,7 @@ public class MockServer {
       String command = (String) ((AmqpValue) msg.getBody()).getValue();
       switch (Commands.valueOf(command)) {
       case disconnect:
+        LOG.trace("Server disconnecting connection per request");
         connection.disconnect();
         break;
       }
