@@ -155,14 +155,17 @@ public interface ProtonConnection {
   ProtonSession createSession();
 
   /**
-   * Disconnects the underlying transport connection.
+   * Disconnects the underlying transport connection. This can occur asynchronously
+   * and may not complete until some time after the method has returned.
+   *
+   * @see #disconnectHandler(Handler)
    */
   void disconnect();
 
   /**
-   * Gets whether the underlying transport is disconnected.
+   * Gets whether the underlying transport has indicated it is disconnected.
    *
-   * @return whether the underlying transport is disconnected.
+   * @return whether the underlying transport indicated it is disconnected.
    */
   boolean isDisconnected();
 
@@ -313,7 +316,7 @@ public interface ProtonConnection {
   ProtonConnection receiverOpenHandler(Handler<ProtonReceiver> remoteReceiverOpenHandler);
 
   /**
-   * Sets a handler for when the underlying transport connection disconnects.
+   * Sets a handler for when the underlying transport connection indicates it has disconnected.
    *
    * @return the connection
    * @param disconnectHandler
