@@ -15,6 +15,8 @@
 */
 package io.vertx.proton;
 
+import java.util.Set;
+
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
@@ -268,6 +270,18 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
+  public ProtonServerOptions removeEnabledSecureTransportProtocol(String protocol) {
+    super.removeEnabledSecureTransportProtocol(protocol);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setEnabledSecureTransportProtocols(Set<String> enabledSecureTransportProtocols) {
+    super.setEnabledSecureTransportProtocols(enabledSecureTransportProtocols);
+    return this;
+  }
+
+  @Override
   public ProtonServerOptions setJdkSslEngineOptions(JdkSSLEngineOptions sslEngineOptions) {
     super.setJdkSslEngineOptions(sslEngineOptions);
     return this;
@@ -306,6 +320,30 @@ public class ProtonServerOptions extends NetServerOptions {
   @Override
   public ProtonServerOptions setSni(boolean sni) {
     super.setSni(sni);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setReusePort(boolean reusePort) {
+    super.setReusePort(reusePort);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setTcpFastOpen(boolean tcpFastOpen) {
+    super.setTcpFastOpen(tcpFastOpen);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setTcpCork(boolean tcpCork) {
+    super.setTcpCork(tcpCork);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setTcpQuickAck(boolean tcpQuickAck) {
+    super.setTcpQuickAck(tcpQuickAck);
     return this;
   }
 
