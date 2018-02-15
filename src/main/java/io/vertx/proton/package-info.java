@@ -120,7 +120,7 @@
  * any cross-connection interactions, should again be ensured to run on the connections own Context as outlined above.
  */
 @Document(fileName = "index.adoc")
-@io.vertx.codegen.annotations.ModuleGen(name = "vertx-proton", groupPackage = "io.vertx.proton")
+@io.vertx.codegen.annotations.ModuleGen(name = "vertx-proton", groupPackage = "io.vertx")
 package io.vertx.proton;
 
 import io.vertx.docgen.Document;
