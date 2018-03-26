@@ -18,8 +18,8 @@
 
   <parent>
     <groupId>io.vertx</groupId>
-    <artifactId>vertx-parent</artifactId>
-    <version>12</version>
+    <artifactId>vertx-ext-parent</artifactId>
+    <version>31</version>
   </parent>
 
   <artifactId>vertx-proton</artifactId>
@@ -124,58 +124,7 @@
   </dependencies>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>default-compile</id>
-              <configuration>
-                <annotationProcessors>
-                  <annotationProcessor>io.vertx.codegen.CodeGenProcessor</annotationProcessor>
-                  <annotationProcessor>io.vertx.docgen.JavaDocGenProcessor</annotationProcessor>
-                </annotationProcessors>
-                <compilerArgs>
-                  <arg>-AoutputDirectory=${project.basedir}/src/main</arg>
-                  <arg>-Adocgen.output=${asciidoc.dir}/java</arg>
-                  <arg>-Amaven.groupId=${project.groupId}</arg>
-                  <arg>-Amaven.artifactId=${project.artifactId}</arg>
-                  <arg>-Amaven.version=${project.version}</arg>
-                </compilerArgs>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <configuration>
-            <reportOutputDirectory>${project.build.directory}/docs</reportOutputDirectory>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-
     <plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>assemble-docs</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <attach>true</attach>
-              <descriptors>
-                <descriptor>src/main/assembly/docs.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
         <executions>
@@ -245,40 +194,5 @@
       </resource>
     </resources>
   </build>
-
-  <profiles>
-    <!-- Documentation generation : activate with -Pdocs -->
-    <profile>
-      <id>docs</id>
-      <build>
-        <plugins>
-          <!-- Transform the Asciidoctor to html -->
-          <plugin>
-            <groupId>org.asciidoctor</groupId>
-            <artifactId>asciidoctor-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>process-asciidoc</goal>
-                </goals>
-                <phase>package</phase>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>javadoc</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
 </project>

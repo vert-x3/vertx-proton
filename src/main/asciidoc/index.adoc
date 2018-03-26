@@ -19,7 +19,7 @@ To use Vert.x Proton, add the following dependency to the _dependencies_ section
 <dependency>
   <groupId>io.vertx</groupId>
   <artifactId>vertx-proton</artifactId>
-  <version>3.5.1</version>
+  <version>${maven.version}</version>
 </dependency>
 ----
 
@@ -27,7 +27,7 @@ To use Vert.x Proton, add the following dependency to the _dependencies_ section
 
 [source,groovy,subs="+attributes"]
 ----
-compile io.vertx:vertx-proton:3.5.1
+compile io.vertx:vertx-proton:${maven.version}
 ----
 
 === Creating a connection
@@ -37,19 +37,7 @@ receivers.
 
 [source,java]
 ----
-ProtonClient client = ProtonClient.create(vertx);
-
-// Connect, then use the event loop thread to process things thereafter
-client.connect("hostname", 5672, "username", "password", connectResult -> {
-  if (connectResult.succeeded()) {
-    connectResult.result().setContainer("my-container/client-id").openHandler(openResult -> {
-      if (openResult.succeeded()) {
-        ProtonConnection conn = openResult.result();
-        // Create senders, receivers etc..
-      }
-    }).open();
-  }
-});
+{@link examples.VertxProtonExamples#example1}
 ----
 
 === Creating a sender
@@ -60,20 +48,7 @@ delivery state and whether the delivery was settled.
 
 [source,java]
 ----
-connection.createSender("myQueue").openHandler(openResult -> {
-  if (openResult.succeeded()) {
-    ProtonSender sender = openResult.result();
-
-    Message message = message();
-    message.setBody(new AmqpValue("Hello World"));
-
-    // Send message, providing an onUpdated delivery handler that prints updates
-    sender.send(message, delivery -> {
-      System.out.println(String.format("Message received by server: remote state=%s, remotely settled=%s",
-                                       delivery.getRemoteState(), delivery.remotelySettled()));
-    });
-  }
-}).open();
+{@link examples.VertxProtonExamples#example2}
 ----
 
 === Creating a receiver
@@ -83,14 +58,7 @@ related delivery.
 
 [source,java]
 ----
-connection.createReceiver("myQueue").handler((delivery, msg) -> {
-  Section body = msg.getBody();
-  if (body instanceof AmqpValue) {
-    System.out.println("Received message with content: " + ((AmqpValue) body).getValue());
-  }
-  // By default, the receiver automatically accepts (and settles) the delivery
-  // when the handler returns if no other disposition has already been applied.
-}).open();
+{@link examples.VertxProtonExamples#example3}
 ----
 
 === Threading Considerations
@@ -109,11 +77,7 @@ For example, consider the following code:
 
 [source,java]
 ----
-client.connect("hostname", 5672, connectResult -> {
-  // In this case the context will be either the one used to call connect
-  // or one created during the process if there was none originally.
-  Context connectionCtx = Vertx.currentContext();
-});
+{@link examples.VertxProtonExamples#example4}
 ----
 
 If the above were to be run within a Verticle initialisation for example, then the verticle Context would be used by
@@ -130,13 +94,7 @@ ensuring it becomes the Context associated with the connection. This can be seen
 
 [source,java]
 ----
-Context myContext = vertx.getOrCreateContext();
-
-myContext.runOnContext(x -> {
-  client.connect("hostname", 5672, connectResult -> {
-    // In this case the context will be 'myContext' from earlier
-  });
-});
+{@link examples.VertxProtonExamples#example5}
 ----
 
 In the case of a ProtonServer connection, a Context is associated with the underlying socket for the connection when
