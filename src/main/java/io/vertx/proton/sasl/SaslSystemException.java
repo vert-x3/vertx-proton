@@ -18,13 +18,15 @@ package io.vertx.proton.sasl;
 import javax.security.sasl.SaslException;
 
 /**
- * Indicates that a SASL handshake has failed with a {@code SYS}
- * response code as defined by <a href="https://tools.ietf.org/html/rfc3206#section-4">RFC 3206, Section 4</a>.
+ * Indicates that a SASL handshake has failed with a {@code sys-perm} or {@code sys-temp}
+ * response code as defined by
+ * <a href="http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-security-v1.0-os.html#type-sasl-code">
+ * AMQP Version 1.0, Section 5.3.3.6</a>.
  */
-public class SystemException extends SaslException {
+public class SaslSystemException extends SaslException {
 
   private static final long serialVersionUID = 1L;
-  private boolean permanent;
+  private final boolean permanent;
 
   /**
    * Creates an exception indicating a system error.
@@ -33,7 +35,7 @@ public class SystemException extends SaslException {
    *                  (manual) intervention.
    * 
    */
-  public SystemException(boolean permanent) {
+  public SaslSystemException(boolean permanent) {
     this(permanent, null);
   }
 
@@ -45,7 +47,7 @@ public class SystemException extends SaslException {
    * @param detail A message providing details about the cause
    *               of the problem.
    */
-  public SystemException(boolean permanent, String detail) {
+  public SaslSystemException(boolean permanent, String detail) {
     super(detail);
     this.permanent = permanent;
   }

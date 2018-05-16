@@ -30,7 +30,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.sasl.ProtonSaslMechanism;
-import io.vertx.proton.sasl.SystemException;
+import io.vertx.proton.sasl.SaslSystemException;
 import io.vertx.proton.sasl.impl.ProtonSaslMechanismFinderImpl;
 
 /**
@@ -138,7 +138,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
           sasl.send(response, 0, response.length);
         }
       } else {
-        throw new SystemException(
+        throw new SaslSystemException(
             true, "Could not find a suitable SASL mechanism for the remote peer using the available credentials.");
       }
     }
@@ -159,9 +159,9 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
       throw new AuthenticationException("Failed to authenticate");
     case PN_SASL_SYS:
     case PN_SASL_TEMP:
-      throw new SystemException(false, "SASL handshake failed due to a transient error");
+      throw new SaslSystemException(false, "SASL handshake failed due to a transient error");
     case PN_SASL_PERM:
-      throw new SystemException(true, "SASL handshake failed due to an unrecoverable error");
+      throw new SaslSystemException(true, "SASL handshake failed due to an unrecoverable error");
     default:
       throw new SaslException("SASL handshake failed");
     }
