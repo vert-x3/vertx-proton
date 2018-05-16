@@ -18,8 +18,8 @@ package io.vertx.proton.sasl;
 import javax.security.sasl.SaslException;
 
 /**
- * Indicates that a SASL handshake has failed with a {@code sys-perm} or {@code sys-temp}
- * response code as defined by
+ * Indicates that a SASL handshake has failed with a {@code sys}, {@code sys-perm}, or {@code sys-temp}
+ * outcome code as defined by
  * <a href="http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-security-v1.0-os.html#type-sasl-code">
  * AMQP Version 1.0, Section 5.3.3.6</a>.
  */
