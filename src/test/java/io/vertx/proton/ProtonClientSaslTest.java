@@ -15,6 +15,8 @@
 */
 package io.vertx.proton;
 
+import javax.security.sasl.AuthenticationException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +28,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.sasl.SaslSystemException;
 import io.vertx.proton.sasl.impl.ProtonSaslAnonymousImpl;
 
 @RunWith(VertxUnitRunner.class)
@@ -63,20 +66,20 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
 
   @Test(timeout = 20000)
   public void testConnectWithValidUserPassSucceeds(TestContext context) throws Exception {
-    doConnectWithGivenCredentialsTestImpl(context, USERNAME_GUEST, PASSWORD_GUEST, true);
+    doConnectWithGivenCredentialsTestImpl(context, USERNAME_GUEST, PASSWORD_GUEST, null);
   }
 
   @Test(timeout = 20000)
   public void testConnectWithInvalidUserPassFails(TestContext context) throws Exception {
-    doConnectWithGivenCredentialsTestImpl(context, USERNAME_GUEST, "wrongpassword", false);
+    doConnectWithGivenCredentialsTestImpl(context, USERNAME_GUEST, "wrongpassword", AuthenticationException.class);
   }
 
   @Test(timeout = 20000)
   public void testConnectAnonymousWithoutUserPass(TestContext context) throws Exception {
-    doConnectWithGivenCredentialsTestImpl(context, null, null, false);
+    doConnectWithGivenCredentialsTestImpl(context, null, null, AuthenticationException.class);
     anonymousAccessAllowed = true;
     restartBroker();
-    doConnectWithGivenCredentialsTestImpl(context, null, null, true);
+    doConnectWithGivenCredentialsTestImpl(context, null, null, null);
   }
 
   @Test(timeout = 20000)
@@ -84,33 +87,40 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     ProtonClientOptions options = new ProtonClientOptions();
 
     // Try with the wrong password, with anonymous access disabled, expect connect to fail
-    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", false);
+    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", AuthenticationException.class);
 
     // Try with the wrong password, with anonymous access enabled, expect connect still to fail
     anonymousAccessAllowed = true;
     restartBroker();
-    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", false);
+    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", AuthenticationException.class);
 
     // Now restrict the allows SASL mechanisms to ANONYMOUS, then expect connect to succeed as it wont use the invalid
     // credentials
     options.addEnabledSaslMechanism(ProtonSaslAnonymousImpl.MECH_NAME);
-    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", true);
+    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", null);
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectWithUnsupportedSaslMechanisms(TestContext context) throws Exception {
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.addEnabledSaslMechanism("NON_EXISTING");
+    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", SaslSystemException.class);
   }
 
   private void doConnectWithGivenCredentialsTestImpl(TestContext context, String username, String password,
-                                                     boolean expectConnectToSucceed) {
+                                                     Class<?> expectedException) {
     doConnectWithGivenCredentialsTestImpl(context, new ProtonClientOptions(), username, password,
-        expectConnectToSucceed);
+        expectedException);
   }
 
   private void doConnectWithGivenCredentialsTestImpl(TestContext context, ProtonClientOptions options, String username,
-                                                     String password, boolean expectConnectToSucceed) {
+                                                     String password, Class<?> expectedException) {
     Async async = context.async();
 
     // Connect the client and open the connection to verify it works
     ProtonClient client = ProtonClient.create(vertx);
     client.connect(options, "localhost", getBrokerAmqpConnectorPort(), username, password, res -> {
-      if (expectConnectToSucceed) {
+      if (expectedException == null) {
         // Expect connect to succeed
         context.assertTrue(res.succeeded());
         ProtonConnection connection = res.result();
@@ -123,7 +133,8 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
       } else {
         // Expect connect to fail
         context.assertFalse(res.succeeded());
-        LOG.trace("Connect failed");
+        context.assertTrue(expectedException.isInstance(res.cause()));
+        LOG.trace("Connect failed: " + res.cause().getMessage());
         async.complete();
       }
     });
