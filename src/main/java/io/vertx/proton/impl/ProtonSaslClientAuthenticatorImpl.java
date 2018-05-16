@@ -17,6 +17,7 @@ package io.vertx.proton.impl;
 
 import java.util.Set;
 
+import javax.security.sasl.AuthenticationException;
 import javax.security.sasl.SaslException;
 
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
@@ -29,6 +30,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.sasl.ProtonSaslMechanism;
+import io.vertx.proton.sasl.SystemException;
 import io.vertx.proton.sasl.impl.ProtonSaslMechanismFinderImpl;
 
 /**
@@ -57,7 +59,8 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
    *          server, or null/empty if no restriction.
    * @param handler
-   *          The handler to convey the result of the SASL process to
+   *          The handler to convey the result of the SASL process to. The async result will succeed if the SASL handshake
+   *          completed successfully, it will fail with a {@link SaslException} if the handshake failed.
    */
   public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms, Handler<AsyncResult<ProtonConnection>> handler) {
     this.handler = handler;
@@ -92,8 +95,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
         handleSaslStep();
         break;
       case PN_SASL_FAIL:
-        done = true;
-        handler.handle(Future.failedFuture(new SecurityException("Failed to authenticate")));
+        handleSaslFail();
         break;
       case PN_SASL_PASS:
         done = true;
@@ -121,41 +123,47 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
     return succeeded;
   }
 
-  private void handleSaslInit() throws SecurityException {
-    try {
-      String[] remoteMechanisms = sasl.getRemoteMechanisms();
-      if (remoteMechanisms != null && remoteMechanisms.length != 0) {
-        mechanism = ProtonSaslMechanismFinderImpl.findMatchingMechanism(username, password, mechanismsRestriction,
-            remoteMechanisms);
-        if (mechanism != null) {
-          mechanism.setUsername(username);
-          mechanism.setPassword(password);
+  private void handleSaslInit() throws SaslException {
+    String[] remoteMechanisms = sasl.getRemoteMechanisms();
+    if (remoteMechanisms != null && remoteMechanisms.length != 0) {
+      mechanism = ProtonSaslMechanismFinderImpl.findMatchingMechanism(username, password, mechanismsRestriction,
+          remoteMechanisms);
+      if (mechanism != null) {
+        mechanism.setUsername(username);
+        mechanism.setPassword(password);
 
-          sasl.setMechanisms(mechanism.getName());
-          byte[] response = mechanism.getInitialResponse();
-          if (response != null) {
-            sasl.send(response, 0, response.length);
-          }
-        } else {
-          throw new SecurityException(
-              "Could not find a suitable SASL mechanism for the remote peer using the available credentials.");
+        sasl.setMechanisms(mechanism.getName());
+        byte[] response = mechanism.getInitialResponse();
+        if (response != null) {
+          sasl.send(response, 0, response.length);
         }
+      } else {
+        throw new SystemException(
+            true, "Could not find a suitable SASL mechanism for the remote peer using the available credentials.");
       }
-    } catch (SaslException se) {
-      throw new SecurityException("Exception while processing SASL init.", se);
     }
   }
 
-  private void handleSaslStep() throws SecurityException {
-    try {
-      if (sasl.pending() != 0) {
-        byte[] challenge = new byte[sasl.pending()];
-        sasl.recv(challenge, 0, challenge.length);
-        byte[] response = mechanism.getChallengeResponse(challenge);
-        sasl.send(response, 0, response.length);
-      }
-    } catch (SaslException se) {
-      throw new SecurityException("Exception while processing SASL step.", se);
+  private void handleSaslStep() throws SaslException {
+    if (sasl.pending() != 0) {
+      byte[] challenge = new byte[sasl.pending()];
+      sasl.recv(challenge, 0, challenge.length);
+      byte[] response = mechanism.getChallengeResponse(challenge);
+      sasl.send(response, 0, response.length);
+    }
+  }
+
+  private void handleSaslFail() throws SaslException {
+    switch(sasl.getOutcome()) {
+    case PN_SASL_AUTH:
+      throw new AuthenticationException("Failed to authenticate");
+    case PN_SASL_SYS:
+    case PN_SASL_TEMP:
+      throw new SystemException(false, "SASL handshake failed due to a transient error");
+    case PN_SASL_PERM:
+      throw new SystemException(true, "SASL handshake failed due to an unrecoverable error");
+    default:
+      throw new SaslException("SASL handshake failed");
     }
   }
 }

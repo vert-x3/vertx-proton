@@ -1,0 +1,61 @@
+/*
+* Copyright 2018 the original author or authors.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+package io.vertx.proton.sasl;
+
+import javax.security.sasl.SaslException;
+
+/**
+ * Indicates that a SASL handshake has failed with a {@code SYS}
+ * response code as defined by <a href="https://tools.ietf.org/html/rfc3206#section-4">RFC 3206, Section 4</a>.
+ */
+public class SystemException extends SaslException {
+
+  private static final long serialVersionUID = 1L;
+  private boolean permanent;
+
+  /**
+   * Creates an exception indicating a system error.
+   * 
+   * @param permanent {@code true} if the error is permanent and requires
+   *                  (manual) intervention.
+   * 
+   */
+  public SystemException(boolean permanent) {
+    this(permanent, null);
+  }
+
+  /**
+   * Creates an exception indicating a system error with a detail message.
+   * 
+   * @param permanent {@code true} if the error is permanent and requires
+   *                  (manual) intervention.
+   * @param detail A message providing details about the cause
+   *               of the problem.
+   */
+  public SystemException(boolean permanent, String detail) {
+    super(detail);
+    this.permanent = permanent;
+  }
+
+  /**
+   * Checks if the condition that caused this exception is of a permanent nature.
+   * 
+   * @return {@code true} if the error condition is permanent.
+   */
+  public final boolean isPermanent() {
+    return permanent;
+  }
+}
