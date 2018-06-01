@@ -15,20 +15,22 @@
 */
 package io.vertx.proton;
 
+import static io.vertx.proton.ProtonHelper.condition;
+import static io.vertx.proton.ProtonHelper.message;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
+import org.apache.qpid.proton.message.Message;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-
-import org.apache.qpid.proton.amqp.transport.AmqpError;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.message.Message;
-
-import java.util.concurrent.ExecutionException;
-
-import static io.vertx.proton.ProtonHelper.condition;
-import static io.vertx.proton.ProtonHelper.message;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -45,7 +47,7 @@ public class MockServer {
   private int bindPort = 0;
   private boolean reuseAddress = false;
 
-  enum Addresses {
+  protected enum Addresses {
     command, drop, echo, // Echos message back to consumer at address "echo"
     no_messages, two_messages, five_messages
   }
@@ -149,7 +151,17 @@ public class MockServer {
   }
 
   public void close() {
-    server.close();
+    CountDownLatch latch = new CountDownLatch(1);
+    server.close(res -> {
+      latch.countDown();
+    });
+
+    try {
+      boolean complete = latch.await(1, TimeUnit.SECONDS);
+      LOG.trace("Server close returning, completed: " + complete);
+    } catch (InterruptedException e) {
+      throw new RuntimeException("Interupted while awaiting server close");
+    }
   }
 
   public int actualPort() {

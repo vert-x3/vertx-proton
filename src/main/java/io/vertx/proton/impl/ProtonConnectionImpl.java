@@ -19,6 +19,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
@@ -30,6 +31,7 @@ import io.vertx.proton.ProtonSender;
 import io.vertx.proton.ProtonSession;
 import io.vertx.proton.ProtonTransportOptions;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
+
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
@@ -41,7 +43,9 @@ import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +64,9 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
   private final Connection connection = Proton.connection();
   private final Vertx vertx;
+  private final ContextInternal connCtx;
   private ProtonTransport transport;
+  private List<Handler<Void>> endHandlers = new ArrayList<>();
 
   private Handler<AsyncResult<ProtonConnection>> openHandler = (result) -> {
     LOG.trace("Connection open completed");
@@ -88,8 +94,9 @@ public class ProtonConnectionImpl implements ProtonConnection {
   private boolean anonymousRelaySupported;
   private ProtonSession defaultSession;
 
-  ProtonConnectionImpl(Vertx vertx, String hostname) {
+  ProtonConnectionImpl(Vertx vertx, String hostname, ContextInternal connCtx) {
     this.vertx = vertx;
+    this.connCtx = connCtx;
     this.connection.setContext(this);
     this.connection.setContainer("vert.x-" + UUID.randomUUID());
     this.connection.setHostname(hostname);
@@ -373,6 +380,13 @@ public class ProtonConnectionImpl implements ProtonConnection {
     if (disconnectHandler != null) {
       disconnectHandler.handle(this);
     }
+
+    Iterator<Handler<Void>> iter = endHandlers.iterator();
+    while(iter.hasNext()) {
+      Handler<Void> h = iter.next();
+      iter.remove();
+      h.handle(null);
+    }
   }
 
   void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator, ProtonTransportOptions transportOptions) {
@@ -399,5 +413,13 @@ public class ProtonConnectionImpl implements ProtonConnection {
         receiverOpenHandler.handle(new ProtonReceiverImpl((Receiver) link));
       }
     }
+  }
+
+  public void addEndHandler(Handler<Void> handler) {
+    endHandlers.add(handler);
+  }
+
+  public ContextInternal getContext() {
+    return connCtx;
   }
 }

@@ -20,6 +20,7 @@ import io.vertx.core.Context;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonConnection;
@@ -154,7 +155,7 @@ public class ProtonServerImpl implements ProtonServer {
         // ignore
       }
 
-      final ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname);
+      final ProtonConnectionImpl connection = new ProtonConnectionImpl(vertx, hostname, (ContextInternal) Vertx.currentContext());
       if (advertiseAnonymousRelayCapability) {
         connection.setOfferedCapabilities(new Symbol[] { ProtonConnectionImpl.ANONYMOUS_RELAY });
       }

@@ -44,7 +44,7 @@ public class ProtonConnectionImplTest {
 
   @Test
   public void testAttachments() {
-    ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, "hostname");
+    ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, "hostname", null);
 
     Record attachments = conn.attachments();
     assertNotNull("Expected attachments but got null", attachments);

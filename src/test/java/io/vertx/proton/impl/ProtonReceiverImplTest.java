@@ -88,7 +88,7 @@ public class ProtonReceiverImplTest {
 
   @Test
   public void testDrainWithExistingDrainOutstandingThrowsISE() {
-    ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null);
+    ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null, null);
     ProtonReceiver receiver = conn.createReceiver("address");
 
     AtomicBoolean drain1complete = new AtomicBoolean();
@@ -110,7 +110,7 @@ public class ProtonReceiverImplTest {
 
   @Test
   public void testFlowWithExistingDrainOutstandingThrowsISE() {
-    ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null);
+    ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null, null);
     ProtonReceiver receiver = conn.createReceiver("address");
 
     AtomicBoolean drain1complete = new AtomicBoolean();

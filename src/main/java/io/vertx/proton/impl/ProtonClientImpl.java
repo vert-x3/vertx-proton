@@ -23,6 +23,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
+import io.vertx.core.impl.ContextInternal;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
@@ -73,7 +74,7 @@ public class ProtonClientImpl implements ProtonClient {
     netClient.connect(port, host, serverName, res -> {
       if (res.succeeded()) {
         String virtualHost = options.getVirtualHost() != null ? options.getVirtualHost() : host;
-        ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, virtualHost);
+        ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, virtualHost, (ContextInternal) Vertx.currentContext());
         conn.disconnectHandler(h -> {
           LOG.trace("Connection disconnected");
           if(!connectHandler.isComplete()) {
