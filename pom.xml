@@ -38,7 +38,7 @@
   <properties>
     <!-- Dependency versions -->
     <stack.version>3.6.0-SNAPSHOT</stack.version>
-    <proton.version>0.25.0</proton.version>
+    <proton.version>0.27.1</proton.version>
 
     <!-- Test dependency versions -->
     <junit.version>4.12</junit.version>

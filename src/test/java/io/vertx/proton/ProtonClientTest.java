@@ -263,7 +263,10 @@ public class ProtonClientTest extends MockServerTestBase {
     connect(context, connection -> {
       connection.open();
       ProtonSender sender = connection.createSender(null);
+      sender.open();
+
       Message messageWithNoAddress = Proton.message();
+      messageWithNoAddress.setBody(new AmqpValue("bodyString"));
       try {
         sender.send(messageWithNoAddress);
         context.fail("Send should have thrown IAE due to lack of message address");
@@ -281,7 +284,11 @@ public class ProtonClientTest extends MockServerTestBase {
     connect(context, connection -> {
       connection.open();
       ProtonSender sender = connection.createSender(MockServer.Addresses.drop.toString());
+      sender.open();
+
       Message messageWithNoAddress = Proton.message();
+      messageWithNoAddress.setBody(new AmqpValue("bodyString"));
+
       sender.send(messageWithNoAddress);
       connection.disconnect();
       async.complete();
