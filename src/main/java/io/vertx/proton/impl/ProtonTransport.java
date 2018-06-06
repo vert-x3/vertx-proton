@@ -231,10 +231,10 @@ class ProtonTransport extends BaseHandler {
     }
 
     // Lets push bytes from vert.x to proton engine.
-    ByteBuffer inputBuffer = transport.getInputBuffer();
-    while (bytes.hasRemaining() && inputBuffer.hasRemaining() && !failed) {
-      inputBuffer.put(bytes.get());
+    while (bytes.hasRemaining() && !failed) {
       try {
+        ByteBuffer inputBuffer = transport.getInputBuffer();
+        inputBuffer.put(bytes.get());
         transport.processInput().checkIsOk();
       } catch (TransportException te) {
         failed = true;
