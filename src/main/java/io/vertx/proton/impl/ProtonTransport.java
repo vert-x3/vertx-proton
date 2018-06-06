@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.impl;
 
+import io.netty.buffer.ByteBuf;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -89,8 +90,8 @@ class ProtonTransport extends BaseHandler {
   }
 
   private void handleSocketBuffer(Buffer buff) {
+    pumpInbound(buff);
 
-    pumpInbound(ByteBuffer.wrap(buff.getBytes()));
     Event protonEvent = null;
     while ((protonEvent = collector.peek()) != null) {
       ProtonConnectionImpl conn = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
@@ -223,32 +224,24 @@ class ProtonTransport extends BaseHandler {
     }
   }
 
-  private void pumpInbound(ByteBuffer bytes) {
+  private void pumpInbound(Buffer buffer) {
     if (failed) {
-      LOG.trace("Skipping processing of data following transport error: {0}", bytes);
+      LOG.trace("Skipping processing of data following transport error: {0}", buffer);
       return;
     }
 
     // Lets push bytes from vert.x to proton engine.
     try {
+      ByteBuf data = buffer.getByteBuf();
       do {
         ByteBuffer transportBuffer = transport.tail();
 
-        int amount = Math.min(transportBuffer.remaining(), bytes.remaining());
-        if(amount < bytes.remaining()) {
-          int origLimit = bytes.limit();
-          bytes.limit(bytes.position() + amount);
-          try {
-            transportBuffer.put(bytes);
-          } finally {
-            bytes.limit(origLimit);
-          }
-        } else {
-          transportBuffer.put(bytes);
-        }
+        int amount = Math.min(transportBuffer.remaining(), data.readableBytes());
+        transportBuffer.limit(transportBuffer.position() + amount);
+        data.readBytes(transportBuffer);
 
         transport.process();
-      } while (bytes.hasRemaining());
+      } while (data.isReadable());
     } catch (Exception te) {
       failed = true;
       LOG.trace("Exception while processing transport input", te);
