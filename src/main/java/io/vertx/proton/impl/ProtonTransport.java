@@ -34,7 +34,6 @@ import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Transport;
-import org.apache.qpid.proton.engine.TransportException;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -231,15 +230,28 @@ class ProtonTransport extends BaseHandler {
     }
 
     // Lets push bytes from vert.x to proton engine.
-    while (bytes.hasRemaining() && !failed) {
-      try {
-        ByteBuffer inputBuffer = transport.getInputBuffer();
-        inputBuffer.put(bytes.get());
-        transport.processInput().checkIsOk();
-      } catch (TransportException te) {
-        failed = true;
-        LOG.trace("Exception while processing transport input", te);
-      }
+    try {
+      do {
+        ByteBuffer transportBuffer = transport.tail();
+
+        int amount = Math.min(transportBuffer.remaining(), bytes.remaining());
+        if(amount < bytes.remaining()) {
+          int origLimit = bytes.limit();
+          bytes.limit(bytes.position() + amount);
+          try {
+            transportBuffer.put(bytes);
+          } finally {
+            bytes.limit(origLimit);
+          }
+        } else {
+          transportBuffer.put(bytes);
+        }
+
+        transport.process();
+      } while (bytes.hasRemaining());
+    } catch (Exception te) {
+      failed = true;
+      LOG.trace("Exception while processing transport input", te);
     }
   }
 
