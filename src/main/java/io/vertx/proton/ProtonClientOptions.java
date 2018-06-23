@@ -18,6 +18,7 @@ package io.vertx.proton;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import io.vertx.codegen.annotations.DataObject;
 
@@ -161,6 +162,12 @@ public class ProtonClientOptions extends NetClientOptions {
   @Override
   public ProtonClientOptions setIdleTimeout(int idleTimeout) {
     super.setIdleTimeout(idleTimeout);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setIdleTimeoutUnit(TimeUnit idleTimeoutUnit) {
+    super.setIdleTimeoutUnit(idleTimeoutUnit);
     return this;
   }
 
