@@ -22,6 +22,7 @@ import io.vertx.core.Vertx;
 import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.message.Message;
@@ -54,6 +55,13 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
   public int recv(byte[] bytes, int offset, int size) {
     return getReceiver().recv(bytes, offset, size);
+  }
+
+  @Override
+  public String getRemoteAddress() {
+    Source remoteSource = getRemoteSource();
+
+    return remoteSource == null ? null : remoteSource.getAddress();
   }
 
   @Override

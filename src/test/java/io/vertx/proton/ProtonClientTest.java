@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -354,6 +355,86 @@ public class ProtonClientTest extends MockServerTestBase {
     serverConnection.openHandler(result -> {
       serverConnection.open();
     });
+  }
+
+  @Test(timeout = 20000)
+  public void testConfigureDynamicReceiver(TestContext context) throws Exception {
+    server.close();
+
+    final Async clientLinkOpenAsync = context.async();
+    final Async serverLinkOpenAsync = context.async();
+
+    final String dynamicAddress = "testConfigureDynamicReceiver:" + UUID.randomUUID();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+
+        serverConnection.sessionOpenHandler(session -> session.open());
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          serverSender.closeHandler(res -> {
+            serverSender.close();
+          });
+
+          // Verify the remote terminus details used were as expected
+          context.assertNotNull(serverSender.getRemoteSource(), "source should not be null");
+          org.apache.qpid.proton.amqp.messaging.Source remoteSource = (org.apache.qpid.proton.amqp.messaging.Source) serverSender.getRemoteSource();
+          context.assertTrue(remoteSource.getDynamic(), "expected dynamic source to be requested");
+          context.assertNull(remoteSource.getAddress(), "expected no source address to be set");
+
+          // Set the local terminus details
+          org.apache.qpid.proton.amqp.messaging.Source source = (org.apache.qpid.proton.amqp.messaging.Source) remoteSource.copy();
+          source.setAddress(dynamicAddress);
+          serverSender.setSource(source);
+
+          LOG.trace("Server sender opened");
+          serverSender.open();
+
+          serverLinkOpenAsync.complete();
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.open();
+
+        // Create receiver with dynamic option
+        ProtonLinkOptions options = new ProtonLinkOptions().setDynamic(true);
+
+        final ProtonReceiver receiver = connection.createReceiver(null, options);
+
+        receiver.openHandler(y -> {
+          LOG.trace("Client link opened");
+          // Verify the remote address details
+          context.assertEquals(dynamicAddress, receiver.getRemoteAddress(), "unexpected remote address");
+
+          // Grab and verify the source details
+          org.apache.qpid.proton.amqp.messaging.Source remoteSource = (org.apache.qpid.proton.amqp.messaging.Source) receiver.getRemoteSource();
+          context.assertTrue(remoteSource.getDynamic(), "expected dynamic source");
+          context.assertEquals(dynamicAddress, remoteSource.getAddress(), "unexpected source address");
+
+          clientLinkOpenAsync.complete();
+          connection.disconnect();
+        });
+        receiver.open();
+      });
+
+      serverLinkOpenAsync.awaitSuccess();
+      clientLinkOpenAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
   }
 
   @Test(timeout = 20000)

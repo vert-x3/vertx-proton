@@ -177,6 +177,9 @@ public class ProtonSessionImpl implements ProtonSession {
     source.setAddress(address);
     source.setOutcomes(outcomes);
     source.setDefaultOutcome(Released.getInstance());
+    if(receiverOptions.isDynamic()) {
+      source.setDynamic(true);
+    }
 
     Target target = new Target();
 
@@ -217,6 +220,9 @@ public class ProtonSessionImpl implements ProtonSession {
 
     Target target = new Target();
     target.setAddress(address);
+    if(senderOptions.isDynamic()) {
+      target.setDynamic(true);
+    }
 
     sender.setSource(source);
     sender.setTarget(target);

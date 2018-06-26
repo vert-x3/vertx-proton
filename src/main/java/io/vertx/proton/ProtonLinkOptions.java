@@ -24,6 +24,7 @@ import io.vertx.core.json.JsonObject;
 @DataObject(generateConverter = true, publicConverter = false)
 public class ProtonLinkOptions {
     private String linkName;
+    private boolean dynamic;
 
     public ProtonLinkOptions() {
     }
@@ -55,5 +56,24 @@ public class ProtonLinkOptions {
 
     public String getLinkName() {
         return linkName;
+    }
+
+    /**
+     * Sets whether the link remote terminus to be used should indicate it is
+     * 'dynamic', requesting the peer names it with a dynamic address.
+     * The address provided by the peer can then be inspected using
+     * {@link ProtonLink#getRemoteAddress()} (or inspecting the remote
+     * terminus details directly) after the link has remotely opened.
+     *
+     * @param dynamic true if the link should request a dynamic terminus address
+     * @return the options
+     */
+    public ProtonLinkOptions setDynamic(boolean dynamic) {
+      this.dynamic = dynamic;
+      return this;
+    }
+
+    public boolean isDynamic() {
+      return dynamic;
     }
 }

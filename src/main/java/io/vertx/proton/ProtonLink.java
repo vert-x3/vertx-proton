@@ -185,6 +185,14 @@ public interface ProtonLink<T extends ProtonLink<T>> {
   ProtonSession getSession();
 
   /**
+   * Retrieves the remote address from the remote terminus (source for receivers, target for senders).
+   * Only useful to call after the link has remotely opened.
+   *
+   * @return the remote address, or null if there was none.
+   */
+  String getRemoteAddress();
+
+  /**
    * Sets the local ErrorCondition object.
    *
    * @param condition

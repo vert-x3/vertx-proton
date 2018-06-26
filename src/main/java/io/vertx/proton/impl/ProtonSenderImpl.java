@@ -22,6 +22,7 @@ import io.vertx.proton.ProtonSender;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
+import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
@@ -169,4 +170,12 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   public int drained() {
     return super.drained();
   }
+
+  @Override
+  public String getRemoteAddress() {
+    Target remoteTarget = getRemoteTarget();
+
+    return remoteTarget == null ? null : remoteTarget.getAddress();
+  }
+
 }
