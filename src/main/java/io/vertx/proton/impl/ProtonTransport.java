@@ -19,6 +19,7 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.impl.NetSocketInternal;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
@@ -253,9 +254,10 @@ class ProtonTransport extends BaseHandler {
     while (!done) {
       ByteBuffer outputBuffer = transport.getOutputBuffer();
       if (outputBuffer != null && outputBuffer.hasRemaining()) {
-        byte buffer[] = new byte[outputBuffer.remaining()];
-        outputBuffer.get(buffer);
-        socket.write(Buffer.buffer(buffer));
+        final NetSocketInternal internal = (NetSocketInternal) socket;
+        final ByteBuf bb = internal.channelHandlerContext().alloc().directBuffer(outputBuffer.remaining());
+        bb.writeBytes(outputBuffer);
+        internal.writeMessage(bb);
         transport.outputConsumed();
       } else {
         done = true;
