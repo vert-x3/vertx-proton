@@ -18,9 +18,6 @@ package io.vertx.proton.impl;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
-
-import java.nio.charset.StandardCharsets;
-
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
@@ -57,7 +54,17 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   }
 
   private byte[] generateTag() {
-    return String.valueOf(tag++).getBytes(StandardCharsets.UTF_8);
+    final int value = tag++;
+    final byte[] binary = new byte[Integer.BYTES];
+    setIntLE(binary, value);
+    return binary;
+  }
+
+  private static void setIntLE(byte[] binary, int value) {
+    binary[0] = (byte) value;
+    binary[1] = (byte) (value >>> 8);
+    binary[2] = (byte) (value >>> 16);
+    binary[3] = (byte) (value >>> 24);
   }
 
   @Override
