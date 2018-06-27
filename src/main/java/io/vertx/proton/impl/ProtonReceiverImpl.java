@@ -23,13 +23,12 @@ import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.transport.Source;
+import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
-import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.impl.MessageImpl;
 
 import static io.vertx.proton.ProtonHelper.accepted;
-
-import java.io.ByteArrayOutputStream;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
@@ -154,8 +153,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   // Implementation details hidden from public api.
   //
   /////////////////////////////////////////////////////////////////////////////
-  protected ByteArrayOutputStream current = new ByteArrayOutputStream();
-  byte[] buffer = new byte[1024];
+
   private boolean autoAccept = true;
 
   void onDelivery() {
@@ -167,10 +165,6 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     Delivery delivery = receiver.current();
 
     if (delivery != null) {
-      int count;
-      while ((count = receiver.recv(buffer, 0, buffer.length)) > 0) {
-        current.write(buffer, 0, count);
-      }
 
       if (delivery.isPartial()) {
         // Delivery is not yet completely received,
@@ -178,11 +172,10 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
         return;
       }
 
-      byte[] data = current.toByteArray();
-      current.reset();
+      ReadableBuffer data = receiver.recv();
 
-      Message msg = Proton.message();
-      msg.decode(data, 0, data.length);
+      MessageImpl msg = (MessageImpl) Proton.message();
+      msg.decode(data);
 
       receiver.advance();
 

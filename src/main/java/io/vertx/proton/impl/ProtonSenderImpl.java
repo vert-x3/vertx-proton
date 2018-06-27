@@ -18,8 +18,12 @@ package io.vertx.proton.impl;
 import io.vertx.core.Handler;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonSender;
+
+import java.nio.ByteBuffer;
+
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.amqp.transport.Target;
+import org.apache.qpid.proton.codec.ReadableBuffer.ByteBufferReader;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.message.Message;
@@ -95,7 +99,10 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
       encodedMessage = new byte[len];
       msg.encode(encodedMessage, 0, len);
     }
-    sender().send(encodedMessage, 0, len);
+
+    ByteBufferReader buff = ByteBufferReader.wrap(ByteBuffer.wrap(encodedMessage, 0, len));
+
+    sender().sendNoCopy(buff);
 
     if (link.getSenderSettleMode() == SenderSettleMode.SETTLED) {
       delivery.settle();
