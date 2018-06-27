@@ -57,15 +57,15 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   private byte[] generateTag() {
     final int value = tag++;
     final byte[] binary = new byte[Integer.BYTES];
-    setIntLE(binary, value);
+    setInt(binary, value);
     return binary;
   }
 
-  private static void setIntLE(byte[] binary, int value) {
-    binary[0] = (byte) value;
-    binary[1] = (byte) (value >>> 8);
-    binary[2] = (byte) (value >>> 16);
-    binary[3] = (byte) (value >>> 24);
+  private static void setInt(byte[] binary, int value) {
+    binary[0] = (byte) (value >>> 24);
+    binary[1] = (byte) (value >>> 16);
+    binary[2] = (byte) (value >>> 8);
+    binary[3] = (byte) value;
   }
 
   @Override
