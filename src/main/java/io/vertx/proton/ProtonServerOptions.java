@@ -369,7 +369,7 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   /**
-   * Sets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * Sets the maximum frame size for connections.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
    * <p>
@@ -388,7 +388,7 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   /**
-   * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * Gets the maximum frame size for connections.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
    *

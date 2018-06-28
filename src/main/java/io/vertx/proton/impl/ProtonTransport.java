@@ -66,7 +66,9 @@ class ProtonTransport extends BaseHandler {
     this.vertx = vertx;
     this.netClient = netClient;
     this.socket = socket;
-    transport.setMaxFrameSize(options.getMaxFrameSize() == 0 ? DEFAULT_MAX_FRAME_SIZE : options.getMaxFrameSize());
+    int maxFrameSize = options.getMaxFrameSize() == 0 ? DEFAULT_MAX_FRAME_SIZE : options.getMaxFrameSize();
+    transport.setMaxFrameSize(maxFrameSize);
+    transport.setOutboundFrameSizeLimit(maxFrameSize);
     transport.setEmitFlowEventOnSend(false); // TODO: make configurable
     transport.setIdleTimeout(2 * options.getHeartbeat());
     if (authenticator != null) {

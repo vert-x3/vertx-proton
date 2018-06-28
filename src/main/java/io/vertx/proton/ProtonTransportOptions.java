@@ -72,7 +72,7 @@ public class ProtonTransportOptions {
   }
 
   /**
-   * Sets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * Sets the maximum frame size for the connection.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
    * <p>
@@ -91,7 +91,7 @@ public class ProtonTransportOptions {
   }
 
   /**
-   * Gets the maximum frame size to announce in the AMQP <em>OPEN</em> frame.
+   * Gets the maximum frame size for the connection.
    * <p>
    * If this property is not set explicitly, a reasonable default value is used.
    *
