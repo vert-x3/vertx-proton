@@ -27,15 +27,21 @@ import org.apache.qpid.proton.engine.Connection;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.engine.Transport;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import io.vertx.core.impl.NetSocketInternal;
+import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonTransportOptions;
 
 public class ProtonReceiverImplTest {
 
   @Test
   public void testAttachments() {
     Connection conn = Connection.Factory.create();
+    Transport.Factory.create().bind(conn);
     Session sess = conn.session();
     Receiver r = sess.receiver("name");
 
@@ -56,6 +62,7 @@ public class ProtonReceiverImplTest {
   @Test
   public void testDrainWithoutDisablingPrefetchThrowsISE() {
     Connection conn = Connection.Factory.create();
+    Transport.Factory.create().bind(conn);
     Session sess = conn.session();
     Receiver r = sess.receiver("name");
 
@@ -72,6 +79,7 @@ public class ProtonReceiverImplTest {
   @Test
   public void testDrainWithoutHandlerThrowsIAE() {
     Connection conn = Connection.Factory.create();
+    Transport.Factory.create().bind(conn);
     Session sess = conn.session();
     Receiver r = sess.receiver("name");
 
@@ -89,6 +97,8 @@ public class ProtonReceiverImplTest {
   @Test
   public void testDrainWithExistingDrainOutstandingThrowsISE() {
     ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null, null);
+    conn.bindClient(null, Mockito.mock(NetSocketInternal.class), null, new ProtonTransportOptions());
+    conn.fireDisconnect();
     ProtonReceiver receiver = conn.createReceiver("address");
 
     AtomicBoolean drain1complete = new AtomicBoolean();
@@ -111,6 +121,8 @@ public class ProtonReceiverImplTest {
   @Test
   public void testFlowWithExistingDrainOutstandingThrowsISE() {
     ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null, null);
+    conn.bindClient(null, Mockito.mock(NetSocketInternal.class), null, new ProtonTransportOptions());
+    conn.fireDisconnect();
     ProtonReceiver receiver = conn.createReceiver("address");
 
     AtomicBoolean drain1complete = new AtomicBoolean();

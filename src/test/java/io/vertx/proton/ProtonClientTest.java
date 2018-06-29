@@ -37,6 +37,7 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.Target;
+import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.message.Message;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -209,6 +210,47 @@ public class ProtonClientTest extends MockServerTestBase {
       builder.append('a' + (i % 26));
     }
     sendReceiveEcho(context, builder.toString());
+  }
+
+  @Test(timeout = 20000)
+  public void testTransferLargeMessageWithSmallerSessionWindow(TestContext context) {
+    Async async = context.async();
+
+    int msgContentSize = 5 * 1024 * 1024;
+    int windowCapacity = 2 * 1024 * 1024;
+    context.assertTrue( msgContentSize >= 2 * windowCapacity);
+
+    StringBuilder builder = new StringBuilder();
+    for (int i = 0; i < msgContentSize; i++) {
+      builder.append('a' + (i % 26));
+    }
+    String content = builder.toString();
+
+    ProtonClient client = ProtonClient.create(vertx);
+    client.connect("localhost", server.actualPort(), res -> {
+      context.assertTrue(res.succeeded());
+      ProtonConnection connection = res.result();
+      connection.open();
+
+      // Set up receiver on session with window of limited capacity
+      final ProtonSession session = connection.createSession();
+      session.setIncomingCapacity(windowCapacity);
+      session.open();
+
+      final ProtonReceiver receiver = session.createReceiver(MockServer.Addresses.echo.toString());
+      receiver.handler((d, m) -> {
+        LOG.trace("Got message");
+        String actual = (String) (getMessageBody(context, m));
+        context.assertEquals(content, actual);
+
+        async.complete();
+        connection.disconnect();
+      });
+      receiver.open();
+
+      // Now send the message
+      session.createSender(MockServer.Addresses.echo.toString()).open().send(message("echo", content));
+    });
   }
 
   private void sendReceiveEcho(TestContext context, String data) {

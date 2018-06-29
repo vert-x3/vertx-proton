@@ -23,9 +23,11 @@ import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.transport.Source;
+import org.apache.qpid.proton.codec.CompositeReadableBuffer;
 import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
+import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.message.impl.MessageImpl;
 
 import static io.vertx.proton.ProtonHelper.accepted;
@@ -38,9 +40,17 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   private int prefetch = 1000;
   private Handler<AsyncResult<Void>> drainCompleteHandler;
   private Long drainTimeoutTaskId = null;
+  private Session session;
+  private int maxFrameSize;
+  private long sessionIncomingCapacity;
+  private long windowFullThreshhold;
 
   ProtonReceiverImpl(Receiver receiver) {
     super(receiver);
+    session = receiver.getSession();
+    sessionIncomingCapacity = session.getIncomingCapacity();
+    maxFrameSize = session.getConnection().getTransport().getMaxFrameSize();
+    windowFullThreshhold = sessionIncomingCapacity - maxFrameSize;
   }
 
   @Override
@@ -155,6 +165,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   /////////////////////////////////////////////////////////////////////////////
 
   private boolean autoAccept = true;
+  private CompositeReadableBuffer splitContent;
 
   void onDelivery() {
     if (this.handler == null) {
@@ -167,12 +178,18 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     if (delivery != null) {
 
       if (delivery.isPartial()) {
+        handlePartial(receiver, delivery);
+
         // Delivery is not yet completely received,
         // return and allow further frames to arrive.
         return;
       }
 
+      // Complete prior partial content if needed, or grab it all.
       ReadableBuffer data = receiver.recv();
+      if(splitContent != null) {
+        data = completePartial(data);
+      }
 
       MessageImpl msg = (MessageImpl) Proton.message();
       msg.decode(data);
@@ -195,6 +212,51 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
         processForDrainCompletion();
       }
     }
+  }
+
+  private void handlePartial(final Receiver receiver, final Delivery delivery) {
+    if (sessionIncomingCapacity <= 0 || maxFrameSize <= 0 || session.getIncomingBytes() < windowFullThreshhold) {
+      // No window, or there is still capacity, so do nothing.
+    } else {
+      // The session window could be effectively full, we need to
+      // read part of the delivery content to ensure there is
+      // room made for receiving more of the delivery.
+      if(delivery.available() > 0) {
+        ReadableBuffer buff = receiver.recv();
+
+        if(splitContent == null && buff instanceof CompositeReadableBuffer) {
+          // Its a composite and there is no prior partial content, use it.
+          splitContent = (CompositeReadableBuffer) buff;
+        } else {
+          int remaining = buff.remaining();
+          if(remaining > 0) {
+            if (splitContent == null) {
+              splitContent = new CompositeReadableBuffer();
+            }
+
+            byte[] chunk = new byte[remaining];
+            buff.get(chunk);
+
+            splitContent.append(chunk);
+          }
+        }
+      }
+    }
+  }
+
+  private ReadableBuffer completePartial(final ReadableBuffer finalContent) {
+    int pending = finalContent.remaining();
+    if(pending > 0) {
+      byte[] chunk = new byte[pending];
+      finalContent.get(chunk);
+
+      splitContent.append(chunk);
+    }
+
+    ReadableBuffer data = splitContent;
+    splitContent = null;
+
+    return data;
   }
 
   @Override

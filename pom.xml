@@ -42,6 +42,7 @@
 
     <!-- Test dependency versions -->
     <junit.version>4.12</junit.version>
+    <mockito-version>2.19.0</mockito-version>
     <activemq.version>5.14.2</activemq.version>
 
     <!-- Test properties -->
@@ -96,6 +97,13 @@
     <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-unit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito-version}</version>
       <scope>test</scope>
     </dependency>
 
