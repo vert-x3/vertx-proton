@@ -254,6 +254,12 @@ public class ProtonSessionImpl implements ProtonSession {
     return session.attachments();
   }
 
+  @Override
+  public void free() {
+    session.free();
+    getConnectionImpl().flush();
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   //
   // Implementation details hidden from public api.

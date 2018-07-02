@@ -298,6 +298,12 @@ abstract class ProtonLinkImpl<T extends ProtonLink<T>> implements ProtonLink<T> 
     return link.getRemoteDesiredCapabilities();
   }
 
+  @Override
+  public void free() {
+    link.free();
+    getSession().getConnectionImpl().flush();
+  }
+
   /////////////////////////////////////////////////////////////////////////////
   //
   // Implementation details hidden from public api.

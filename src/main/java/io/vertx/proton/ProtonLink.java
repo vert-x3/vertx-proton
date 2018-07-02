@@ -332,4 +332,9 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    */
   Symbol[] getRemoteDesiredCapabilities();
 
+  /**
+   * Tidies up related link resources when complete with use. Call only after the link is
+   * finished with, e.g. locally and remotely closed.
+   */
+  void free();
 }
