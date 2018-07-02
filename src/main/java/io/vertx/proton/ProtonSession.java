@@ -86,7 +86,8 @@ public interface ProtonSession {
    * Closed the AMQP session, i.e. allows the End frame to be emitted.
    *
    * If the closure is being locally initiated, the {@link #closeHandler(Handler)} may be used to handle the peer
-   * sending their End frame.
+   * sending their End frame. When use of the session is complete, i.e it is locally and
+   * remotely closed, {@link #free()} must be called to ensure related resources can be tidied up.
    *
    * @return the session
    */
