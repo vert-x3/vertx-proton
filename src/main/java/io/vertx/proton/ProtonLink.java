@@ -48,7 +48,8 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    *
    * If the closure is being locally initiated, the {@link #closeHandler(Handler)} should be used to handle the peer
    * sending their Detach frame with closed=true (and {@link #detachHandler(Handler)} can be used to handle the peer
-   * sending their Detach frame with closed=false).
+   * sending their Detach frame with closed=false). When use of the link is complete, i.e it is locally and
+   * remotely closed, {@link #free()} must be called to ensure related resources can be tidied up.
    *
    * @return the link
    */
@@ -59,7 +60,8 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    *
    * If the detach is being locally initiated, the {@link #detachHandler(Handler)} should be used to handle the peer
    * sending their Detach frame with closed=false (and {@link #closeHandler(Handler)} can be used to handle the peer
-   * sending their Detach frame with closed=true).
+   * sending their Detach frame with closed=true). When use of the link is complete, i.e it is locally and
+   * remotely detached, {@link #free()} must be called to ensure related resources can be tidied up.
    *
    * @return the link
    */
