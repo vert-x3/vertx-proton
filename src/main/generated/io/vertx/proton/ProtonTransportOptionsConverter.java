@@ -5,7 +5,7 @@ import io.vertx.core.json.JsonArray;
 
 /**
  * Converter for {@link io.vertx.proton.ProtonTransportOptions}.
- * NOTE: This class has been automatically generated from the {@link "io.vertx.proton.ProtonTransportOptions} original class using Vert.x codegen.
+ * NOTE: This class has been automatically generated from the {@link io.vertx.proton.ProtonTransportOptions} original class using Vert.x codegen.
  */
  class ProtonTransportOptionsConverter {
 
