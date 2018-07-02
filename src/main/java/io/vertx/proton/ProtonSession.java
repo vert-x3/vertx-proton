@@ -164,4 +164,10 @@ public interface ProtonSession {
    * @return the session
    */
   ProtonSession closeHandler(Handler<AsyncResult<ProtonSession>> remoteCloseHandler);
+
+  /**
+   * Tidies up related session resources when complete with use. Call only after the
+   * session is finished with, i.e. locally and remotely closed.
+   */
+  void free();
 }
