@@ -450,4 +450,19 @@ public class ProtonReadableBufferImplTest {
 
     assertEquals(testString, buffer.readString(StandardCharsets.UTF_8.newDecoder()));
   }
+
+  @Test
+  public void testArrayOffset() {
+    byte[] data = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    ByteBuf byteBuffer = Unpooled.wrappedBuffer(data, 5, 5);
+    ProtonReadableBufferImpl buffer = new ProtonReadableBufferImpl(byteBuffer);
+
+    assertTrue(buffer.hasArray());
+    assertSame(buffer.array(), byteBuffer.array());
+    assertEquals(buffer.arrayOffset(), byteBuffer.arrayOffset());
+
+    assertEquals(5, buffer.get());
+
+    assertEquals(buffer.arrayOffset(), byteBuffer.arrayOffset());
+  }
 }
