@@ -36,6 +36,7 @@ import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Event;
 import org.apache.qpid.proton.engine.Event.Type;
 import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.impl.TransportInternal;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -71,6 +72,7 @@ class ProtonTransport extends BaseHandler {
     transport.setOutboundFrameSizeLimit(maxFrameSize);
     transport.setEmitFlowEventOnSend(false); // TODO: make configurable
     transport.setIdleTimeout(2 * options.getHeartbeat());
+    ((TransportInternal) transport).setUseReadOnlyOutputBuffer(false);
     if (authenticator != null) {
       authenticator.init(this.socket, (ProtonConnection) this.connection.getContext(), transport);
     }
