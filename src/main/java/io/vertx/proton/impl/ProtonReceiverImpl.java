@@ -177,6 +177,11 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
     if (delivery != null) {
 
+      if(delivery.isAborted()) {
+        handleAborted(receiver, delivery);
+        return;
+      }
+
       if (delivery.isPartial()) {
         handlePartial(receiver, delivery);
 
@@ -211,6 +216,19 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
       } else {
         processForDrainCompletion();
       }
+    }
+  }
+
+  private void handleAborted(Receiver receiver, Delivery delivery) {
+    splitContent = null;
+
+    receiver.advance();
+    delivery.settle();
+
+    if(!receiver.getDrain()) {
+      flow(1, false);
+    } else {
+      processForDrainCompletion();
     }
   }
 
