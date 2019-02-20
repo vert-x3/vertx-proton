@@ -22,62 +22,6 @@ import static org.junit.Assert.*;
 public class ProtonServerOptionsTest {
 
   @Test
-  public void testEqualsItself() {
-    ProtonServerOptions options = new ProtonServerOptions();
-
-    assertEquals("Options should be equal to itself", options, options);
-  }
-
-  @Test
-  public void testDifferentObjectsEqual() {
-    ProtonServerOptions options1 = new ProtonServerOptions();
-    options1.setHeartbeat(1000);
-    ProtonServerOptions options2 = new ProtonServerOptions();
-    options2.setHeartbeat(1000);
-
-    assertNotSame("Options should be different objects", options1, options2);
-    assertEquals("Options should be equal", options1, options2);
-  }
-
-  @Test
-  public void testDifferentObjectsNotEqual() {
-    ProtonServerOptions options1 = new ProtonServerOptions();
-    options1.setHeartbeat(1000);
-    ProtonServerOptions options2 = new ProtonServerOptions();
-    options2.setHeartbeat(2000);
-
-    assertNotSame("Options should be different objects", options1, options2);
-    assertNotEquals("Options should not be equal", options1, options2);
-  }
-
-  @Test
-  public void testEqualObjectsReturnSameHashCode() {
-    ProtonServerOptions options1 = new ProtonServerOptions();
-    options1.setHeartbeat(1000);
-    ProtonServerOptions options2 = new ProtonServerOptions();
-    options2.setHeartbeat(1000);
-
-    assertNotSame("Options should be different objects", options1, options2);
-    assertEquals("Options should be equal", options1, options2);
-    assertEquals("Options should have same hash code", options1.hashCode(), options2.hashCode());
-  }
-
-  @Test
-  public void testEqualsNull() {
-    ProtonServerOptions options = new ProtonServerOptions();
-
-    assertFalse("Options should not equal null", options.equals(null));
-  }
-
-  @Test
-  public void testHashCodeReturnsSameValueOnRepeatedCall() {
-    ProtonServerOptions options = new ProtonServerOptions();
-    options.setHeartbeat(1000);
-
-    assertEquals("Options should have same hash code for both calls", options.hashCode(), options.hashCode());
-  }
-
-  @Test
   public void testHeartbeat() {
     ProtonServerOptions options = new ProtonServerOptions();
 

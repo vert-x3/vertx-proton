@@ -71,7 +71,6 @@ Explicitly override the hostname to use for the TLS SNI server name.
 |[[trustAll]]`@trustAll`|`Boolean`|-
 |[[trustStoreOptions]]`@trustStoreOptions`|`link:dataobjects.html#JksOptions[JksOptions]`|-
 |[[useAlpn]]`@useAlpn`|`Boolean`|-
-|[[usePooledBuffers]]`@usePooledBuffers`|`Boolean`|-
 |[[virtualHost]]`@virtualHost`|`String`|+++
 Override the hostname value used in the connection AMQP Open frame and TLS SNI server name (if TLS is in use).
  By default, the hostname specified in link will be used for both, with SNI performed
@@ -160,7 +159,6 @@ Sets the maximum frame size for connections.
 |[[trafficClass]]`@trafficClass`|`Number (int)`|-
 |[[trustStoreOptions]]`@trustStoreOptions`|`link:dataobjects.html#JksOptions[JksOptions]`|-
 |[[useAlpn]]`@useAlpn`|`Boolean`|-
-|[[usePooledBuffers]]`@usePooledBuffers`|`Boolean`|-
 |===
 
 [[ProtonTransportOptions]]

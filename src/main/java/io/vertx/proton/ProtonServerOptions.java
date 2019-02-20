@@ -120,12 +120,6 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
-  public ProtonServerOptions setUsePooledBuffers(boolean usePooledBuffers) {
-    super.setUsePooledBuffers(usePooledBuffers);
-    return this;
-  }
-
-  @Override
   public ProtonServerOptions setIdleTimeout(int idleTimeout) {
     super.setIdleTimeout(idleTimeout);
     return this;

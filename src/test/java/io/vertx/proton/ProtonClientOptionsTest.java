@@ -22,54 +22,6 @@ import org.junit.Test;
 public class ProtonClientOptionsTest {
 
   @Test
-  public void testEqualsItself() {
-    ProtonClientOptions options = new ProtonClientOptions();
-
-    assertEquals("Options should be equal to itself", options, options);
-  }
-
-  @Test
-  public void testDifferentObjectsEqual() {
-    ProtonClientOptions options1 = new ProtonClientOptions();
-    options1.addEnabledSaslMechanism("PLAIN");
-    ProtonClientOptions options2 = new ProtonClientOptions();
-    options2.addEnabledSaslMechanism("PLAIN");
-
-    assertNotSame("Options should be different objects", options1, options2);
-    assertEquals("Options should be equal", options1, options2);
-  }
-
-  @Test
-  public void testDifferentObjectsNotEqual() {
-    ProtonClientOptions options1 = new ProtonClientOptions();
-    options1.addEnabledSaslMechanism("PLAIN");
-    ProtonClientOptions options2 = new ProtonClientOptions();
-    options2.addEnabledSaslMechanism("ANONYMOUS");
-
-    assertNotSame("Options should be different objects", options1, options2);
-    assertNotEquals("Options should not be equal", options1, options2);
-  }
-
-  @Test
-  public void testEqualObjectsReturnSameHashCode() {
-    ProtonClientOptions options1 = new ProtonClientOptions();
-    options1.addEnabledSaslMechanism("PLAIN");
-    ProtonClientOptions options2 = new ProtonClientOptions();
-    options2.addEnabledSaslMechanism("PLAIN");
-
-    assertNotSame("Options should be different objects", options1, options2);
-    assertEquals("Options should be equal", options1, options2);
-    assertEquals("Options should have same hash code", options1.hashCode(), options2.hashCode());
-  }
-
-  @Test
-  public void testEqualsNull() {
-    ProtonClientOptions options = new ProtonClientOptions();
-
-    assertFalse("Options should not equal null", options.equals(null));
-  }
-
-  @Test
   public void testAddGetEnabledSaslMechanisms() {
     ProtonClientOptions options = new ProtonClientOptions();
 

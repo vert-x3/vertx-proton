@@ -154,12 +154,6 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   @Override
-  public ProtonClientOptions setUsePooledBuffers(boolean usePooledBuffers) {
-    super.setUsePooledBuffers(usePooledBuffers);
-    return this;
-  }
-
-  @Override
   public ProtonClientOptions setIdleTimeout(int idleTimeout) {
     super.setIdleTimeout(idleTimeout);
     return this;
