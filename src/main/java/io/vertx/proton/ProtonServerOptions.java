@@ -204,13 +204,6 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
-  @Deprecated
-  public ProtonServerOptions setClientAuthRequired(boolean clientAuthRequired) {
-    super.setClientAuthRequired(clientAuthRequired);
-    return this;
-  }
-
-  @Override
   public ProtonServerOptions setClientAuth(ClientAuth clientAuth) {
     super.setClientAuth(clientAuth);
     return this;
