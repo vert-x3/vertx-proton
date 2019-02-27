@@ -20,6 +20,7 @@ import java.util.Set;
 import javax.security.sasl.AuthenticationException;
 import javax.security.sasl.SaslException;
 
+import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
@@ -138,8 +139,9 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
           sasl.send(response, 0, response.length);
         }
       } else {
-        throw new SaslSystemException(
-            true, "Could not find a suitable SASL mechanism for the remote peer using the available credentials.");
+        throw new MechanismMismatchException(
+            "Could not find a suitable SASL mechanism for the remote peer using the available credentials.",
+            remoteMechanisms);
       }
     }
   }
