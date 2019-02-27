@@ -23,6 +23,7 @@ import javax.security.sasl.SaslException;
 import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import org.apache.qpid.proton.engine.Sasl;
+import org.apache.qpid.proton.engine.Sasl.SaslOutcome;
 import org.apache.qpid.proton.engine.Transport;
 
 import io.vertx.core.AsyncResult;
@@ -35,7 +36,7 @@ import io.vertx.proton.sasl.SaslSystemException;
 import io.vertx.proton.sasl.impl.ProtonSaslMechanismFinderImpl;
 
 /**
- * Manage the SASL authentication process
+ * Manage the client side of the SASL authentication process.
  */
 public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticator {
 
@@ -60,8 +61,19 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
    *          server, or null/empty if no restriction.
    * @param handler
-   *          The handler to convey the result of the SASL process to. The async result will succeed if the SASL handshake
-   *          completed successfully, it will fail with a {@link SaslException} if the handshake failed.
+   *          The handler to convey the result of the SASL process to.
+   *          The async result will succeed if the SASL handshake completed successfully, it will fail with
+   *          <ul>
+   *          <li>a {@link MechanismMismatchException} if this client does not support any of the SASL
+   *          mechanisms offered by the server,</li>
+   *          <li>a {@link SaslSystemException} if the SASL handshake fails with either of the
+   *          {@link SaslOutcome#PN_SASL_SYS}, {@link SaslOutcome#PN_SASL_TEMP} or
+   *          {@link SaslOutcome#PN_SASL_PERM} outcomes,</li>
+   *          <li>a {@code javax.security.sasl.AuthenticationException} if the handshake fails with
+   *          the {@link SaslOutcome#PN_SASL_AUTH} outcome or</li>
+   *          <li>a generic {@code javax.security.sasl.SaslException} if the handshake fails due to
+   *          any other reason.</li>
+   *          </ul>
    */
   public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms, Handler<AsyncResult<ProtonConnection>> handler) {
     this.handler = handler;
