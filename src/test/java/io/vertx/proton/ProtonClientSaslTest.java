@@ -28,6 +28,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.SaslSystemException;
 import io.vertx.proton.sasl.impl.ProtonSaslAnonymousImpl;
 
@@ -104,7 +105,7 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
   public void testConnectWithUnsupportedSaslMechanisms(TestContext context) throws Exception {
     ProtonClientOptions options = new ProtonClientOptions();
     options.addEnabledSaslMechanism("NON_EXISTING");
-    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", SaslSystemException.class);
+    doConnectWithGivenCredentialsTestImpl(context, options, USERNAME_GUEST, "wrongpassword", MechanismMismatchException.class);
   }
 
   private void doConnectWithGivenCredentialsTestImpl(TestContext context, String username, String password,
