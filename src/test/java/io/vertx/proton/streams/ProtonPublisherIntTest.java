@@ -44,8 +44,8 @@ import org.reactivestreams.Subscription;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -1406,7 +1406,9 @@ public class ProtonPublisherIntTest extends MockServerTestBase {
 
   private void validateMessage(TestContext context, int count, Object expected, Message msg) {
     Object actual = getMessageBody(context, msg);
-    LOG.trace("Got msg {0}, body: {1}", count, actual);
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("Got msg " + count + ", body: " + actual);
+    }
 
     context.assertEquals(expected, actual, "Unexpected message body");
   }

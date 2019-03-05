@@ -29,8 +29,8 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 import io.vertx.core.impl.ContextInternal;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.impl.ProtonConnectionImpl;
@@ -169,7 +169,9 @@ public class ProtonPublisherImpl implements ProtonPublisher<Delivery> {
 
             int credits = creditLimit - currentCredit;
             if(credits > 0) {
-              LOG.trace("Updating credit for outstanding requests: {0}", credits);
+              if (LOG.isTraceEnabled()) {
+                LOG.trace("Updating credit for outstanding requests: " + credits);
+              }
               flowCreditIfNeeded(credits);
             }
           }
@@ -184,7 +186,9 @@ public class ProtonPublisherImpl implements ProtonPublisher<Delivery> {
 
     @Override
     public void request(long n) {
-      LOG.trace("Request called: {0}", n);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Request called: " + n);
+      }
       if(n <= 0 && !cancelled.get()) {
         LOG.warn("non-positive subscription request, requests must be > 0");
         connCtx.runOnContext(x -> {
@@ -192,7 +196,9 @@ public class ProtonPublisherImpl implements ProtonPublisher<Delivery> {
         });
       } else if(!cancelled.get()) {
         connCtx.runOnContext(x -> {
-          LOG.trace("Processing request: {0}", n);
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("Processing request: " + n);
+          }
 
           if(n == Long.MAX_VALUE) {
             outstandingRequests = Long.MAX_VALUE;
@@ -222,10 +228,14 @@ public class ProtonPublisherImpl implements ProtonPublisher<Delivery> {
 
         if(addedCredit > 0) {
           if(!completed.get()) {
-            LOG.trace("Flowing additional credits : {0}", addedCredit);
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Flowing additional credits : " + addedCredit);
+            }
             receiver.flow(addedCredit);
           } else {
-            LOG.trace("Skipping flowing additional credits as already completed: {0}", addedCredit);
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Skipping flowing additional credits as already completed: " + addedCredit);
+            }
           }
         }
       }

@@ -20,8 +20,8 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.impl.NetSocketInternal;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
 
@@ -103,7 +103,7 @@ class ProtonTransport extends BaseHandler {
 
       Type eventType = protonEvent.getType();
       if (LOG.isTraceEnabled() && !eventType.equals(Type.TRANSPORT)) {
-        LOG.trace("New Proton Event: {0}", eventType);
+        LOG.trace("New Proton Event: " + eventType);
       }
 
       switch (eventType) {
@@ -224,14 +224,18 @@ class ProtonTransport extends BaseHandler {
     if (deadline != 0) {
       // timer treats 0 as error, ensure value is at least 1 as there was a deadline
       long delay = Math.max(deadline - now, 1);
-      LOG.trace("IdleTimeoutCheck being initiated, initial delay: {0}", delay);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("IdleTimeoutCheck being initiated, initial delay: " + delay);
+      }
       idleTimeoutCheckTimerId = vertx.setTimer(delay, new IdleTimeoutCheck());
     }
   }
 
   private void pumpInbound(Buffer buffer) {
     if (failed) {
-      LOG.trace("Skipping processing of data following transport error: {0}", buffer);
+      if (LOG.isTraceEnabled()) {
+        LOG.trace("Skipping processing of data following transport error: " + buffer);
+      }
       return;
     }
 
@@ -297,7 +301,9 @@ class ProtonTransport extends BaseHandler {
             // timer treats 0 as error, ensure value is at least 1 as there was a deadline
             long delay = Math.max(deadline - now, 1);
             checkScheduled = true;
-            LOG.trace("IdleTimeoutCheck rescheduling with delay: {0}", delay);
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("IdleTimeoutCheck rescheduling with delay: " + delay);
+            }
             idleTimeoutCheckTimerId = vertx.setTimer(delay, this);
           }
         }

@@ -36,8 +36,8 @@ import org.reactivestreams.Publisher;
 import io.reactivex.Flowable;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -79,7 +79,9 @@ public class ProtonSubscriberIntTest extends MockServerTestBase {
 
           serverReceiver.handler((delivery, msg) -> {
             // We got the message that was sent, complete the test
-            LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Server got msg: " + getMessageBody(context, msg));
+            }
             validateMessage(context, 1, "1", msg);
             serverReceivedMessageAsync.complete();
           });
@@ -272,7 +274,9 @@ public class ProtonSubscriberIntTest extends MockServerTestBase {
 
           serverReceiver.handler((delivery, msg) -> {
             // We got the message that was sent, complete the test
-            LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Server got msg: " + getMessageBody(context, msg));
+            }
             validateMessage(context, 1, "1", msg);
             serverReceivedMessageAsync.complete();
           });
@@ -351,7 +355,9 @@ public class ProtonSubscriberIntTest extends MockServerTestBase {
 
           serverReceiver.handler((delivery, msg) -> {
             int count = msgCounter.incrementAndGet();
-            LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Server got msg: " + getMessageBody(context, msg));
+            }
             switch (count) {
               case 1: {
                 validateMessage(context, 1, "1", msg);
@@ -445,7 +451,9 @@ public class ProtonSubscriberIntTest extends MockServerTestBase {
           serverReceiver.handler((delivery, msg) -> {
             int msgNum = counter.incrementAndGet();
             // We got the message that was sent, validate it
-            LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Server got msg: " + getMessageBody(context, msg));
+            }
             validateMessage(context, msgNum, String.valueOf(msgNum), msg);
 
             switch (msgNum) {
@@ -557,7 +565,9 @@ public class ProtonSubscriberIntTest extends MockServerTestBase {
         serverConnection.receiverOpenHandler(serverReceiver -> {
           serverReceiver.handler((delivery, msg) -> {
             // We got the message that was sent, complete the test
-            LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+            if (LOG.isTraceEnabled()) {
+              LOG.trace("Server got msg: " + getMessageBody(context, msg));
+            }
             validateMessage(context, 1, "1", msg);
             serverReceivedMessageAsync.complete();
           });
@@ -629,7 +639,9 @@ public class ProtonSubscriberIntTest extends MockServerTestBase {
 
   private void validateMessage(TestContext context, int count, Object expected, Message msg) {
     Object actual = getMessageBody(context, msg);
-    LOG.trace("Got msg {0}, body: {1}", count, actual);
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("Got msg " + count + ", body: " + actual);
+    }
 
     context.assertEquals(expected, actual, "Unexpected message body");
   }

@@ -32,7 +32,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 
-import io.vertx.core.logging.Logger;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 
 public abstract class ActiveMQTestBase {
 
@@ -45,7 +46,7 @@ public abstract class ActiveMQTestBase {
   public static final String USERNAME_GUEST = "guest";
   public static final String PASSWORD_GUEST = "guestpass";
 
-  private static final Logger LOG = io.vertx.core.logging.LoggerFactory.getLogger(ActiveMQTestBase.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ActiveMQTestBase.class);
 
   private static final int PORT = Integer.getInteger("activemq.test.amqp.port", 0);
   private static final String AMQP_CONNECTOR_NAME = "amqp";
@@ -187,7 +188,9 @@ public abstract class ActiveMQTestBase {
     connector.setName(AMQP_CONNECTOR_NAME);
 
     port = connector.getPublishableConnectURI().getPort();
-    LOG.debug("Using amqp port: {}", port);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Using amqp port: " + port);
+    }
   }
 
   // Subclasses can override with their own authentication config

@@ -20,8 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.proton.sasl.ProtonSaslMechanism;
 import io.vertx.proton.sasl.ProtonSaslMechanismFactory;
 
@@ -56,12 +56,15 @@ public class ProtonSaslMechanismFinderImpl {
       if (factory != null) {
         ProtonSaslMechanism mech = factory.createMechanism();
         if (mechRestrictions != null && !mechRestrictions.isEmpty() && !mechRestrictions.contains(remoteMechanism)) {
-          LOG.trace("Skipping {0} mechanism because it is not in the configured mechanisms restriction set",
-              remoteMechanism);
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("Skipping " + remoteMechanism + " mechanism because it is not in the configured mechanisms restriction set");
+          }
         } else if (mech.isApplicable(username, password)) {
           found.add(mech);
         } else {
-          LOG.trace("Skipping {0} mechanism because the available credentials are not sufficient", mech);
+          if (LOG.isTraceEnabled()) {
+            LOG.trace("Skipping " + mech + " mechanism because the available credentials are not sufficient");
+          }
         }
       }
     }
@@ -73,7 +76,9 @@ public class ProtonSaslMechanismFinderImpl {
       match = found.get(found.size() - 1);
     }
 
-    LOG.trace("Best match for SASL auth was: {0}", match);
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("Best match for SASL auth was: " + match);
+    }
 
     return match;
   }

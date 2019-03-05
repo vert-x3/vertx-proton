@@ -18,8 +18,8 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.impl.logging.Logger;
+import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.NetServer;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -381,7 +381,9 @@ public class ProtonClientTest extends MockServerTestBase {
       // TODO: set the local target on link before opening it
       receiver.handler((delivery, msg) -> {
         // We got the message that was sent, complete the test
-        LOG.trace("Server got msg: {0}", getMessageBody(context, msg));
+        if (LOG.isTraceEnabled()) {
+          LOG.trace("Server got msg: " + getMessageBody(context, msg));
+        }
         serverConnection.disconnect();
         async.complete();
       });
@@ -1532,7 +1534,9 @@ public class ProtonClientTest extends MockServerTestBase {
 
   private void validateMessage(TestContext context, int count, Object expected, Message msg) {
     Object actual = getMessageBody(context, msg);
-    LOG.trace("Got msg {0}, body: {1}", count, actual);
+    if (LOG.isTraceEnabled()) {
+      LOG.trace("Got msg " + count + ", body: " + actual);
+    }
 
     context.assertEquals(expected, actual, "Unexpected message body");
   }
