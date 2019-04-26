@@ -19,9 +19,12 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.messaging.Modified;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.codec.CompositeReadableBuffer;
 import org.apache.qpid.proton.codec.ReadableBuffer;
@@ -36,6 +39,9 @@ import static io.vertx.proton.ProtonHelper.accepted;
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
 public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implements ProtonReceiver {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ProtonReceiverImpl.class);
+
   private ProtonMessageHandler handler;
   private int prefetch = 1000;
   private Handler<AsyncResult<Void>> drainCompleteHandler;
@@ -196,12 +202,18 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
         data = completePartial(data);
       }
 
-      MessageImpl msg = (MessageImpl) Proton.message();
-      msg.decode(data);
-
       receiver.advance();
 
+      MessageImpl msg = (MessageImpl) Proton.message();
       ProtonDeliveryImpl delImpl = new ProtonDeliveryImpl(delivery);
+      try {
+        msg.decode(data);
+      } catch (Throwable t) {
+        LOG.debug("Unable to decode message, undeliverable", t);
+
+        handleDecodeFailure(receiver, delImpl);
+        return;
+      }
 
       handler.handle(delImpl, msg);
 
@@ -216,6 +228,20 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
       } else {
         processForDrainCompletion();
       }
+    }
+  }
+
+  private void handleDecodeFailure(Receiver receiver, ProtonDeliveryImpl delImpl) {
+    Modified modified = new Modified();
+    modified.setDeliveryFailed(true);
+    modified.setUndeliverableHere(true);
+
+    delImpl.disposition(modified, true);
+
+    if(!receiver.getDrain()) {
+      flow(1, false);
+    } else {
+      processForDrainCompletion();
     }
   }
 
