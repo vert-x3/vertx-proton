@@ -31,16 +31,21 @@ import io.vertx.proton.impl.ProtonServerImpl;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedLong;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Modified;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.Target;
-import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.codec.WritableBuffer;
 import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -1518,6 +1523,103 @@ public class ProtonClientTest extends MockServerTestBase {
     }
   }
 
+  @Test(timeout = 20000)
+  public void testFailedMessageDecoding(TestContext context) throws Exception {
+    server.close();
+
+    Async serverAsync = context.async();
+    Async clientAsync = context.async();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+        serverConnection.sessionOpenHandler(session -> {
+          session.open();
+        });
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          serverSender.open();
+
+          AtomicInteger count = new AtomicInteger();
+          serverSender.sendQueueDrainHandler(s -> {
+            int msg = count.incrementAndGet();
+
+            switch (msg) {
+              case 1:
+                context.assertEquals(1000, s.getCredit(), "Unexpected initial credit level when send handler fired for round 1");
+                serverSender.send(message(String.valueOf(msg)), del -> {
+                  context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 1 after update");
+                });
+                break;
+              case 2:
+                MessageImpl invalidEncodingMessage = Mockito.mock(MessageImpl.class);
+                Mockito.when(invalidEncodingMessage.encode(Mockito.any(WritableBuffer.class)))
+                .then(i -> {
+                  WritableBuffer buffer = i.getArgument(0);
+                  byte[] invalid = new byte[5];
+                  buffer.put(invalid, 0, invalid.length);
+                  return invalid.length;
+                });
+
+                serverSender.send(invalidEncodingMessage, del -> {
+                  DeliveryState state = del.getRemoteState();
+                  context.assertTrue(state instanceof Modified, "Unexpected state for delivery 2 after update");
+                  context.assertTrue(((Modified)state).getDeliveryFailed(), "Expected true");
+                  context.assertTrue(((Modified)state).getUndeliverableHere(), "Expected true");
+                });
+                break;
+              case 3:
+                serverSender.send(message(String.valueOf(msg)), del -> {
+                  context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 3 after update");
+                  // We've sent 3 messages, consumer should receive 2 and fail to decode 1.
+                  // Verify credit is fully replenished to initial 1000 in the end.
+                  vertx.setTimer(500, x -> {
+                    context.assertEquals(1000, s.getCredit(), "Unexpected credit level after messages processed");
+                    serverAsync.complete();
+                  });
+                });
+                break;
+            }
+          });
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.open();
+        AtomicInteger counter = new AtomicInteger(0);
+        ProtonReceiver receiver = connection.createReceiver("address");
+
+        receiver.handler((d, m) -> {
+          int count = counter.incrementAndGet();
+          switch (count) {
+            case 1:
+              validateMessage(context, 1, "1", m);
+              break;
+            case 2:
+              validateMessage(context, 3, "3", m);
+              clientAsync.complete();
+              break;
+          }
+        }).open();
+      });
+
+      serverAsync.awaitSuccess();
+      clientAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
+  }
 
   private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException,
                                                                                  ExecutionException {
