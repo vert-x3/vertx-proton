@@ -26,6 +26,8 @@ public interface ProtonDelivery {
   /**
    * Updates the DeliveryState, and optionally settle the delivery as well.
    *
+   * Has no effect if the delivery was previously locally settled.
+   *
    * @param state
    *          the delivery state to apply
    * @param settle
@@ -54,6 +56,13 @@ public interface ProtonDelivery {
    * @return the delivery
    */
   ProtonDelivery settle();
+
+  /**
+   * Gets whether the delivery was locally settled yet.
+   *
+   * @return whether the delivery is locally settled
+   */
+  boolean isSettled();
 
   /**
    * Gets whether the delivery was settled by the remote peer yet.

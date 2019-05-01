@@ -48,6 +48,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
     return delivery.getLocalState();
   }
 
+  @Override
   public boolean isSettled() {
     return delivery.isSettled();
   }
@@ -110,6 +111,10 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
 
   @Override
   public ProtonDelivery disposition(DeliveryState state, boolean settle) {
+    if(delivery.isSettled()) {
+      return this;
+    }
+
     delivery.disposition(state);
     if (settle) {
       settle();
