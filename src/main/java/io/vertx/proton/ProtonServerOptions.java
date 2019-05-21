@@ -16,6 +16,7 @@
 package io.vertx.proton;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.buffer.Buffer;
@@ -122,6 +123,12 @@ public class ProtonServerOptions extends NetServerOptions {
   @Override
   public ProtonServerOptions setIdleTimeout(int idleTimeout) {
     super.setIdleTimeout(idleTimeout);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setIdleTimeoutUnit(TimeUnit idleTimeoutUnit) {
+    super.setIdleTimeoutUnit(idleTimeoutUnit);
     return this;
   }
 
