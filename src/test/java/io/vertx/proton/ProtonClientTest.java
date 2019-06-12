@@ -18,6 +18,7 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
 import io.vertx.core.net.NetServer;
@@ -870,21 +871,21 @@ public class ProtonClientTest extends MockServerTestBase {
     ProtonServer protonServer = null;
     try {
       protonServer = createServer(serverConnection -> {
-        Future<ProtonSession> sessionFuture = Future.<ProtonSession> future();
+        Promise<ProtonSession> sessionPromise = Promise.<ProtonSession> promise();
         // Expect a session to open, when the sender is created by the client
         serverConnection.sessionOpenHandler(serverSession -> {
           LOG.trace("Server session open");
           serverSession.open();
-          sessionFuture.complete(serverSession);
+          sessionPromise.complete(serverSession);
         });
         // Expect a receiver link, then close the session after opening it.
         serverConnection.receiverOpenHandler(serverReceiver -> {
           LOG.trace("Server receiver open");
           serverReceiver.open();
 
-          context.assertTrue(sessionFuture.succeeded(), "Session future not [yet] succeeded");
+          context.assertTrue(sessionPromise.future().succeeded(), "Session future not [yet] succeeded");
           LOG.trace("Server session close");
-          ProtonSession s = sessionFuture.result();
+          ProtonSession s = sessionPromise.future().result();
           if (sessionError) {
             ErrorCondition error = new ErrorCondition();
             error.setCondition(AmqpError.INTERNAL_ERROR);
