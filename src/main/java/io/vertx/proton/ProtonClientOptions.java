@@ -363,6 +363,18 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   @Override
+  public ProtonClientOptions setSslHandshakeTimeout(long sslHandshakeTimeout) {
+    super.setSslHandshakeTimeout(sslHandshakeTimeout);
+    return this;
+  }
+
+  @Override
+  public ProtonClientOptions setSslHandshakeTimeoutUnit(TimeUnit sslHandshakeTimeoutUnit) {
+    super.setSslHandshakeTimeoutUnit(sslHandshakeTimeoutUnit);
+    return this;
+  }
+
+  @Override
   public ProtonClientOptions setLocalAddress(String localAddress) {
     super.setLocalAddress(localAddress);
     return this;

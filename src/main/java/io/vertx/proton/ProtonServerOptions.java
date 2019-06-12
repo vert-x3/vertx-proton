@@ -300,6 +300,18 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
+  public ProtonServerOptions setSslHandshakeTimeout(long sslHandshakeTimeout) {
+    super.setSslHandshakeTimeout(sslHandshakeTimeout);
+    return this;
+  }
+
+  @Override
+  public ProtonServerOptions setSslHandshakeTimeoutUnit(TimeUnit sslHandshakeTimeoutUnit) {
+    super.setSslHandshakeTimeoutUnit(sslHandshakeTimeoutUnit);
+    return this;
+  }
+
+  @Override
   public ProtonServerOptions setTrustOptions(TrustOptions options) {
     super.setTrustOptions(options);
     return this;
