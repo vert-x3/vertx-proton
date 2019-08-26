@@ -23,7 +23,7 @@
   </parent>
 
   <artifactId>vertx-proton</artifactId>
-  <version>4.0.0-SNAPSHOT</version>
+  <version>4.0.0-milestone2</version>
 
   <name>Vert.x Proton</name>
 
@@ -37,7 +37,7 @@
 
   <properties>
     <!-- Dependency versions -->
-    <stack.version>4.0.0-SNAPSHOT</stack.version>
+    <stack.version>4.0.0-milestone2</stack.version>
     <proton.version>0.33.2</proton.version>
 
     <!-- Test dependency versions -->
