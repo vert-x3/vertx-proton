@@ -31,7 +31,7 @@ import org.apache.qpid.proton.engine.Transport;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import io.vertx.core.impl.NetSocketInternal;
+import io.vertx.core.net.impl.NetSocketInternal;
 import io.vertx.core.net.NetSocket;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.ProtonTransportOptions;
