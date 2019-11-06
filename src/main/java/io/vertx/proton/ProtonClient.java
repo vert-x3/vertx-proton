@@ -16,6 +16,7 @@
 package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.proton.impl.ProtonClientImpl;
@@ -98,4 +99,24 @@ public interface ProtonClient {
    */
   void connect(ProtonClientOptions options, String host, int port, String username, String password,
                Handler<AsyncResult<ProtonConnection>> connectionHandler);
+
+  /**
+   * Like {@link #connect(String, int, Handler)} but returns a {@code Future} of the asynchronous result.
+   */
+  Future<ProtonConnection> connect(String host, int port);
+
+  /**
+   * Like {@link #connect(String, int, String, String, Handler)} but returns a {@code Future} of the asynchronous result.
+   */
+  Future<ProtonConnection> connect(String host, int port, String username, String password);
+
+  /**
+   * Like {@link #connect(ProtonClientOptions, String, int, Handler)} but returns a {@code Future} of the asynchronous result.
+   */
+  Future<ProtonConnection> connect(ProtonClientOptions options, String host, int port);
+
+  /**
+   * Like {@link #connect(ProtonClientOptions, String, int, String, String, Handler)} but returns a {@code Future} of the asynchronous result.
+   */
+  Future<ProtonConnection> connect(ProtonClientOptions options, String host, int port, String username, String password);
 }

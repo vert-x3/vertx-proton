@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxException;
 import io.vertx.core.impl.ContextInternal;
@@ -45,24 +46,66 @@ public class ProtonClientImpl implements ProtonClient {
     this.vertx = vertx;
   }
 
+  @Override
   public void connect(String host, int port, Handler<AsyncResult<ProtonConnection>> handler) {
     connect(host, port, null, null, handler);
   }
 
+  @Override
   public void connect(String host, int port, String username, String password,
                       Handler<AsyncResult<ProtonConnection>> handler) {
     connect(new ProtonClientOptions(), host, port, username, password, handler);
   }
 
+  @Override
   public void connect(ProtonClientOptions options, String host, int port,
                       Handler<AsyncResult<ProtonConnection>> handler) {
     connect(options, host, port, null, null, handler);
   }
 
+  @Override
   public void connect(ProtonClientOptions options, String host, int port, String username, String password,
                       Handler<AsyncResult<ProtonConnection>> handler) {
     final NetClient netClient = vertx.createNetClient(options);
     connectNetClient(netClient, host, port, username, password, new ConnectCompletionHandler(handler, netClient), options);
+  }
+
+  @Override
+  public Future<ProtonConnection> connect(String host, int port) {
+    return connect(host, port, null, null);
+  }
+
+  @Override
+  public Future<ProtonConnection> connect(String host, int port, String username, String password) {
+    return connect(new ProtonClientOptions(), host, port, username, password);
+  }
+
+  @Override
+  public Future<ProtonConnection> connect(ProtonClientOptions options, String host, int port) {
+    return connect(options, host, port, null, null);
+  }
+
+  @Override
+  public Future<ProtonConnection> connect(ProtonClientOptions options, String host, int port, String username, String password) {
+    return connectWithFuture(options, host, port, username, password);
+  }
+
+  private Future<ProtonConnection> connectWithFuture(ProtonClientOptions options, String host, int port, String username, String password) {
+    ContextInternal ctx = (ContextInternal) vertx.getOrCreateContext();
+    Promise<ProtonConnection> promise = ctx.promise();
+    Future<ProtonConnection> future = promise.future();
+
+    ctx.runOnContext(x -> {
+      connect(options, host, port, username, password, res -> {
+        if (res.succeeded()) {
+          promise.complete(res.result());
+        } else {
+          promise.fail(res.cause());
+        }
+      });
+    });
+
+    return future;
   }
 
   private void connectNetClient(NetClient netClient, String host, int port, String username, String password,

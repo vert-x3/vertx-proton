@@ -111,6 +111,63 @@ public class ProtonClientTest extends MockServerTestBase {
   }
 
   @Test(timeout = 20000)
+  public void testConnectionOpenWithFutureConnect(TestContext context) {
+    Async connectedAsync = context.async();
+    Async openedAsync = context.async();
+
+    ProtonClient client = ProtonClient.create(vertx);
+    Future<ProtonConnection> future = client.connect("localhost", server.actualPort());
+
+    future.onFailure(x -> {
+      context.fail("Connect failed, cause: " + x);
+    });
+
+    future.onSuccess(conn -> {
+      context.assertNotNull(conn, "connection result should not be null");
+      connectedAsync.complete();
+
+      conn.openHandler(res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection openedConn = res.result();
+        context.assertNotNull(openedConn, "opened connection result should not be null");
+        openedConn.disconnect();
+        openedAsync.complete();
+      }).open();
+    });
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectionDisconnectedDuringCreationWithFutureConnect(TestContext context) {
+    server.close();
+
+    Async connectFailsAsync = context.async();
+
+    NetServer netServer = this.vertx.createNetServer();
+    netServer.connectHandler(netSocket -> {
+      netSocket.pause();
+      vertx.setTimer(50, x -> {
+        netSocket.close();
+      });
+    });
+
+    netServer.listen(listenResult -> {
+      context.assertTrue(listenResult.succeeded());
+
+      ProtonClient client = ProtonClient.create(vertx);
+      Future<ProtonConnection> future = client.connect("localhost", netServer.actualPort());
+
+      future.onFailure(x -> {
+        connectFailsAsync.complete();
+      });
+
+      future.onSuccess(conn -> {
+        context.fail("Connect succeeded when not expected to");
+      });
+    });
+  }
+
+  @Test(timeout = 20000)
   public void testGetConnectionFromLink(TestContext context) {
     Async async = context.async();
     connect(context, connection -> {
