@@ -57,7 +57,7 @@ class ProtonTransport extends BaseHandler {
   private final Collector collector = Proton.collector();
   private ProtonSaslAuthenticator authenticator;
 
-  private volatile Long idleTimeoutCheckTimerId; // TODO: cancel when closing etc?
+  private volatile Long idleTimeoutCheckTimerId;
 
   private boolean failed;
 
@@ -84,6 +84,7 @@ class ProtonTransport extends BaseHandler {
   }
 
   private void handleSocketEnd(Void arg) {
+    cancelIdleTimeoutCheck();
     transport.unbind();
     transport.close();
     if (this.netClient != null) {
@@ -231,6 +232,15 @@ class ProtonTransport extends BaseHandler {
     }
   }
 
+  private void cancelIdleTimeoutCheck() {
+    Long timerId = idleTimeoutCheckTimerId;
+    if (timerId != null) {
+      vertx.cancelTimer(timerId);
+      idleTimeoutCheckTimerId = null;
+      LOG.trace("IdleTimeoutCheck cancelled");
+    }
+  }
+
   private void pumpInbound(Buffer buffer) {
     if (failed) {
       if (LOG.isTraceEnabled()) {
@@ -291,7 +301,12 @@ class ProtonTransport extends BaseHandler {
         long now = TimeUnit.NANOSECONDS.toMillis(System.nanoTime());
         long deadline = transport.tick(now);
 
-        flush();
+        try {
+          flush();
+        } catch (IllegalStateException ex) {
+          // socket closed already
+          deadline = 0;
+        }
 
         if (transport.isClosed()) {
           LOG.info("IdleTimeoutCheck closed the transport due to the peer exceeding our requested idle-timeout.");
