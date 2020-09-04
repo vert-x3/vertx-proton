@@ -36,6 +36,27 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
   ProtonReceiver handler(ProtonMessageHandler handler);
 
   /**
+   * Sets the handler to notify about a message from the peer that exceeds this receiver's configured
+   * maximum message size.
+   * <p>
+   * The handler will be invoked as soon as a transfer frame from the peer has been received which
+   * causes the max-message-size to be exceeded. This means that the full message may not have been
+   * received by that time.
+   * <p>
+   * The AMQP 1.0 specification requires the link to be detached with error code
+   * <em>amqp:link:message-size-exceeded</em> in such a situation. Thus, after the handler returns,
+   * a corresponding AMQP <em>detach</em> frame with <em>close=true</em> will be sent to the peer,
+   * if the handler has not already detached the link manually.
+   * Note that the resources held by the link still need to be released in the close/detach handler(s)
+   * using the {@link #free()} method, if appropriate.
+   *
+   * @param handler
+   *          the handler to invoke
+   * @return the receiver
+   */
+  ProtonReceiver maxMessageSizeExceededHandler(Handler<ProtonReceiver> handler);
+
+  /**
    * Sets the number of message credits the receiver grants and replenishes automatically as messages are delivered.
    *
    * To manage credit manually, you can instead set prefetch to 0 before opening the consumer and then explicitly call

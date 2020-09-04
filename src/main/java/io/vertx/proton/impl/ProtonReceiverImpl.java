@@ -1,5 +1,5 @@
 /*
-* Copyright 2016 the original author or authors.
+* Copyright 2016, 2020 the original author or authors.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -25,6 +25,10 @@ import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.codec.CompositeReadableBuffer;
 import org.apache.qpid.proton.codec.ReadableBuffer;
@@ -35,6 +39,8 @@ import org.apache.qpid.proton.message.impl.MessageImpl;
 
 import static io.vertx.proton.ProtonHelper.accepted;
 
+import java.util.Optional;
+
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
@@ -43,6 +49,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   private static final Logger LOG = LoggerFactory.getLogger(ProtonReceiverImpl.class);
 
   private ProtonMessageHandler handler;
+  private Handler<ProtonReceiver> maxMessageSizeExceededHandler;
   private int prefetch = 1000;
   private Handler<AsyncResult<Void>> drainCompleteHandler;
   private Long drainTimeoutTaskId = null;
@@ -160,6 +167,15 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     return this;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ProtonReceiver maxMessageSizeExceededHandler(Handler<ProtonReceiver> handler) {
+    this.maxMessageSizeExceededHandler = handler;
+    return this;
+  }
+
   private void flushConnection() {
     getSession().getConnectionImpl().flush();
   }
@@ -172,6 +188,12 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
 
   private boolean autoAccept = true;
   private CompositeReadableBuffer splitContent;
+
+  private boolean isMaxMessageSizeExceeded(int size) {
+    return Optional.ofNullable(getMaxMessageSize())
+        .map(ul -> ul.longValue() > 0 && ul.longValue() < size)
+        .orElse(false);
+  }
 
   void onDelivery() {
     if (this.handler == null) {
@@ -201,7 +223,10 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
       if(splitContent != null) {
         data = completePartial(data);
       }
-
+      if (isMaxMessageSizeExceeded(data.capacity())) {
+        handleMaxMessageSizeExceeded();
+        return;
+      }
       receiver.advance();
 
       MessageImpl msg = (MessageImpl) Proton.message();
@@ -228,6 +253,22 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
       } else {
         processForDrainCompletion();
       }
+    }
+  }
+
+  private void handleMaxMessageSizeExceeded() {
+
+    LOG.debug("received message exceeding configured max-message-size [" + getMaxMessageSize() + " bytes]");
+    splitContent = null;
+
+    if (maxMessageSizeExceededHandler != null) {
+      maxMessageSizeExceededHandler.handle(this);
+    }
+    // close link if handler has not sent a detach frame already
+    if (!getReceiver().detached() && isOpen()) {
+      LOG.debug("closing link with error condition " + LinkError.MESSAGE_SIZE_EXCEEDED);
+      setCondition(new ErrorCondition(LinkError.MESSAGE_SIZE_EXCEEDED, "max-message-size of " + getMaxMessageSize() + " bytes exceeded"));
+      close();
     }
   }
 
@@ -278,10 +319,14 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
               splitContent = new CompositeReadableBuffer();
             }
 
-            byte[] chunk = new byte[remaining];
-            buff.get(chunk);
+            if (isMaxMessageSizeExceeded(splitContent.capacity() + remaining)) {
+              handleMaxMessageSizeExceeded();
+            } else {
+              byte[] chunk = new byte[remaining];
+              buff.get(chunk);
 
-            splitContent.append(chunk);
+              splitContent.append(chunk);
+            }
           }
         }
       }
