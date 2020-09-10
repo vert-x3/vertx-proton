@@ -111,4 +111,29 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    *           if no completion handler is given
    */
   ProtonReceiver drain(long timeout, Handler<AsyncResult<Void>> completionHandler) throws IllegalStateException, IllegalArgumentException;
+
+  /**
+   * Sets a handler to execute when an incoming delivery has exceeded the receivers
+   * {@link ProtonLink#getMaxMessageSize() max-message-size}, if one was configured.
+   *
+   * The handler will be called once the receiver becomes aware of transfer frame(s) arriving for
+   * a delivery with accumulated payload exceeding the max-message-size. The delivery payload will be
+   * dropped and no further messages delivered. The handler notifies the situation has arisen to allow
+   * some reaction and provide awareness of impending subsequent activity, namely the sending peers
+   * matching 'response' to the receiver detaching or closing the link.
+   *
+   * Exceeding an advertised max-message-size is a link-error, resulting in the link being detached or
+   * closed with the <a href="http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-transport-v1.0-os.html#type-link-error">
+   * amqp:link:message-size-exceeded</a> link error. After the handler is executed, if the link has not already
+   * been either detached or closed within the handler, then the library will detach it with the
+   * amqp:link:message-size-exceeded link error. Whether closed or detached by the handler or after it, note
+   * that subsequent behaviour will be the same as if the application called {@link #detach()} or {@link #close()},
+   * itself normally, i.e the sending peers 'response' is handled as always through use of
+   * {@link #detachHandler(Handler)} and {@link #closeHandler(Handler)}.
+   *
+   * @param handler
+   *          the handler to be notified of max-message-size being exceeded
+   * @return the receiver
+   */
+  ProtonReceiver maxMessageSizeExceededHandler(Handler<ProtonReceiver> handler);
 }
