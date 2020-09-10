@@ -45,8 +45,8 @@ public interface ProtonReceiver extends ProtonLink<ProtonReceiver> {
    * <p>
    * The AMQP 1.0 specification requires the link to be detached with error code
    * <em>amqp:link:message-size-exceeded</em> in such a situation. Thus, after the handler returns,
-   * a corresponding AMQP <em>detach</em> frame with <em>close=true</em> will be sent to the peer,
-   * if the handler has not already detached the link manually.
+   * a corresponding AMQP <em>detach</em> frame with <em>close=false</em> will be sent to the peer,
+   * if the handler has not already detached or closed the link manually.
    * Note that the resources held by the link still need to be released in the close/detach handler(s)
    * using the {@link #free()} method, if appropriate.
    *

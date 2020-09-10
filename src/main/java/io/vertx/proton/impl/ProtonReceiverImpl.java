@@ -268,7 +268,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     if (!getReceiver().detached() && isOpen()) {
       LOG.debug("closing link with error condition " + LinkError.MESSAGE_SIZE_EXCEEDED);
       setCondition(new ErrorCondition(LinkError.MESSAGE_SIZE_EXCEEDED, "max-message-size of " + getMaxMessageSize() + " bytes exceeded"));
-      close();
+      detach();
     }
   }
 
