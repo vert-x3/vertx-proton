@@ -256,6 +256,10 @@ public interface ProtonLink<T extends ProtonLink<T>> {
    *
    * Must be called during link setup, i.e. before calling the {@link #open()} method.
    *
+   * Receivers setting this can use the {@link ProtonReceiver#maxMessageSizeExceededHandler(Handler)}
+   * to be made aware if the limit is exceeded by the sending peer. See the handler doc for additional
+   * detail on the resulting behaviour.
+   *
    * @param maxMessageSize
    *            the local max message size value, or null to clear. 0 also means no limit.
    */

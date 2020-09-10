@@ -24,7 +24,10 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.proton.ProtonMessageHandler;
 import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.messaging.Modified;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.amqp.transport.Source;
 import org.apache.qpid.proton.codec.CompositeReadableBuffer;
 import org.apache.qpid.proton.codec.ReadableBuffer;
@@ -50,6 +53,8 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   private int maxFrameSize;
   private long sessionIncomingCapacity;
   private long windowFullThreshhold;
+  private Handler<ProtonReceiver> maxMessageSizeExceededHandler;
+  private boolean maxMessageSizeExceeded;
 
   ProtonReceiverImpl(Receiver receiver) {
     super(receiver);
@@ -160,6 +165,12 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
     return this;
   }
 
+  @Override
+  public ProtonReceiver maxMessageSizeExceededHandler(Handler<ProtonReceiver> handler) {
+    this.maxMessageSizeExceededHandler = handler;
+    return this;
+  }
+
   private void flushConnection() {
     getSession().getConnectionImpl().flush();
   }
@@ -186,6 +197,13 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
       if(delivery.isAborted()) {
         handleAborted(receiver, delivery);
         return;
+      }
+
+      UnsignedLong maxMessageSize = getMaxMessageSize();
+      if(maxMessageSize != null) {
+        if(checkMaxMessageSize(maxMessageSize, delivery, receiver)) {
+          return;
+        };
       }
 
       if (delivery.isPartial()) {
@@ -227,6 +245,53 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
         flow(1, false);
       } else {
         processForDrainCompletion();
+      }
+    }
+  }
+
+  private boolean checkMaxMessageSize(final UnsignedLong maxMessageSize, final Delivery delivery, final Receiver receiver) {
+    if(maxMessageSizeExceeded) {
+      // Already previously exceeded.
+      // Drop any accumulated payload for the delivery, wont be processed.
+      receiver.recv();
+
+      return true;
+    }
+
+    // Check size, using any available now in the delivery, and any previously buffered partial payload
+    long payloadLength = delivery.available();
+    if(splitContent != null) {
+      payloadLength += splitContent.remaining();
+    }
+
+    long max = maxMessageSize.longValue();
+    if(max > 0 && payloadLength > max) {
+      maxMessageSizeExceeded = true;
+
+      // Drop any accumulated payload for the delivery, wont be processed
+      splitContent = null;
+      receiver.recv();
+
+      handleMaxMessageSizeExceeded(maxMessageSize, receiver);
+
+      return true;
+    }
+
+    return false;
+  }
+
+  private void handleMaxMessageSizeExceeded(final UnsignedLong maxMessageSize, final Receiver receiver) {
+    try {
+      LOG.debug("delivery received exceeding max-message-size of " + maxMessageSize + " bytes");
+      if (maxMessageSizeExceededHandler != null) {
+        maxMessageSizeExceededHandler.handle(this);
+      }
+    } finally {
+      // Detach link if handler has not sent a detach frame already
+      if (!receiver.detached() && isOpen()) {
+        LOG.debug("detaching link with error condition " + LinkError.MESSAGE_SIZE_EXCEEDED);
+        setCondition(new ErrorCondition(LinkError.MESSAGE_SIZE_EXCEEDED, "exceeded max-message-size of " + maxMessageSize + " bytes "));
+        detach();
       }
     }
   }
