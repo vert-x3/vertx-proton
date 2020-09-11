@@ -16,7 +16,6 @@
 package io.vertx.proton;
 
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.impl.logging.Logger;
@@ -30,16 +29,19 @@ import io.vertx.proton.impl.ProtonMetaDataSupportImpl;
 import io.vertx.proton.impl.ProtonServerImpl;
 
 import org.apache.qpid.proton.Proton;
+import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.UnsignedLong;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.Modified;
 import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.amqp.transport.Target;
 import org.apache.qpid.proton.codec.WritableBuffer;
 import org.apache.qpid.proton.message.Message;
@@ -1376,13 +1378,38 @@ public class ProtonClientTest extends MockServerTestBase {
   }
 
   @Test(timeout = 20000)
-  public void testMaxMessageSize(TestContext context) throws Exception {
-    server.close();
-    Async serverAsync = context.async();
-    Async clientAsync = context.async();
+  public void testMaxMessageSizeWithSingleFrameExceedingLimit(TestContext context) throws Exception {
+    final int maxFrameSize = 10000;
+    final int maxMessageSize = maxFrameSize / 2;
+    doMaxMessageSizeTestImpl(context, maxFrameSize, maxMessageSize, maxMessageSize + 100);
+  }
 
-    final UnsignedLong clientMaxMsgSize = UnsignedLong.valueOf(54321);
-    final UnsignedLong serverMaxMsgSize = UnsignedLong.valueOf(12345);
+  @Test(timeout = 20000)
+  public void testMaxMessageSizeWithMultipleFramesExceedingOnLastFrameOfDelivery(TestContext context) throws Exception {
+    final int maxFrameSize = 10000;
+    final int maxMessageSize = 3 * maxFrameSize;
+    doMaxMessageSizeTestImpl(context, maxFrameSize, maxMessageSize, maxMessageSize + 100);
+  }
+
+  @Test(timeout = 20000)
+  public void testMaxMessageSizeWithMultipleFramesExceedingInCentralFrameOfDelivery(TestContext context) throws Exception {
+    final int maxFrameSize = 10000;
+    final int maxMessageSize = 5 * maxFrameSize;
+    doMaxMessageSizeTestImpl(context, maxFrameSize, maxMessageSize, 3 * maxMessageSize);
+  }
+
+  private void doMaxMessageSizeTestImpl(TestContext context, final int maxFrameSize, final int maxMessageSize, final int dataPayloadSize) throws Exception {
+    server.close();
+    Async serverSenderOpenAsync = context.async();
+    Async serverSenderCreditCheck = context.async();
+    Async clientReceiverOpenAsync = context.async();
+    Async serverSenderDetachCheck = context.async();
+    Async maxMessageSizeExceededHandlerFired = context.async();
+    AtomicInteger messageCount = new AtomicInteger();
+    AtomicInteger handlerCount = new AtomicInteger();
+
+    final UnsignedLong receiverMaxMsgSize = UnsignedLong.valueOf(maxMessageSize);
+    final UnsignedLong serverMaxMsgSize = UnsignedLong.valueOf(5 * receiverMaxMsgSize.longValue());
 
     ProtonServer protonServer = null;
     try {
@@ -1395,53 +1422,109 @@ public class ProtonClientTest extends MockServerTestBase {
         });
 
         serverConnection.senderOpenHandler(serverSender -> {
-          context.assertEquals(clientMaxMsgSize, serverSender.getRemoteMaxMessageSize(),
+          context.assertEquals(receiverMaxMsgSize, serverSender.getRemoteMaxMessageSize(),
               "unexpected remote max message size at server");
           context.assertNull(serverSender.getMaxMessageSize(), "Expected no value to be set");
           serverSender.setMaxMessageSize(serverMaxMsgSize);
           context.assertEquals(serverMaxMsgSize, serverSender.getMaxMessageSize(), "Expected value to now be set");
 
+          serverSender.sendQueueDrainHandler(ss -> {
+            if(!serverSenderCreditCheck.isCompleted()) {
+              context.assertTrue(serverSender.getCredit() > 3  , "Unexpectedly low credit: " + serverSender.getCredit());
+              serverSenderCreditCheck.complete();
+              sendMessagesForMaxMessageSizeTest(dataPayloadSize, serverSender);
+            }
+          });
+
+          serverSender.detachHandler(res -> {
+            ErrorCondition remoteCondition = serverSender.getRemoteCondition();
+            context.assertNotNull(remoteCondition);
+            context.assertEquals(remoteCondition.getCondition(), LinkError.MESSAGE_SIZE_EXCEEDED);
+            context.assertTrue(res.failed());
+            serverSender.detach();
+            serverSenderDetachCheck.complete();
+          });
+
           LOG.trace("Server sender opened");
           serverSender.open();
-
-          serverAsync.complete();
+          serverSenderOpenAsync.complete();
         });
       });
 
       // ===== Client Handling =====
 
       ProtonClient client = ProtonClient.create(vertx);
-      client.connect("localhost", protonServer.actualPort(), res -> {
+      ProtonClientOptions options = new ProtonClientOptions();
+      options.setMaxFrameSize(maxFrameSize);
+
+      client.connect(options, "localhost", protonServer.actualPort(), res -> {
         context.assertTrue(res.succeeded());
 
         ProtonConnection connection = res.result();
         connection.openHandler(x -> {
           LOG.trace("Client connection opened");
-          final ProtonLink<?> receiver = connection.createReceiver("some-address");
+          final ProtonReceiver receiver = connection.createReceiver("some-address");
 
           context.assertNull(receiver.getMaxMessageSize(), "Expected no value to be set");
-          receiver.setMaxMessageSize(clientMaxMsgSize);
-          context.assertEquals(clientMaxMsgSize, receiver.getMaxMessageSize(), "Expected value to now be set");
+          receiver.setMaxMessageSize(receiverMaxMsgSize);
+          context.assertEquals(receiverMaxMsgSize, receiver.getMaxMessageSize(), "Expected value to now be set");
 
           receiver.openHandler(y -> {
             LOG.trace("Client link opened");
             context.assertEquals(serverMaxMsgSize, receiver.getRemoteMaxMessageSize(),
                 "unexpected remote max message size at client");
 
-            clientAsync.complete();
+            clientReceiverOpenAsync.complete();
+
+            receiver.handler((delivery, message) -> {
+              validateMessage(context, messageCount.incrementAndGet(), "small-first-message", message);
+            });
+
+            receiver.maxMessageSizeExceededHandler(recv -> {
+              handlerCount.incrementAndGet();
+              maxMessageSizeExceededHandlerFired.complete();
+            });
           });
           receiver.open();
 
         }).open();
       });
-
-      serverAsync.awaitSuccess();
-      clientAsync.awaitSuccess();
+      serverSenderOpenAsync.awaitSuccess();
+      clientReceiverOpenAsync.awaitSuccess();
+      serverSenderCreditCheck.awaitSuccess();
+      maxMessageSizeExceededHandlerFired.awaitSuccess();
+      serverSenderDetachCheck.awaitSuccess();
+      context.assertEquals(1, handlerCount.get(), "Unexpected number of handler executions");
+      context.assertEquals(1, messageCount.get(), "Unexpected number of deliveries");
     } finally {
       if (protonServer != null) {
         protonServer.close();
       }
     }
+  }
+
+  private void sendMessagesForMaxMessageSizeTest(int oversizedPayloadSize, ProtonSender serverSender) {
+    //Message 1, small enough to get through
+    Message message1 = Message.Factory.create();
+    message1.setBody(new AmqpValue("small-first-message"));
+
+    serverSender.send(message1);
+
+    //Message 2, too large to get through, over max-message-size (further, once section structure is added in encode);
+    Message message2 = Message.Factory.create();
+    byte[] payload = new byte[oversizedPayloadSize];
+    for (int i = 0; i < payload.length; i++) {
+      payload[i] = (byte) (i % 256);
+    }
+    message2.setBody(new Data(new Binary(payload)));
+
+    serverSender.send(message2);
+
+    //Message 3, small enough to get through, but it wont
+    Message message3 = Message.Factory.create();
+    message3.setBody(new AmqpValue("small-last-message"));
+
+    serverSender.send(message3);
   }
 
   @Test(timeout = 20000)
