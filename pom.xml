@@ -41,7 +41,7 @@
     <proton.version>0.33.6</proton.version>
 
     <!-- Test dependency versions -->
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <mockito-version>2.19.0</mockito-version>
     <activemq.version>5.14.2</activemq.version>
 
