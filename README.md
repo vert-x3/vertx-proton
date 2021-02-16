@@ -1,6 +1,6 @@
 # Vert.x Proton
 
-[![Build Status](https://travis-ci.org/vert-x3/vertx-proton.svg?branch=master)](https://travis-ci.org/vert-x3/vertx-proton)
+[![Build Status](https://github.com/vert-x3/vertx-proton/workflows/CI/badge.svg?branch=3.9)](https://github.com/vert-x3/vertx-proton/actions?query=workflow%3ACI)
 
 This component facilitates AMQP integrations for Vert.x by providing a thin wrapper around the
 [Apache Qpid](http://qpid.apache.org) Proton-J AMQP 1.0 protocol engine.
