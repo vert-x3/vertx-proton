@@ -15,6 +15,8 @@
 */
 package io.vertx.proton.sasl.impl;
 
+import java.security.Principal;
+
 public class ProtonSaslAnonymousImpl extends ProtonSaslMechanismImpl {
 
   public static final String MECH_NAME = "ANONYMOUS";
@@ -40,7 +42,7 @@ public class ProtonSaslAnonymousImpl extends ProtonSaslMechanismImpl {
   }
 
   @Override
-  public boolean isApplicable(String username, String password) {
+  public boolean isApplicable(String username, String password, Principal localPrincipal) {
     return true;
   }
 }

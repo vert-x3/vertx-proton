@@ -15,6 +15,8 @@
 */
 package io.vertx.proton.sasl;
 
+import java.security.Principal;
+
 import javax.security.sasl.SaslException;
 
 public interface ProtonSaslMechanism extends Comparable<ProtonSaslMechanism> {
@@ -111,7 +113,9 @@ public interface ProtonSaslMechanism extends Comparable<ProtonSaslMechanism> {
    *          the username
    * @param password
    *          the password
+   * @param localPrincipal
+   *          the socket SSLSession local Principal, or null if there is none
    * @return whether mechanism is applicable
    */
-  boolean isApplicable(String username, String password);
+  boolean isApplicable(String username, String password, Principal localPrincipal);
 }

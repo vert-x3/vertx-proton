@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.sasl.impl;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +38,8 @@ public class ProtonSaslMechanismFinderImpl {
    *          the username, or null if there is none
    * @param password
    *          the password, or null if there is none
+   * @param localPrincipal
+   *          the socket SSLSession local Principal, or null if there is none
    * @param mechRestrictions
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
    *          server, or null/empty if there is no restriction
@@ -46,7 +49,7 @@ public class ProtonSaslMechanismFinderImpl {
    * @return the best matching Mechanism for the supported remote set.
    */
   public static ProtonSaslMechanism findMatchingMechanism(String username, String password,
-                                                          Set<String> mechRestrictions, String... remoteMechanisms) {
+                                                          Principal localPrincipal, Set<String> mechRestrictions, String... remoteMechanisms) {
 
     ProtonSaslMechanism match = null;
     List<ProtonSaslMechanism> found = new ArrayList<ProtonSaslMechanism>();
@@ -59,7 +62,7 @@ public class ProtonSaslMechanismFinderImpl {
           if (LOG.isTraceEnabled()) {
             LOG.trace("Skipping " + remoteMechanism + " mechanism because it is not in the configured mechanisms restriction set");
           }
-        } else if (mech.isApplicable(username, password)) {
+        } else if (mech.isApplicable(username, password, localPrincipal)) {
           found.add(mech);
         } else {
           if (LOG.isTraceEnabled()) {
