@@ -15,21 +15,32 @@
 */
 package io.vertx.proton;
 
+import java.util.concurrent.ExecutionException;
+
+import javax.net.ssl.SSLSession;
 import javax.security.sasl.AuthenticationException;
 
+import org.apache.qpid.proton.engine.Sasl;
+import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.Sasl.SaslOutcome;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.core.http.ClientAuth;
+import io.vertx.core.net.NetSocket;
+import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import io.vertx.proton.sasl.MechanismMismatchException;
-import io.vertx.proton.sasl.SaslSystemException;
+import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import io.vertx.proton.sasl.impl.ProtonSaslAnonymousImpl;
 
 @RunWith(VertxUnitRunner.class)
@@ -37,7 +48,13 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
 
   private static Logger LOG = LoggerFactory.getLogger(ProtonClientSaslTest.class);
 
+  private static final String SERVER_KEYSTORE = "src/test/resources/broker-pkcs12.keystore";
+  private static final String TRUSTSTORE = "src/test/resources/client-pkcs12.truststore";
+  private static final String KEYSTORE_CLIENT = "src/test/resources/client-pkcs12.keystore";
+  private static final String STORE_PASSWORD = "password";
+
   private Vertx vertx;
+  private ProtonServer protonServer;
 
   private boolean anonymousAccessAllowed = false;
 
@@ -54,8 +71,14 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     try {
       super.tearDown();
     } finally {
-      if (vertx != null) {
-        vertx.close();
+      try {
+        if (protonServer != null) {
+          protonServer.close();
+        }
+      } finally {
+        if (vertx != null) {
+          vertx.close();
+        }
       }
     }
   }
@@ -141,5 +164,137 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     });
 
     async.awaitSuccess();
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectWithSslWithClientCertSelectsOfferedExternalSaslMech(TestContext context) throws Exception {
+    doExternalMechTestImpl(context, true);
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectWithSslWithoutClientCertIgnoresOfferedExternalSaslMech(TestContext context) throws Exception {
+    doExternalMechTestImpl(context, false);
+  }
+
+  private void doExternalMechTestImpl(TestContext context, boolean supplyClientCert) throws Exception {
+    stopBroker();
+    Async async = context.async();
+
+    // Create a server that accept a connection and expects a client connection
+    ProtonServerOptions serverOptions = new ProtonServerOptions();
+    serverOptions.setSsl(true);
+    serverOptions.setClientAuth(supplyClientCert ? ClientAuth.REQUIRED : ClientAuth.NONE);
+    PfxOptions serverPfxOptions = new PfxOptions().setPath(SERVER_KEYSTORE).setPassword(STORE_PASSWORD);
+    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    PfxOptions pfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(STORE_PASSWORD);
+    serverOptions.setPfxTrustOptions(pfxOptions);
+
+    TestExternalAuthenticator authenticator = new TestExternalAuthenticator("EXTERNAL", "PLAIN", "ANONYMOUS");
+
+    protonServer = createTestServer(serverOptions, authenticator);
+
+    // Try to connect the client
+    ProtonClientOptions clientOptions = new ProtonClientOptions();
+    clientOptions.setSsl(true);
+    clientOptions.setPfxTrustOptions(pfxOptions);
+
+    if (supplyClientCert) {
+      PfxOptions clientKeyPfxOptions = new PfxOptions().setPath(KEYSTORE_CLIENT).setPassword(STORE_PASSWORD);
+      clientOptions.setPfxKeyCertOptions(clientKeyPfxOptions);
+    }
+
+    ProtonClient client = ProtonClient.create(vertx);
+    client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
+      // Expect connect to succeed
+      context.assertTrue(res.succeeded());
+      async.complete();
+    });
+
+    async.awaitSuccess();
+
+    if(supplyClientCert) {
+      context.assertEquals("EXTERNAL", authenticator.getChosenMech());
+      SSLSession sslSession = authenticator.getClientSocket().sslSession();
+      context.assertNotNull(sslSession.getPeerPrincipal());
+    } else {
+      context.assertEquals("ANONYMOUS", authenticator.getChosenMech());
+    }
+  }
+
+  private ProtonServer createTestServer(ProtonServerOptions serverOptions,
+      TestExternalAuthenticator authenticator) throws InterruptedException,
+                                                                                 ExecutionException {
+    ProtonServer server = ProtonServer.create(vertx, serverOptions);
+    server.connectHandler(serverConnection -> {
+      serverConnection.closeHandler(x -> {
+        serverConnection.close();
+        serverConnection.disconnect();
+      });
+
+      serverConnection.openHandler(y -> {
+        serverConnection.open();
+      });
+    });
+
+    server.saslAuthenticatorFactory(() -> authenticator);
+
+    FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
+    server.listen(0, handler);
+    handler.get();
+
+    return server;
+  }
+
+  private static final class TestExternalAuthenticator implements ProtonSaslAuthenticator {
+    private Sasl sasl;
+    private String[] offeredMechs;
+    private String chosenMech = null;
+    boolean succeeded = false;
+    NetSocket socket;
+
+    public TestExternalAuthenticator(String... offeredMechs){
+      this.offeredMechs = offeredMechs;
+    }
+
+    @Override
+    public void init(NetSocket socket, ProtonConnection protonConnection, Transport transport) {
+      this.socket = socket;
+      this.sasl = transport.sasl();
+      sasl.server();
+      sasl.allowSkip(false);
+      sasl.setMechanisms(offeredMechs);
+    }
+
+    @Override
+    public void process(Handler<Boolean> processComplete) {
+      boolean done = false;
+      String[] remoteMechanisms = sasl.getRemoteMechanisms();
+      if (remoteMechanisms.length > 0) {
+        chosenMech = remoteMechanisms[0];
+
+        byte[] initialResponse = new byte[sasl.pending()];
+        sasl.recv(initialResponse, 0, initialResponse.length);
+
+        sasl.done(SaslOutcome.PN_SASL_OK);
+        succeeded = true;
+
+        done = true;
+      }
+
+      processComplete.handle(done);
+    }
+
+    @Override
+    public boolean succeeded() {
+      return succeeded;
+    }
+
+    public String getChosenMech() {
+      return chosenMech;
+    }
+
+    public NetSocket getClientSocket() {
+      return socket;
+    }
   }
 }

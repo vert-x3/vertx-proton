@@ -15,6 +15,8 @@
 */
 package io.vertx.proton.sasl.impl;
 
+import java.security.Principal;
+
 public class ProtonSaslExternalImpl extends ProtonSaslMechanismImpl {
 
   public static final String MECH_NAME = "EXTERNAL";
@@ -40,7 +42,7 @@ public class ProtonSaslExternalImpl extends ProtonSaslMechanismImpl {
   }
 
   @Override
-  public boolean isApplicable(String username, String password) {
-    return true;
+  public boolean isApplicable(String username, String password, Principal localPrincipal) {
+    return localPrincipal != null;
   }
 }
