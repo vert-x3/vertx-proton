@@ -15,8 +15,10 @@
 */
 package io.vertx.proton.impl;
 
+import java.security.Principal;
 import java.util.Set;
 
+import javax.net.ssl.SSLSession;
 import javax.security.sasl.AuthenticationException;
 import javax.security.sasl.SaslException;
 
@@ -139,8 +141,14 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
   private void handleSaslInit() throws SaslException {
     String[] remoteMechanisms = sasl.getRemoteMechanisms();
     if (remoteMechanisms != null && remoteMechanisms.length != 0) {
-      mechanism = ProtonSaslMechanismFinderImpl.findMatchingMechanism(username, password, mechanismsRestriction,
-          remoteMechanisms);
+      Principal localPrincipal = null;
+      SSLSession sslSession = socket.sslSession();
+      if (sslSession != null) {
+        localPrincipal = sslSession.getLocalPrincipal();
+      }
+
+      mechanism = ProtonSaslMechanismFinderImpl.findMatchingMechanism(username, password, localPrincipal,
+          mechanismsRestriction, remoteMechanisms);
       if (mechanism != null) {
         mechanism.setUsername(username);
         mechanism.setPassword(password);

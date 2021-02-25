@@ -16,6 +16,7 @@
 package io.vertx.proton.sasl.impl;
 
 import java.nio.charset.StandardCharsets;
+import java.security.Principal;
 
 public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
 
@@ -59,7 +60,7 @@ public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
   }
 
   @Override
-  public boolean isApplicable(String username, String password) {
+  public boolean isApplicable(String username, String password, Principal localPrincipal) {
     return username != null && username.length() > 0 && password != null && password.length() > 0;
   }
 }
