@@ -23,7 +23,7 @@
   </parent>
 
   <artifactId>vertx-proton</artifactId>
-  <version>4.1.0-SNAPSHOT</version>
+  <version>4.1.0</version>
 
   <name>Vert.x Proton</name>
 
@@ -38,7 +38,7 @@
   <properties>
     <jar.manifest>${project.basedir}/src/main/resources/META-INF/MANIFEST.MF</jar.manifest>
     <!-- Dependency versions -->
-    <stack.version>4.1.0-SNAPSHOT</stack.version>
+    <stack.version>4.1.0</stack.version>
     <proton.version>0.33.8</proton.version>
 
     <!-- Test dependency versions -->
