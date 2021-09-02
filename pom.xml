@@ -42,9 +42,9 @@
     <proton.version>0.33.9</proton.version>
 
     <!-- Test dependency versions -->
-    <junit.version>4.13.1</junit.version>
-    <mockito-version>2.19.0</mockito-version>
-    <activemq.version>5.14.2</activemq.version>
+    <junit.version>4.13.2</junit.version>
+    <mockito-version>3.12.4</mockito-version>
+    <activemq.version>5.16.3</activemq.version>
 
     <!-- Test properties -->
     <proton.trace.frames>false</proton.trace.frames>
