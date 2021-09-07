@@ -14,250 +14,444 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>io.vertx</groupId>
-    <artifactId>vertx-ext-parent</artifactId>
-    <version>38</version>
-  </parent>
-
-  <artifactId>vertx-proton</artifactId>
-  <version>3.9.9-SNAPSHOT</version>
-
-  <name>Vert.x Proton</name>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <properties>
-    <!-- Dependency versions -->
-    <stack.version>3.9.9-SNAPSHOT</stack.version>
-    <proton.version>0.33.8</proton.version>
-
-    <!-- Test dependency versions -->
-    <junit.version>4.13.1</junit.version>
-    <mockito-version>2.19.0</mockito-version>
-    <activemq.version>5.14.2</activemq.version>
-
-    <!-- Test properties -->
-    <proton.trace.frames>false</proton.trace.frames>
-  </properties>
-
-  <scm>
-    <connection>scm:git:git@github.com:vert-x3/vertx-proton.git</connection>
-    <developerConnection>scm:git:git@github.com:vert-x3/vertx-proton.git</developerConnection>
-    <url>git@github.com:vert-x3/vertx-proton.git</url>
-  </scm>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
+      
+    <modelVersion>4.0.0</modelVersion>
+      
+    <parent>
+            
         <groupId>io.vertx</groupId>
-        <artifactId>vertx-dependencies</artifactId>
-        <version>${stack.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
+            
+        <artifactId>vertx-ext-parent</artifactId>
+            
+        <version>38</version>
+          
+    </parent>
+      
+    <artifactId>vertx-proton</artifactId>
+      
+    <version>3.9.9</version>
+      
+    <name>Vert.x Proton</name>
+      
+    <licenses>
+            
+        <license>
+                  
+            <name>The Apache Software License, Version 2.0</name>
+                  
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+                  
+            <distribution>repo</distribution>
+                
+        </license>
+          
+    </licenses>
+      
+    <properties>
+            
+        <!-- Dependency versions -->
+            
+        <stack.version>3.9.9</stack.version>
+            
+        <proton.version>0.33.8</proton.version>
+            
+        <!-- Test dependency versions -->
+            
+        <junit.version>4.13.1</junit.version>
+            
+        <mockito-version>2.19.0</mockito-version>
+            
+        <activemq.version>5.14.2</activemq.version>
+            
+        <!-- Test properties -->
+            
+        <proton.trace.frames>false</proton.trace.frames>
+          
+    </properties>
+      
+    <scm>
+            
+        <connection>scm:git:git@github.com:vert-x3/vertx-proton.git</connection>
+            
+        <developerConnection>scm:git:git@github.com:vert-x3/vertx-proton.git</developerConnection>
+            
+        <url>git@github.com:vert-x3/vertx-proton.git</url>
+          
+    </scm>
+      
+    <dependencyManagement>
+            
+        <dependencies>
+                  
+            <dependency>
+                        
+                <groupId>io.vertx</groupId>
+                        
+                <artifactId>vertx-dependencies</artifactId>
+                        
+                <version>${stack.version}</version>
+                        
+                <type>pom</type>
+                        
+                <scope>import</scope>
+                      
+            </dependency>
+                
+        </dependencies>
+          
+    </dependencyManagement>
+      
+    <dependencies>
+            
+        <dependency>
+                  
+            <groupId>io.vertx</groupId>
+                  
+            <artifactId>vertx-core</artifactId>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>org.apache.qpid</groupId>
+                  
+            <artifactId>proton-j</artifactId>
+                  
+            <version>${proton.version}</version>
+                
+        </dependency>
+            
+        <!-- Optionally provided if required -->
+            
+        <dependency>
+                  
+            <groupId>org.reactivestreams</groupId>
+                  
+            <artifactId>reactive-streams</artifactId>
+                  
+            <version>1.0.3</version>
+                  
+            <scope>provided</scope>
+                
+        </dependency>
+            
+        <!-- test -->
+            
+        <dependency>
+                  
+            <groupId>junit</groupId>
+                  
+            <artifactId>junit</artifactId>
+                  
+            <version>${junit.version}</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>io.vertx</groupId>
+                  
+            <artifactId>vertx-unit</artifactId>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>org.mockito</groupId>
+                  
+            <artifactId>mockito-core</artifactId>
+                  
+            <version>${mockito-version}</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>org.apache.activemq</groupId>
+                  
+            <artifactId>activemq-broker</artifactId>
+                  
+            <version>${activemq.version}</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>org.apache.activemq</groupId>
+                  
+            <artifactId>activemq-amqp</artifactId>
+                  
+            <version>${activemq.version}</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>org.apache.activemq</groupId>
+                  
+            <artifactId>activemq-jaas</artifactId>
+                  
+            <version>${activemq.version}</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>org.reactivestreams</groupId>
+                  
+            <artifactId>reactive-streams-tck</artifactId>
+                  
+            <version>1.0.3</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <dependency>
+                  
+            <groupId>io.reactivex.rxjava2</groupId>
+                  
+            <artifactId>rxjava</artifactId>
+                  
+            <version>2.1.0</version>
+                  
+            <scope>test</scope>
+                
+        </dependency>
+            
+        <!-- codegen -->
+            
+        <dependency>
+                  
+            <groupId>io.vertx</groupId>
+                  
+            <artifactId>vertx-codegen</artifactId>
+                  
+            <classifier>processor</classifier>
+                  
+            <scope>provided</scope>
+                
+        </dependency>
+            
+        <!-- doc -->
+            
+        <dependency>
+                  
+            <groupId>io.vertx</groupId>
+                  
+            <artifactId>vertx-docgen</artifactId>
+                  
+            <scope>provided</scope>
+                
+        </dependency>
+          
     </dependencies>
-  </dependencyManagement>
-
-  <dependencies>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.qpid</groupId>
-      <artifactId>proton-j</artifactId>
-      <version>${proton.version}</version>
-    </dependency>
-
-    <!-- Optionally provided if required -->
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams</artifactId>
-      <version>1.0.3</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- test -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>${mockito-version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-broker</artifactId>
-      <version>${activemq.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-amqp</artifactId>
-      <version>${activemq.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-jaas</artifactId>
-      <version>${activemq.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams-tck</artifactId>
-      <version>1.0.3</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.reactivex.rxjava2</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>2.1.0</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- codegen -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-codegen</artifactId>
-      <classifier>processor</classifier>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- doc -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-docgen</artifactId>
-      <scope>provided</scope>
-    </dependency>
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>default-jar</id>
-            <configuration>
-              <archive>
-                <!-- A manifest containing the OSGi metadata has been generated using the maven-bundle-plugin -->
-                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
-              </archive>
-              <!-- Remove examples and docoverride -->
-              <excludes>
-                <exclude>/docoverride/**</exclude>
-                <exclude>/examples/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>2.5.3</version>
-        <executions>
-          <execution>
-            <id>bundle-manifest</id>
-            <phase>process-classes</phase>
-            <goals>
-              <goal>manifest</goal>
-            </goals>
-            <configuration>
-              <instructions>
-                <Export-Package>io.vertx.proton*</Export-Package>
-                <Private-Package>!docoverride*, !examples*</Private-Package>
-                <Import-Package>
+      
+    <build>
+            
+        <plugins>
+                  
+            <plugin>
+                        
+                <artifactId>maven-jar-plugin</artifactId>
+                        
+                <executions>
+                              
+                    <execution>
+                                    
+                        <id>default-jar</id>
+                                    
+                        <configuration>
+                                          
+                            <archive>
+                                                
+                                <!-- A manifest containing the OSGi metadata has been generated using the maven-bundle-plugin -->
+                                                
+                                <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                                              
+                            </archive>
+                                          
+                            <!-- Remove examples and docoverride -->
+                                          
+                            <excludes>
+                                                
+                                <exclude>/docoverride/**</exclude>
+                                                
+                                <exclude>/examples/**</exclude>
+                                              
+                            </excludes>
+                                        
+                        </configuration>
+                                  
+                    </execution>
+                            
+                </executions>
+                      
+            </plugin>
+                  
+            <plugin>
+                        
+                <groupId>org.apache.felix</groupId>
+                        
+                <artifactId>maven-bundle-plugin</artifactId>
+                        
+                <version>2.5.3</version>
+                        
+                <executions>
+                              
+                    <execution>
+                                    
+                        <id>bundle-manifest</id>
+                                    
+                        <phase>process-classes</phase>
+                                    
+                        <goals>
+                                          
+                            <goal>manifest</goal>
+                                        
+                        </goals>
+                                    
+                        <configuration>
+                                          
+                            <instructions>
+                                                
+                                <Export-Package>io.vertx.proton*</Export-Package>
+                                                
+                                <Private-Package>!docoverride*, !examples*</Private-Package>
+                                                
+                                <Import-Package>
                   io.vertx.codegen.annotations;resolution:=optional,
                   *
                 </Import-Package>
-              </instructions>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
-          <failIfNoTests>false</failIfNoTests>
-          <environmentVariables>
-            <PN_TRACE_FRM>${proton.trace.frames}</PN_TRACE_FRM>
-          </environmentVariables>
-        </configuration>
-        <executions>
-          <execution>
-            <id>default-test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <exclude>**/streams/tck/*</exclude>
-              </excludes>
-              <testNGArtifactName>none:none</testNGArtifactName>
-            </configuration>
-          </execution>
-          <execution>
-            <id>streams-tck</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <configuration>
-              <includes>
-                <include>**/streams/tck/*</include>
-              </includes>
-              <junitArtifactName>none:none</junitArtifactName>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-
-    <resources>
-      <resource>
-        <directory>${project.basedir}/src/main/resources</directory>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>${project.basedir}/src/main/filtered-resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
-
+                                              
+                            </instructions>
+                                        
+                        </configuration>
+                                  
+                    </execution>
+                            
+                </executions>
+                      
+            </plugin>
+                  
+            <plugin>
+                        
+                <groupId>org.apache.maven.plugins</groupId>
+                        
+                <artifactId>maven-surefire-plugin</artifactId>
+                        
+                <configuration>
+                              
+                    <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
+                              
+                    <failIfNoTests>false</failIfNoTests>
+                              
+                    <environmentVariables>
+                                    
+                        <PN_TRACE_FRM>${proton.trace.frames}</PN_TRACE_FRM>
+                                  
+                    </environmentVariables>
+                            
+                </configuration>
+                        
+                <executions>
+                              
+                    <execution>
+                                    
+                        <id>default-test</id>
+                                    
+                        <goals>
+                                          
+                            <goal>test</goal>
+                                        
+                        </goals>
+                                    
+                        <configuration>
+                                          
+                            <excludes>
+                                                
+                                <exclude>**/streams/tck/*</exclude>
+                                              
+                            </excludes>
+                                          
+                            <testNGArtifactName>none:none</testNGArtifactName>
+                                        
+                        </configuration>
+                                  
+                    </execution>
+                              
+                    <execution>
+                                    
+                        <id>streams-tck</id>
+                                    
+                        <goals>
+                                          
+                            <goal>test</goal>
+                                        
+                        </goals>
+                                    
+                        <configuration>
+                                          
+                            <includes>
+                                                
+                                <include>**/streams/tck/*</include>
+                                              
+                            </includes>
+                                          
+                            <junitArtifactName>none:none</junitArtifactName>
+                                        
+                        </configuration>
+                                  
+                    </execution>
+                            
+                </executions>
+                      
+            </plugin>
+                
+        </plugins>
+            
+        <resources>
+                  
+            <resource>
+                        
+                <directory>${project.basedir}/src/main/resources</directory>
+                        
+                <includes>
+                              
+                    <include>**/*</include>
+                            
+                </includes>
+                      
+            </resource>
+                  
+            <resource>
+                        
+                <directory>${project.basedir}/src/main/filtered-resources</directory>
+                        
+                <filtering>true</filtering>
+                        
+                <includes>
+                              
+                    <include>**/*</include>
+                            
+                </includes>
+                      
+            </resource>
+                
+        </resources>
+          
+    </build>
+    
 </project>
