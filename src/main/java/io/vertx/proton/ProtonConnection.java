@@ -271,6 +271,15 @@ public interface ProtonConnection {
   ProtonConnection openHandler(Handler<AsyncResult<ProtonConnection>> remoteOpenHandler);
 
   /**
+   * Sets a handler for when respective AMQP Open frames are received from and sent to the remote peer.
+   *
+   * @param openedHandler
+   *          the handler
+   * @return the connection
+   */
+  ProtonConnection openedHandler(Handler<AsyncResult<ProtonConnection>> openedHandler);
+
+  /**
    * Sets a handler for when an AMQP Close frame is received from the remote peer.
    *
    * @param remoteCloseHandler

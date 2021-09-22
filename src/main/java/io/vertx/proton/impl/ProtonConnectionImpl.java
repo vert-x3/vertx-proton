@@ -71,6 +71,9 @@ public class ProtonConnectionImpl implements ProtonConnection {
   private Handler<AsyncResult<ProtonConnection>> openHandler = (result) -> {
     LOG.trace("Connection open completed");
   };
+  private Handler<AsyncResult<ProtonConnection>> openedHandler = (result) -> {
+    LOG.trace("Connection opened");
+  };
   private Handler<AsyncResult<ProtonConnection>> closeHandler = (result) -> {
     if (result.succeeded()) {
       LOG.trace("Connection closed");
@@ -233,6 +236,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
   public ProtonConnection open() {
     connection.open();
     flush();
+    fireOpenedIfLocalAndRemoteOpen();
     return this;
   }
 
@@ -316,6 +320,12 @@ public class ProtonConnectionImpl implements ProtonConnection {
   }
 
   @Override
+  public ProtonConnection openedHandler(Handler<AsyncResult<ProtonConnection>> openedHandler) {
+    this.openedHandler = openedHandler;
+    return this;
+  }
+
+  @Override
   public ProtonConnection closeHandler(Handler<AsyncResult<ProtonConnection>> closeHandler) {
     this.closeHandler = closeHandler;
     return this;
@@ -367,11 +377,20 @@ public class ProtonConnectionImpl implements ProtonConnection {
     if (openHandler != null) {
       openHandler.handle(future(this, getRemoteCondition()));
     }
+    fireOpenedIfLocalAndRemoteOpen();
   }
 
   void fireRemoteClose() {
     if (closeHandler != null) {
       closeHandler.handle(future(this, getRemoteCondition()));
+    }
+  }
+
+  private void fireOpenedIfLocalAndRemoteOpen() {
+    if (getLocalState() == EndpointState.ACTIVE && getRemoteState() == EndpointState.ACTIVE) {
+      if (openedHandler != null) {
+        openedHandler.handle(future(this, getRemoteCondition()));
+      }
     }
   }
 

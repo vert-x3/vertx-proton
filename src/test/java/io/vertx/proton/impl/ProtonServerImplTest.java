@@ -404,4 +404,25 @@ public class ProtonServerImplTest {
       return succeeded;
     }
   }
+
+  @Test
+  public void testServerWithEagerOpenFrame(TestContext context) {
+    Async connectedAsync = context.async();
+    ProtonServer.create(vertx).connectHandler(serverConnection -> {
+      // call server open eagerly
+      serverConnection.open();
+    }).listen(server -> ProtonClient.create(vertx).connect("localhost", server.result().actualPort(),
+      event -> {
+        context.assertTrue(event.succeeded());
+        event.result()
+          .openHandler(serverOpen -> {
+            context.fail("Open handler should not be called for server sending open eagerly");
+          })
+          .openedHandler(openedConnection -> {
+            context.assertTrue(openedConnection.succeeded());
+            connectedAsync.complete();
+          }).open();
+      }));
+    connectedAsync.awaitSuccess();
+  }
 }
