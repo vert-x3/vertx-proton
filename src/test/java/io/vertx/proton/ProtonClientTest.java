@@ -86,6 +86,61 @@ public class ProtonClientTest extends MockServerTestBase {
   }
 
   @Test(timeout = 20000)
+  public void testConnectionWithPreemptiveServerOpen(TestContext context) throws Exception {
+    server.close();
+
+    Async clientConnectionOpenAsync = context.async();
+    Async clientLinkOpenAsync = context.async();
+    Async serverLinkOpenAsync = context.async();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer((serverConnection) -> {
+        serverConnection.sessionOpenHandler(session -> session.open());
+
+        serverConnection.receiverOpenHandler(serverReceiver -> {
+          serverReceiver.open();
+          serverLinkOpenAsync.complete();
+        });
+
+        // Send the servers Open frame preemptively, before the client does.
+        serverConnection.open();
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect("localhost", protonServer.actualPort(), conRres -> {
+        context.assertTrue(conRres.succeeded());
+        ProtonConnection connection = conRres.result();
+
+        connection.openHandler(x -> {
+          // Only have the client send its open once the openHandler fires,
+          // thus ensuring it did fire, and the client opens second.
+          connection.open();
+          clientConnectionOpenAsync.complete();
+
+          ProtonSender sender = connection.createSender("testConnectionWithPreemptiveServerOpen");
+          sender.openHandler(sendRes -> {
+            context.assertTrue(sendRes.succeeded());
+            connection.disconnect();
+            clientLinkOpenAsync.complete();
+          });
+          sender.open();
+        });
+      });
+
+      clientConnectionOpenAsync.awaitSuccess(3000);
+      clientLinkOpenAsync.awaitSuccess(3000);
+      serverLinkOpenAsync.awaitSuccess(3000);
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
+  }
+
+  @Test(timeout = 20000)
   public void testConnectionDisconnectedDuringCreation(TestContext context) {
     server.close();
 
