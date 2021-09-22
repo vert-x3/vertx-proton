@@ -98,6 +98,10 @@ class ProtonTransport extends BaseHandler {
   private void handleSocketBuffer(Buffer buff) {
     pumpInbound(buff);
 
+    if (!failed) {
+      processSaslAuthentication();
+    }
+
     Event protonEvent = null;
     while ((protonEvent = collector.peek()) != null) {
       ProtonConnectionImpl conn = (ProtonConnectionImpl) protonEvent.getConnection().getContext();
@@ -189,10 +193,6 @@ class ProtonTransport extends BaseHandler {
       case LINK_FINAL:
       }
       collector.pop();
-    }
-
-    if (!failed) {
-      processSaslAuthentication();
     }
 
     flush();
