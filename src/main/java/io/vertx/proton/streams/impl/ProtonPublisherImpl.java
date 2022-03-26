@@ -93,7 +93,7 @@ public class ProtonPublisherImpl implements ProtonPublisher<Delivery> {
     }
 
     if(!capabilities.isEmpty()) {
-      Symbol[] caps = capabilities.toArray(new Symbol[capabilities.size()]);
+      Symbol[] caps = capabilities.toArray(new Symbol[0]);
       source.setCapabilities(caps);
     }
   }
