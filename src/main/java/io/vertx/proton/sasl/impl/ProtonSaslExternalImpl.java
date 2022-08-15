@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.sasl.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 
 public class ProtonSaslExternalImpl extends ProtonSaslMechanismImpl {
