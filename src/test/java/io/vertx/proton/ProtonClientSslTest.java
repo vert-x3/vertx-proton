@@ -15,8 +15,15 @@
 */
 package io.vertx.proton;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.security.KeyStore;
 import java.util.concurrent.ExecutionException;
 
+import io.vertx.proton.impl.ProtonClientImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +39,9 @@ import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 @RunWith(VertxUnitRunner.class)
 public class ProtonClientSslTest {
@@ -85,6 +95,61 @@ public class ProtonClientSslTest {
     clientOptions.setPfxTrustOptions(clientPfxOptions);
 
     ProtonClient client = ProtonClient.create(vertx);
+    client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
+      // Expect connect to succeed
+      context.assertTrue(res.succeeded());
+      ProtonConnection connection = res.result();
+      connection.open();
+
+      ProtonReceiver receiver = connection.createReceiver("some-address");
+
+      receiver.openHandler(recvResult -> {
+        context.assertTrue(recvResult.succeeded());
+        LOG.trace("Client reciever open");
+        async.complete();
+      }).open();
+    });
+
+    async.awaitSuccess();
+  }
+
+  // This test is here to cover a WildFly use case for passing in an SSLContext for which there are no
+  // configuration options.
+  // This is currently done by casing to ProtonClientImpl and calling setSuppliedSSLContext().
+  @Test(timeout = 20000)
+  public void testConnectWithSuppliedSslContextSucceeds(TestContext context) throws Exception {
+    Async async = context.async();
+
+    // Create a server that accept a connection and expects a client connection+session+receiver
+    ProtonServerOptions serverOptions = new ProtonServerOptions();
+    serverOptions.setSsl(true);
+    PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
+    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+
+    protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
+
+    // Connect the client and open a receiver to verify the connection works
+    ProtonClientOptions clientOptions = new ProtonClientOptions();
+    clientOptions.setSsl(true);
+
+    Path tsPath = Paths.get(".").resolve(TRUSTSTORE);
+    TrustManagerFactory tmFactory;
+    try (InputStream trustStoreStream = Files.newInputStream(tsPath, StandardOpenOption.READ)){
+      KeyStore trustStore = KeyStore.getInstance("pkcs12");
+      trustStore.load(trustStoreStream, PASSWORD.toCharArray());
+      tmFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      tmFactory.init(trustStore);
+    }
+
+    SSLContext sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(
+      null,
+      tmFactory.getTrustManagers(),
+      null
+    );
+
+    ProtonClient client = ProtonClient.create(vertx);
+    ((ProtonClientImpl)client).setSuppliedSSLContext(sslContext);
     client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
       // Expect connect to succeed
       context.assertTrue(res.succeeded());
