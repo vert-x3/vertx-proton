@@ -23,7 +23,11 @@ import java.nio.file.StandardOpenOption;
 import java.security.KeyStore;
 import java.util.concurrent.ExecutionException;
 
-import io.vertx.proton.impl.ProtonClientImpl;
+import io.netty.handler.ssl.ApplicationProtocolConfig;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
+import io.netty.handler.ssl.JdkSslContext;
+import io.vertx.core.net.JdkSSLEngineOptions;
+import io.vertx.core.spi.tls.SslContextFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +45,7 @@ import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
 import javax.net.ssl.TrustManagerFactory;
 
 @RunWith(VertxUnitRunner.class)
@@ -148,8 +153,22 @@ public class ProtonClientSslTest {
       null
     );
 
+    clientOptions.setSslEngineOptions(new JdkSSLEngineOptions() {
+      @Override
+      public SslContextFactory sslContextFactory() {
+        return () -> new JdkSslContext(
+          sslContext,
+          true,
+          null,
+          IdentityCipherSuiteFilter.INSTANCE,
+          ApplicationProtocolConfig.DISABLED,
+          io.netty.handler.ssl.ClientAuth.NONE,
+          null,
+          false);
+      }
+    });
+
     ProtonClient client = ProtonClient.create(vertx);
-    ((ProtonClientImpl)client).setSuppliedSSLContext(sslContext);
     client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
       // Expect connect to succeed
       context.assertTrue(res.succeeded());
