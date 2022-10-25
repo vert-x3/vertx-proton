@@ -69,6 +69,7 @@ Explicitly override the hostname to use for the TLS SNI server name.
 |[[tcpKeepAlive]]`@tcpKeepAlive`|`Boolean`|-
 |[[tcpNoDelay]]`@tcpNoDelay`|`Boolean`|-
 |[[tcpQuickAck]]`@tcpQuickAck`|`Boolean`|-
+|[[tcpUserTimeout]]`@tcpUserTimeout`|`Number (int)`|-
 |[[trafficClass]]`@trafficClass`|`Number (int)`|-
 |[[trustAll]]`@trustAll`|`Boolean`|-
 |[[trustStoreOptions]]`@trustStoreOptions`|`link:dataobjects.html#JksOptions[JksOptions]`|-
@@ -161,6 +162,7 @@ Sets the maximum frame size for connections.
 |[[tcpKeepAlive]]`@tcpKeepAlive`|`Boolean`|-
 |[[tcpNoDelay]]`@tcpNoDelay`|`Boolean`|-
 |[[tcpQuickAck]]`@tcpQuickAck`|`Boolean`|-
+|[[tcpUserTimeout]]`@tcpUserTimeout`|`Number (int)`|-
 |[[trafficClass]]`@trafficClass`|`Number (int)`|-
 |[[trustStoreOptions]]`@trustStoreOptions`|`link:dataobjects.html#JksOptions[JksOptions]`|-
 |[[useAlpn]]`@useAlpn`|`Boolean`|-
