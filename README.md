@@ -1,6 +1,7 @@
 # Vert.x Proton
 
-[![Build Status](https://github.com/vert-x3/vertx-proton/workflows/CI/badge.svg?branch=master)](https://github.com/vert-x3/vertx-proton/actions?query=workflow%3ACI)
+[![Build Status (5.x)](https://github.com/vert-x3/vertx-proton/actions/workflows/ci-5.x.yml/badge.svg)](https://github.com/vert-x3/vertx-proton/actions/workflows/ci-5.x.yml)
+[![Build Status (4.x)](https://github.com/vert-x3/vertx-proton/actions/workflows/ci-4.x.yml/badge.svg)](https://github.com/vert-x3/vertx-proton/actions/workflows/ci-4.x.yml)
 
 This component facilitates AMQP integrations for Vert.x by providing a thin wrapper around the
 [Apache Qpid](http://qpid.apache.org) Proton-J AMQP 1.0 protocol engine.
