@@ -71,7 +71,7 @@ public class ProtonClientImpl implements ProtonClient {
     String serverName = options.getSniServerName() != null ? options.getSniServerName() :
       (options.getVirtualHost() != null ? options.getVirtualHost() : null);
 
-    netClient.connect(port, host, serverName, res -> {
+    netClient.connect(port, host, serverName).onComplete(res -> {
       if (res.succeeded()) {
         String virtualHost = options.getVirtualHost() != null ? options.getVirtualHost() : host;
         ProtonConnectionImpl conn = new ProtonConnectionImpl(vertx, virtualHost, (ContextInternal) Vertx.currentContext());

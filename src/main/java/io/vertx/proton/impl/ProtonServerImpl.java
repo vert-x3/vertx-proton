@@ -86,13 +86,13 @@ public class ProtonServerImpl implements ProtonServer {
 
   @Override
   public ProtonServerImpl listen(int port, String host, Handler<AsyncResult<ProtonServer>> handler) {
-    server.listen(port, host, convertHandler(handler));
+    server.listen(port, host).onComplete(convertHandler(handler));
     return this;
   }
 
   @Override
   public ProtonServerImpl listen(Handler<AsyncResult<ProtonServer>> handler) {
-    server.listen(convertHandler(handler));
+    server.listen().onComplete(convertHandler(handler));
     return this;
   }
 
@@ -114,7 +114,7 @@ public class ProtonServerImpl implements ProtonServer {
 
   @Override
   public ProtonServerImpl listen(int i, Handler<AsyncResult<ProtonServer>> handler) {
-    server.listen(i, convertHandler(handler));
+    server.listen(i).onComplete(convertHandler(handler));
     return this;
   }
 
@@ -125,7 +125,7 @@ public class ProtonServerImpl implements ProtonServer {
 
   @Override
   public void close(Handler<AsyncResult<Void>> handler) {
-    server.close(handler);
+    server.close().onComplete(handler);
   }
 
   @Override
