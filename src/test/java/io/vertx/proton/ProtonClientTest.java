@@ -154,7 +154,7 @@ public class ProtonClientTest extends MockServerTestBase {
       });
     });
 
-    netServer.listen(listenResult -> {
+    netServer.listen().onComplete(listenResult -> {
       context.assertTrue(listenResult.succeeded());
 
       ProtonClient.create(vertx).connect("localhost", netServer.actualPort(), connResult -> {
