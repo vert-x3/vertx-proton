@@ -19,6 +19,7 @@ import io.netty.buffer.ByteBuf;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.buffer.impl.BufferInternal;
 import io.vertx.core.net.impl.NetSocketInternal;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -251,7 +252,7 @@ class ProtonTransport extends BaseHandler {
 
     // Lets push bytes from vert.x to proton engine.
     try {
-      ByteBuf data = buffer.getByteBuf();
+      ByteBuf data = ((BufferInternal)buffer).getByteBuf();
       do {
         ByteBuffer transportBuffer = transport.tail();
 
