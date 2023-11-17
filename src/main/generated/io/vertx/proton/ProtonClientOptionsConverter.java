@@ -20,6 +20,11 @@ public class ProtonClientOptionsConverter {
    static void fromJson(Iterable<java.util.Map.Entry<String, Object>> json, ProtonClientOptions obj) {
     for (java.util.Map.Entry<String, Object> member : json) {
       switch (member.getKey()) {
+        case "openSslEngineOptions":
+          if (member.getValue() instanceof JsonObject) {
+            obj.setOpenSslEngineOptions(new io.vertx.core.net.OpenSSLEngineOptions((io.vertx.core.json.JsonObject)member.getValue()));
+          }
+          break;
         case "enabledSaslMechanisms":
           if (member.getValue() instanceof JsonArray) {
             ((Iterable<Object>)member.getValue()).forEach( item -> {
@@ -57,6 +62,9 @@ public class ProtonClientOptionsConverter {
   }
 
    static void toJson(ProtonClientOptions obj, java.util.Map<String, Object> json) {
+    if (obj.getOpenSslEngineOptions() != null) {
+      json.put("openSslEngineOptions", obj.getOpenSslEngineOptions().toJson());
+    }
     if (obj.getEnabledSaslMechanisms() != null) {
       JsonArray array = new JsonArray();
       obj.getEnabledSaslMechanisms().forEach(item -> array.add(item));

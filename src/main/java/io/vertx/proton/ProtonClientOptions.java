@@ -309,12 +309,6 @@ public class ProtonClientOptions extends NetClientOptions {
   }
 
   @Override
-  public ProtonClientOptions setOpenSslEngineOptions(OpenSSLEngineOptions sslEngineOptions) {
-    super.setOpenSslEngineOptions(sslEngineOptions);
-    return this;
-  }
-
-  @Override
   public ProtonClientOptions setSslEngineOptions(SSLEngineOptions sslEngineOptions) {
     super.setSslEngineOptions(sslEngineOptions);
     return this;

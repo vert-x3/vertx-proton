@@ -246,12 +246,6 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
-  public ProtonServerOptions setOpenSslEngineOptions(OpenSSLEngineOptions sslEngineOptions) {
-    super.setOpenSslEngineOptions(sslEngineOptions);
-    return this;
-  }
-
-  @Override
   public ProtonServerOptions setSslEngineOptions(SSLEngineOptions sslEngineOptions) {
     super.setSslEngineOptions(sslEngineOptions);
     return this;
