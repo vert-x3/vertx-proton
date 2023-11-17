@@ -185,9 +185,9 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     serverOptions.setSsl(true);
     serverOptions.setClientAuth(supplyClientCert ? ClientAuth.REQUIRED : ClientAuth.NONE);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(SERVER_KEYSTORE).setPassword(STORE_PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
     PfxOptions pfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(STORE_PASSWORD);
-    serverOptions.setPfxTrustOptions(pfxOptions);
+    serverOptions.setTrustOptions(pfxOptions);
 
     TestExternalAuthenticator authenticator = new TestExternalAuthenticator("EXTERNAL", "PLAIN", "ANONYMOUS");
 
@@ -196,11 +196,11 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     // Try to connect the client
     ProtonClientOptions clientOptions = new ProtonClientOptions();
     clientOptions.setSsl(true);
-    clientOptions.setPfxTrustOptions(pfxOptions);
+    clientOptions.setTrustOptions(pfxOptions);
 
     if (supplyClientCert) {
       PfxOptions clientKeyPfxOptions = new PfxOptions().setPath(KEYSTORE_CLIENT).setPassword(STORE_PASSWORD);
-      clientOptions.setPfxKeyCertOptions(clientKeyPfxOptions);
+      clientOptions.setKeyCertOptions(clientKeyPfxOptions);
     }
 
     ProtonClient client = ProtonClient.create(vertx);

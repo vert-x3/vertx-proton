@@ -28,6 +28,16 @@ public class ProtonClientOptionsConverter {
             });
           }
           break;
+        case "virtualHost":
+          if (member.getValue() instanceof String) {
+            obj.setVirtualHost((String)member.getValue());
+          }
+          break;
+        case "sniServerName":
+          if (member.getValue() instanceof String) {
+            obj.setSniServerName((String)member.getValue());
+          }
+          break;
         case "heartbeat":
           if (member.getValue() instanceof Number) {
             obj.setHeartbeat(((Number)member.getValue()).intValue());
@@ -36,16 +46,6 @@ public class ProtonClientOptionsConverter {
         case "maxFrameSize":
           if (member.getValue() instanceof Number) {
             obj.setMaxFrameSize(((Number)member.getValue()).intValue());
-          }
-          break;
-        case "sniServerName":
-          if (member.getValue() instanceof String) {
-            obj.setSniServerName((String)member.getValue());
-          }
-          break;
-        case "virtualHost":
-          if (member.getValue() instanceof String) {
-            obj.setVirtualHost((String)member.getValue());
           }
           break;
       }
@@ -62,13 +62,13 @@ public class ProtonClientOptionsConverter {
       obj.getEnabledSaslMechanisms().forEach(item -> array.add(item));
       json.put("enabledSaslMechanisms", array);
     }
-    json.put("heartbeat", obj.getHeartbeat());
-    json.put("maxFrameSize", obj.getMaxFrameSize());
-    if (obj.getSniServerName() != null) {
-      json.put("sniServerName", obj.getSniServerName());
-    }
     if (obj.getVirtualHost() != null) {
       json.put("virtualHost", obj.getVirtualHost());
     }
+    if (obj.getSniServerName() != null) {
+      json.put("sniServerName", obj.getSniServerName());
+    }
+    json.put("heartbeat", obj.getHeartbeat());
+    json.put("maxFrameSize", obj.getMaxFrameSize());
   }
 }

@@ -139,42 +139,6 @@ public class ProtonServerOptions extends NetServerOptions {
   }
 
   @Override
-  public ProtonServerOptions setKeyStoreOptions(JksOptions options) {
-    super.setKeyStoreOptions(options);
-    return this;
-  }
-
-  @Override
-  public ProtonServerOptions setPfxKeyCertOptions(PfxOptions options) {
-    super.setPfxKeyCertOptions(options);
-    return this;
-  }
-
-  @Override
-  public ProtonServerOptions setPemKeyCertOptions(PemKeyCertOptions options) {
-    super.setPemKeyCertOptions(options);
-    return this;
-  }
-
-  @Override
-  public ProtonServerOptions setTrustStoreOptions(JksOptions options) {
-    super.setTrustStoreOptions(options);
-    return this;
-  }
-
-  @Override
-  public ProtonServerOptions setPfxTrustOptions(PfxOptions options) {
-    super.setPfxTrustOptions(options);
-    return this;
-  }
-
-  @Override
-  public ProtonServerOptions setPemTrustOptions(PemTrustOptions options) {
-    super.setPemTrustOptions(options);
-    return this;
-  }
-
-  @Override
   public ProtonServerOptions addEnabledCipherSuite(String suite) {
     super.addEnabledCipherSuite(suite);
     return this;
@@ -272,12 +236,6 @@ public class ProtonServerOptions extends NetServerOptions {
   @Override
   public ProtonServerOptions setEnabledSecureTransportProtocols(Set<String> enabledSecureTransportProtocols) {
     super.setEnabledSecureTransportProtocols(enabledSecureTransportProtocols);
-    return this;
-  }
-
-  @Override
-  public ProtonServerOptions setJdkSslEngineOptions(JdkSSLEngineOptions sslEngineOptions) {
-    super.setJdkSslEngineOptions(sslEngineOptions);
     return this;
   }
 

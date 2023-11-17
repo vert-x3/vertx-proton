@@ -89,7 +89,7 @@ public class ProtonClientSslTest {
     ProtonServerOptions serverOptions = new ProtonServerOptions();
     serverOptions.setSsl(true);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
@@ -97,7 +97,7 @@ public class ProtonClientSslTest {
     ProtonClientOptions clientOptions = new ProtonClientOptions();
     clientOptions.setSsl(true);
     PfxOptions clientPfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(PASSWORD);
-    clientOptions.setPfxTrustOptions(clientPfxOptions);
+    clientOptions.setTrustOptions(clientPfxOptions);
 
     ProtonClient client = ProtonClient.create(vertx);
     client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
@@ -129,7 +129,7 @@ public class ProtonClientSslTest {
     ProtonServerOptions serverOptions = new ProtonServerOptions();
     serverOptions.setSsl(true);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
@@ -201,7 +201,7 @@ public class ProtonClientSslTest {
     ProtonClientOptions clientOptions = new ProtonClientOptions();
     clientOptions.setSsl(true);
     PfxOptions pfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(PASSWORD);
-    clientOptions.setPfxTrustOptions(pfxOptions);
+    clientOptions.setTrustOptions(pfxOptions);
 
     ProtonClient client = ProtonClient.create(vertx);
     client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
@@ -221,7 +221,7 @@ public class ProtonClientSslTest {
     ProtonServerOptions serverOptions = new ProtonServerOptions();
     serverOptions.setSsl(true);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
@@ -229,7 +229,7 @@ public class ProtonClientSslTest {
     ProtonClientOptions clientOptions = new ProtonClientOptions();
     clientOptions.setSsl(true);
     PfxOptions pfxOptions = new PfxOptions().setPath(OTHER_CA_TRUSTSTORE).setPassword(PASSWORD);
-    clientOptions.setPfxTrustOptions(pfxOptions);
+    clientOptions.setTrustOptions(pfxOptions);
 
     ProtonClient client = ProtonClient.create(vertx);
     client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
@@ -249,7 +249,7 @@ public class ProtonClientSslTest {
     ProtonServerOptions serverOptions = new ProtonServerOptions();
     serverOptions.setSsl(true);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
@@ -287,21 +287,21 @@ public class ProtonClientSslTest {
     serverOptions.setSsl(true);
     serverOptions.setClientAuth(ClientAuth.REQUIRED);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     PfxOptions pfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxTrustOptions(pfxOptions);
+    serverOptions.setTrustOptions(pfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
     // Try to connect the client
     ProtonClientOptions clientOptions = new ProtonClientOptions();
     clientOptions.setSsl(true);
-    clientOptions.setPfxTrustOptions(pfxOptions);
+    clientOptions.setTrustOptions(pfxOptions);
 
     if (supplyClientCert) {
       PfxOptions clientKeyPfxOptions = new PfxOptions().setPath(KEYSTORE_CLIENT).setPassword(PASSWORD);
-      clientOptions.setPfxKeyCertOptions(clientKeyPfxOptions);
+      clientOptions.setKeyCertOptions(clientKeyPfxOptions);
     }
 
     ProtonClient client = ProtonClient.create(vertx);
@@ -337,7 +337,7 @@ public class ProtonClientSslTest {
     ProtonServerOptions serverOptions = new ProtonServerOptions();
     serverOptions.setSsl(true);
     PfxOptions serverPfxOptions = new PfxOptions().setPath(WRONG_HOST_KEYSTORE).setPassword(PASSWORD);
-    serverOptions.setPfxKeyCertOptions(serverPfxOptions);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
@@ -345,7 +345,7 @@ public class ProtonClientSslTest {
     ProtonClientOptions clientOptions = new ProtonClientOptions();
     clientOptions.setSsl(true);
     PfxOptions clientPfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(PASSWORD);
-    clientOptions.setPfxTrustOptions(clientPfxOptions);
+    clientOptions.setTrustOptions(clientPfxOptions);
 
     // Verify/update the hostname verification settings
     context.assertEquals(VERIFY_HTTPS, clientOptions.getHostnameVerificationAlgorithm(),
