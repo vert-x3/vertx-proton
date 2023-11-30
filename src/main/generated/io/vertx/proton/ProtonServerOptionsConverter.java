@@ -20,11 +20,6 @@ public class ProtonServerOptionsConverter {
    static void fromJson(Iterable<java.util.Map.Entry<String, Object>> json, ProtonServerOptions obj) {
     for (java.util.Map.Entry<String, Object> member : json) {
       switch (member.getKey()) {
-        case "openSslEngineOptions":
-          if (member.getValue() instanceof JsonObject) {
-            obj.setOpenSslEngineOptions(new io.vertx.core.net.OpenSSLEngineOptions((io.vertx.core.json.JsonObject)member.getValue()));
-          }
-          break;
         case "heartbeat":
           if (member.getValue() instanceof Number) {
             obj.setHeartbeat(((Number)member.getValue()).intValue());
@@ -44,9 +39,6 @@ public class ProtonServerOptionsConverter {
   }
 
    static void toJson(ProtonServerOptions obj, java.util.Map<String, Object> json) {
-    if (obj.getOpenSslEngineOptions() != null) {
-      json.put("openSslEngineOptions", obj.getOpenSslEngineOptions().toJson());
-    }
     json.put("heartbeat", obj.getHeartbeat());
     json.put("maxFrameSize", obj.getMaxFrameSize());
   }

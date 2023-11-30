@@ -16,12 +16,14 @@
 package io.vertx.proton;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.codegen.json.annotations.JsonGen;
 import io.vertx.core.json.JsonObject;
 
 /**
  * Options for configuring transport layer
  */
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject
+@JsonGen(publicConverter = false)
 public class ProtonTransportOptions {
 
   private int heartbeat;
