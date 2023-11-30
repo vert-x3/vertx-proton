@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.codegen.annotations.JsonGen;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.json.JsonObject;
@@ -36,7 +37,8 @@ import io.vertx.core.net.TrustOptions;
 /**
  * Options for configuring {@link io.vertx.proton.ProtonServer} creation.
  */
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject
+@JsonGen(publicConverter = false)
 public class ProtonServerOptions extends NetServerOptions {
 
   private int heartbeat;

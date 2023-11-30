@@ -16,12 +16,14 @@
 package io.vertx.proton;
 
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.codegen.annotations.JsonGen;
 import io.vertx.core.json.JsonObject;
 
 /**
  * Options for configuring link attributes.
  */
-@DataObject(generateConverter = true, publicConverter = false)
+@DataObject
+@JsonGen(publicConverter = false)
 public class ProtonLinkOptions {
     private String linkName;
     private boolean dynamic;
