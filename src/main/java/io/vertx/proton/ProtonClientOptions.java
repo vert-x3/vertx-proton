@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.vertx.codegen.annotations.DataObject;
 
-import io.vertx.codegen.annotations.JsonGen;
+import io.vertx.codegen.json.annotations.JsonGen;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.JdkSSLEngineOptions;

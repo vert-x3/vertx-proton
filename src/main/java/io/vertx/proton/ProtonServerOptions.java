@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.vertx.codegen.annotations.DataObject;
-import io.vertx.codegen.annotations.JsonGen;
+import io.vertx.codegen.json.annotations.JsonGen;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.ClientAuth;
 import io.vertx.core.json.JsonObject;
