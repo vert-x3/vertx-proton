@@ -21,7 +21,7 @@ import org.apache.qpid.proton.message.Message;
 
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.ContextInternal;
+import io.vertx.core.internal.ContextInternal;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.streams.Delivery;
 

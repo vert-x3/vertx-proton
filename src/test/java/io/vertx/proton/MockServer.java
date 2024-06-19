@@ -29,8 +29,8 @@ import org.apache.qpid.proton.message.Message;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>

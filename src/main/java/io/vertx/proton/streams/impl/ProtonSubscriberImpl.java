@@ -24,8 +24,8 @@ import org.reactivestreams.Subscription;
 
 import io.vertx.core.Context;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonSender;

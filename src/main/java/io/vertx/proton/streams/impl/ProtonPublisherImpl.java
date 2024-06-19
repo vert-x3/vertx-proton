@@ -28,9 +28,9 @@ import org.apache.qpid.proton.amqp.transport.Target;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
-import io.vertx.core.impl.ContextInternal;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.internal.ContextInternal;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
 import io.vertx.proton.impl.ProtonConnectionImpl;

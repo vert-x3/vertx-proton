@@ -44,8 +44,8 @@ import org.reactivestreams.Subscription;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
@@ -54,9 +54,6 @@ import io.vertx.proton.MockServerTestBase;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
-import io.vertx.proton.streams.Delivery;
-import io.vertx.proton.streams.ProtonPublisher;
-import io.vertx.proton.streams.ProtonStreams;
 
 @RunWith(VertxUnitRunner.class)
 public class ProtonPublisherIntTest extends MockServerTestBase {

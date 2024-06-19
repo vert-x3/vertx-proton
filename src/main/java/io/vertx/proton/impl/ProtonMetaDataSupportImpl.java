@@ -22,8 +22,8 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.qpid.proton.amqp.Symbol;
 
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 
 public class ProtonMetaDataSupportImpl {
   private static final Logger LOG = LoggerFactory.getLogger(ProtonMetaDataSupportImpl.class);

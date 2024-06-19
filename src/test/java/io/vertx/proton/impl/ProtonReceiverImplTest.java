@@ -53,8 +53,8 @@ import org.mockito.Mockito;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.ContextInternal;
-import io.vertx.core.net.impl.NetSocketInternal;
+import io.vertx.core.internal.ContextInternal;
+import io.vertx.core.internal.net.NetSocketInternal;
 import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonHelper;
 import io.vertx.proton.ProtonMessageHandler;

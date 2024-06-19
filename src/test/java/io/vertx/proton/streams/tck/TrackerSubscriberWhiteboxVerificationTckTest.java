@@ -36,8 +36,8 @@ import org.testng.annotations.BeforeMethod;
 
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.impl.logging.Logger;
-import io.vertx.core.impl.logging.LoggerFactory;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
 import io.vertx.proton.MockServer;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
