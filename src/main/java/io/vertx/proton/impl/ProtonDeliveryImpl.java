@@ -31,7 +31,7 @@ public class ProtonDeliveryImpl implements ProtonDelivery {
   private Handler<ProtonDelivery> handler;
   private boolean autoSettle;
 
-  ProtonDeliveryImpl(Delivery delivery) {
+  public ProtonDeliveryImpl(Delivery delivery) {
     this.delivery = delivery;
     delivery.setContext(this);
   }

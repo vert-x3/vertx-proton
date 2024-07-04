@@ -94,7 +94,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
   private boolean anonymousRelaySupported;
   private ProtonSession defaultSession;
 
-  ProtonConnectionImpl(Vertx vertx, String hostname, ContextInternal connCtx) {
+  public ProtonConnectionImpl(Vertx vertx, String hostname, ContextInternal connCtx) {
     this.vertx = vertx;
     this.connCtx = connCtx;
     this.connection.setContext(this);
@@ -389,7 +389,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
   }
 
-  void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator, ProtonTransportOptions transportOptions) {
+  public void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator, ProtonTransportOptions transportOptions) {
     transport = new ProtonTransport(connection, vertx, client, socket, authenticator, transportOptions);
   }
 

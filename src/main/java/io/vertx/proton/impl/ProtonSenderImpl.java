@@ -38,7 +38,7 @@ public class ProtonSenderImpl extends ProtonLinkImpl<ProtonSender> implements Pr
   private int tag = 1;
   private boolean autoDrained = true;
 
-  ProtonSenderImpl(Sender sender) {
+  public ProtonSenderImpl(Sender sender) {
     super(sender);
   }
 

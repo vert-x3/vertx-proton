@@ -56,7 +56,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   private Handler<ProtonReceiver> maxMessageSizeExceededHandler;
   private boolean maxMessageSizeExceeded;
 
-  ProtonReceiverImpl(Receiver receiver) {
+  public ProtonReceiverImpl(Receiver receiver) {
     super(receiver);
     session = receiver.getSession();
     sessionIncomingCapacity = session.getIncomingCapacity();
@@ -184,7 +184,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   private boolean autoAccept = true;
   private CompositeReadableBuffer splitContent;
 
-  void onDelivery() {
+  public void onDelivery() {
     if (this.handler == null) {
       return;
     }
