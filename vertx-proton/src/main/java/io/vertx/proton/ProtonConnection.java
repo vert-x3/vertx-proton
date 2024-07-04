@@ -15,6 +15,7 @@
 */
 package io.vertx.proton;
 
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
@@ -22,6 +23,7 @@ import java.util.Map;
 
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.transport.ErrorCondition;
+import org.apache.qpid.proton.engine.EndpointState;
 import org.apache.qpid.proton.engine.Record;
 
 /**
@@ -323,5 +325,11 @@ public interface ProtonConnection {
    *          the handler
    */
   ProtonConnection disconnectHandler(Handler<ProtonConnection> disconnectHandler);
+
+  @GenIgnore(GenIgnore.PERMITTED_TYPE)
+  EndpointState getRemoteState();
+
+  @GenIgnore(GenIgnore.PERMITTED_TYPE)
+  EndpointState getLocalState();
 
 }

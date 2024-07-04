@@ -155,4 +155,6 @@ public interface ProtonServer {
    *          the completion handler
    */
   void close(Handler<AsyncResult<Void>> handler);
+
+  void setAdvertiseAnonymousRelayCapability(boolean advertiseAnonymousRelayCapability);
 }

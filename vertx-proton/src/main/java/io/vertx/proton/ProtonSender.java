@@ -139,4 +139,7 @@ public interface ProtonSender extends ProtonLink<ProtonSender> {
    * @see #setAutoDrained(boolean)
    */
   int drained();
+
+  int getRemoteCredit();
+
 }

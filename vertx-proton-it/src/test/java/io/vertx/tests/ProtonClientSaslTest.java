@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import javax.net.ssl.SSLSession;
 import javax.security.sasl.AuthenticationException;
 
+import io.vertx.core.Promise;
 import io.vertx.proton.*;
 import org.apache.qpid.proton.engine.Sasl;
 import org.apache.qpid.proton.engine.Transport;
@@ -238,12 +239,15 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     });
 
     server.saslAuthenticatorFactory(() -> authenticator);
-
-    FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
-    server.listen(0, handler);
-    handler.get();
-
-    return server;
+    Promise<ProtonServer> promise = Promise.promise();
+    server.listen(0, ar -> {
+      if (ar.succeeded()) {
+        promise.complete(ar.result());
+      } else {
+        promise.fail(ar.cause());
+      }
+    });
+    return promise.future().await();
   }
 
   private static final class TestExternalAuthenticator implements ProtonSaslAuthenticator {

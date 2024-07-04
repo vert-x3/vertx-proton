@@ -22,10 +22,11 @@
     <version>4</version>
   </parent>
 
-  <artifactId>vertx-proton</artifactId>
+  <artifactId>vertx-proton-aggregator</artifactId>
   <version>5.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
-  <name>Vert.x Proton</name>
+  <name>Vert.x Proton Aggregator</name>
 
   <licenses>
     <license>
@@ -36,7 +37,6 @@
   </licenses>
 
   <properties>
-    <jar.manifest>${project.basedir}/src/main/resources/META-INF/MANIFEST.MF</jar.manifest>
     <!-- Dependency versions -->
     <proton.version>0.34.1</proton.version>
 
@@ -68,25 +68,12 @@
   </dependencyManagement>
 
   <dependencies>
+
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
+      <artifactId>vertx-unit</artifactId>
+      <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.qpid</groupId>
-      <artifactId>proton-j</artifactId>
-      <version>${proton.version}</version>
-    </dependency>
-
-    <!-- Optionally provided if required -->
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams</artifactId>
-      <version>1.0.3</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- test -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -94,167 +81,11 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>${mockito-version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-broker</artifactId>
-      <version>${activemq.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-amqp</artifactId>
-      <version>${activemq.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-jaas</artifactId>
-      <version>${activemq.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.reactivestreams</groupId>
-      <artifactId>reactive-streams-tck</artifactId>
-      <version>1.0.3</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.reactivex.rxjava2</groupId>
-      <artifactId>rxjava</artifactId>
-      <version>2.1.0</version>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- generators -->
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-codegen-api</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-codegen-json</artifactId>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-docgen-api</artifactId>
-      <optional>true</optional>
-    </dependency>
-
   </dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>package-docs</id>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <redirectTestOutputToFile>${maven.test.redirectTestOutputToFile}</redirectTestOutputToFile>
-          <failIfNoTests>false</failIfNoTests>
-          <environmentVariables>
-            <PN_TRACE_FRM>${proton.trace.frames}</PN_TRACE_FRM>
-          </environmentVariables>
-        </configuration>
-        <executions>
-          <execution>
-            <id>default-test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <exclude>**/streams/tck/*</exclude>
-              </excludes>
-              <testNGArtifactName>none:none</testNGArtifactName>
-            </configuration>
-          </execution>
-          <execution>
-            <id>streams-tck</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <configuration>
-              <includes>
-                <include>**/streams/tck/*</include>
-              </includes>
-              <junitArtifactName>none:none</junitArtifactName>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>default-compile</id>
-              <configuration>
-                <annotationProcessorPaths>
-                  <annotationProcessorPath>
-                    <groupId>io.vertx</groupId>
-                    <artifactId>vertx-codegen</artifactId>
-                    <classifier>processor</classifier>
-                  </annotationProcessorPath>
-                  <annotationProcessorPath>
-                    <groupId>io.vertx</groupId>
-                    <artifactId>vertx-docgen-processor</artifactId>
-                    <classifier>processor</classifier>
-                  </annotationProcessorPath>
-                </annotationProcessorPaths>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-
-    <resources>
-      <resource>
-        <directory>${project.basedir}/src/main/resources</directory>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-      <resource>
-        <directory>${project.basedir}/src/main/filtered-resources</directory>
-        <filtering>true</filtering>
-        <includes>
-          <include>**/*</include>
-        </includes>
-      </resource>
-    </resources>
-  </build>
+  <modules>
+    <module>vertx-proton</module>
+    <module>vertx-proton-it</module>
+  </modules>
 
 </project>
