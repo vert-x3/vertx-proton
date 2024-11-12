@@ -15,6 +15,34 @@
 */
 package io.vertx.tests;
 
+import io.netty.handler.ssl.ApplicationProtocolConfig;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
+import io.netty.handler.ssl.JdkSslContext;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.http.ClientAuth;
+import io.vertx.core.internal.logging.Logger;
+import io.vertx.core.internal.logging.LoggerFactory;
+import io.vertx.core.net.JdkSSLEngineOptions;
+import io.vertx.core.net.PfxOptions;
+import io.vertx.core.spi.tls.SslContextFactory;
+import io.vertx.ext.unit.Async;
+import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.junit.VertxUnitRunner;
+import io.vertx.proton.ProtonClient;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonReceiver;
+import io.vertx.proton.ProtonServer;
+import io.vertx.proton.ProtonServerOptions;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,31 +50,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyStore;
 import java.util.concurrent.ExecutionException;
-
-import io.netty.handler.ssl.ApplicationProtocolConfig;
-import io.netty.handler.ssl.IdentityCipherSuiteFilter;
-import io.netty.handler.ssl.JdkSslContext;
-import io.vertx.core.net.JdkSSLEngineOptions;
-import io.vertx.core.spi.tls.SslContextFactory;
-import io.vertx.proton.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.core.http.ClientAuth;
-import io.vertx.core.internal.logging.Logger;
-import io.vertx.core.internal.logging.LoggerFactory;
-import io.vertx.core.net.PfxOptions;
-import io.vertx.ext.unit.Async;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.unit.junit.VertxUnitRunner;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
 
 @RunWith(VertxUnitRunner.class)
 public class ProtonClientSslTest {
@@ -57,6 +60,8 @@ public class ProtonClientSslTest {
   private static final String KEYSTORE = "src/test/resources/broker-pkcs12.keystore";
   private static final String WRONG_HOST_KEYSTORE = "src/test/resources/broker-wrong-host-pkcs12.keystore";
   private static final String TRUSTSTORE = "src/test/resources/client-pkcs12.truststore";
+  private static final String KEYSTORE_NEW = "src/test/resources/broker-pkcs12-new.keystore";
+  private static final String TRUSTSTORE_NEW = "src/test/resources/client-pkcs12-new.truststore";
   private static final String KEYSTORE_CLIENT = "src/test/resources/client-pkcs12.keystore";
   private static final String OTHER_CA_TRUSTSTORE = "src/test/resources/other-ca-pkcs12.truststore";
   private static final String VERIFY_HTTPS = "HTTPS";
@@ -379,6 +384,98 @@ public class ProtonClientSslTest {
     });
 
     async.awaitSuccess();
+  }
+
+  /**
+   * this test is here to cover update server SSL Options. Historical connections are not effected.
+   * New connections are successfully connected using the new trustStore.
+   */
+  @Test(timeout = 20000)
+  public void testUpdateSSLOptionsSuccess(TestContext context) throws Exception {
+    doTestUpdateSSLOptions(context, true);
+  }
+
+  @Test(timeout = 20000)
+  public void testUpdateSSLOptionsNewConnectionWithOldTrustStoreFail(TestContext context) throws Exception {
+    doTestUpdateSSLOptions(context, false);
+  }
+
+  private void doTestUpdateSSLOptions(TestContext context, boolean isClientUsingNewTrustStore) throws Exception {
+    Async async = context.async();
+
+    // Create a server that accept a connection and expects a client connection+session+receiver
+    ProtonServerOptions serverOptions = createServerOptionsByKeyStorePath(KEYSTORE);
+
+    protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
+
+    // Connect the client and open a receiver to verify the connection works
+    ProtonClientOptions clientOptions = createClientOptionsByTrustStorePath(TRUSTSTORE);
+
+    ProtonClient client = ProtonClient.create(vertx);
+    client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
+      // Expect connect to succeed
+      context.assertTrue(res.succeeded());
+      ProtonConnection connection = res.result();
+      // Upexpect the connection disconnect when update server ssl options
+      connection.disconnectHandler(protonConnection -> context.fail("connection close")).open();
+
+      ProtonReceiver receiver = connection.createReceiver("some-address");
+
+      receiver.openHandler(recvResult -> {
+        context.assertTrue(recvResult.succeeded());
+        LOG.trace("Client reciever open");
+        protonServer.updateSSLOptions(createServerOptionsByKeyStorePath(KEYSTORE_NEW), false, sslUpdateRes -> {
+          context.assertTrue(sslUpdateRes.succeeded());
+          if (isClientUsingNewTrustStore) {
+            // the connection is successfully connected using new truestStore
+            createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_NEW, true);
+          } else {
+            // the connection is fails to connected using old trustStore
+            createNewClientByTrustStorePath(client, async, context, TRUSTSTORE, false);
+          }
+        });
+      }).closeHandler(protonReceiver -> context.fail("receiver close")).open();
+    });
+
+    async.awaitSuccess();
+  }
+
+  private void createNewClientByTrustStorePath(ProtonClient client, Async async, TestContext context, String trustStorePath, boolean expectSuccess) {
+    client.connect(createClientOptionsByTrustStorePath(trustStorePath), "localhost", protonServer.actualPort(), res -> {
+      // Expect connect to succeed
+      if (!expectSuccess) {
+        context.assertFalse(res.succeeded());
+        async.complete();
+        return;
+      }
+      context.assertTrue(res.succeeded());
+      ProtonConnection connection = res.result();
+      connection.open();
+
+      ProtonReceiver receiver = connection.createReceiver("some-address");
+
+      receiver.openHandler(recvResult -> {
+        context.assertTrue(recvResult.succeeded());
+        LOG.trace("Client reciever open");
+        async.complete();
+      }).open();
+    });
+  }
+
+  private ProtonClientOptions createClientOptionsByTrustStorePath(String trustStorePath) {
+    ProtonClientOptions clientOptions = new ProtonClientOptions();
+    clientOptions.setSsl(true);
+    PfxOptions clientPfxOptions = new PfxOptions().setPath(trustStorePath).setPassword(PASSWORD);
+    clientOptions.setTrustOptions(clientPfxOptions);
+    return clientOptions;
+  }
+
+  private ProtonServerOptions createServerOptionsByKeyStorePath(String keyStorePath) {
+    ProtonServerOptions serverOptions = new ProtonServerOptions();
+    serverOptions.setSsl(true);
+    PfxOptions serverPfxOptions = new PfxOptions().setPath(keyStorePath).setPassword(PASSWORD);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
+    return serverOptions;
   }
 
   private ProtonServer createServer(ProtonServerOptions serverOptions,

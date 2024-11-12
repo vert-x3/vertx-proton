@@ -144,6 +144,15 @@ public interface ProtonServer {
   ProtonServer listen();
 
   /**
+   * Update the server with new SSL options, the update happens if the options object is valid and different from the existing options object.
+   *
+   * @param options the options to use
+   * @param force force the update when options are equals
+   * @param handler the result handler
+   */
+  void updateSSLOptions(ProtonServerOptions options, boolean force, Handler<AsyncResult<ProtonServer>> handler);
+
+  /**
    * Closes the server and any currently open connections. May not complete until after method has returned.
    */
   void close();

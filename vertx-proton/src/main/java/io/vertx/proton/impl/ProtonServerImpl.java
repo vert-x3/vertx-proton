@@ -119,6 +119,18 @@ public class ProtonServerImpl implements ProtonServer {
   }
 
   @Override
+  public void updateSSLOptions(ProtonServerOptions options, boolean force, Handler<AsyncResult<ProtonServer>> handler) {
+    server.updateSSLOptions(options.getSslOptions(), force).onComplete(result -> {
+        if (result.succeeded()) {
+          handler.handle(Future.succeededFuture(ProtonServerImpl.this));
+        } else {
+          handler.handle(Future.failedFuture(result.cause()));
+        }
+      }
+    );
+  }
+
+  @Override
   public void close() {
     server.close();
   }
