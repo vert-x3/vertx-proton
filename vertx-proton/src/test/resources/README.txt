@@ -70,3 +70,20 @@ keytool -storetype pkcs12 -keystore ca-pkcs12.keystore -storepass password -alia
 
 keytool -storetype pkcs12 -keystore broker-wrong-host-pkcs12.keystore -storepass password -keypass password -importcert -alias ca -file ca.crt -noprompt
 keytool -storetype pkcs12 -keystore broker-wrong-host-pkcs12.keystore -storepass password -keypass password -importcert -alias broker-wrong-host -file broker-wrong-host.crt
+
+# Create updated key pair for the broker, and sign it with the CA:
+# --------------------------------------------------------------------------------------
+keytool -storetype pkcs12 -keystore ca-updated-pkcs12.keystore -storepass password -keypass password -alias ca-updated -genkey -keyalg "RSA" -keysize 2048  -dname "O=My Trusted Inc.,CN=my-vertx-ca.org" -validity 9999 -ext bc:c=ca:true
+keytool -storetype pkcs12 -keystore ca-updated-pkcs12.keystore -storepass password -alias ca-updated -exportcert -rfc > ca-updated.crt
+
+keytool -storetype pkcs12 -keystore broker-updated-pkcs12.keystore -storepass password -keypass password -alias broker-updated -genkey -keyalg "RSA" -keysize 2048  -dname "O=Server,CN=localhost" -validity 9999 -ext bc=ca:false -ext eku=sA
+
+keytool -storetype pkcs12 -keystore broker-updated-pkcs12.keystore -storepass password -alias broker-updated -certreq -file broker-updated.csr
+keytool -storetype pkcs12 -keystore ca-updated-pkcs12.keystore -storepass password -alias ca-updated -gencert -rfc -infile broker-updated.csr -outfile broker-updated.crt -validity 9999 -ext bc=ca:false -ext eku=sA
+
+keytool -storetype pkcs12 -keystore broker-updated-pkcs12.keystore -storepass password -keypass password -importcert -alias ca-updated -file ca-updated.crt -noprompt
+keytool -storetype pkcs12 -keystore broker-updated-pkcs12.keystore -storepass password -keypass password -importcert -alias broker-updated -file broker-updated.crt
+
+# Create updated trust store for the client, import the CA cert:
+# -------------------------------------------------------
+keytool -storetype pkcs12 -keystore client-updated-pkcs12.truststore -storepass password -keypass password -importcert -alias ca-updated -file ca-updated.crt -noprompt
