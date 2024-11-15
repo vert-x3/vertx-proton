@@ -412,54 +412,48 @@ public class ProtonClientSslTest {
     ProtonClientOptions clientOptions = createClientOptionsByTrustStorePath(TRUSTSTORE);
 
     ProtonClient client = ProtonClient.create(vertx);
-    client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
-      // Expect connect to succeed
-      context.assertTrue(res.succeeded());
-      ProtonConnection connection = res.result();
+    client.connect(clientOptions, "localhost", protonServer.actualPort(), context.asyncAssertSuccess(connection -> {
       // Upexpect the connection disconnect when update server ssl options
       connection.disconnectHandler(protonConnection -> context.fail("connection close")).open();
 
       ProtonReceiver receiver = connection.createReceiver("some-address");
 
-      receiver.openHandler(recvResult -> {
-        context.assertTrue(recvResult.succeeded());
+      receiver.openHandler(context.asyncAssertSuccess(recv -> {
         LOG.trace("Client reciever open");
-        protonServer.updateSSLOptions(createServerOptionsByKeyStorePath(KEYSTORE_NEW), false, sslUpdateRes -> {
-          context.assertTrue(sslUpdateRes.succeeded());
-          if (isClientUsingNewTrustStore) {
-            // the connection is successfully connected using new truestStore
-            createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_NEW, true);
-          } else {
-            // the connection is fails to connected using old trustStore
-            createNewClientByTrustStorePath(client, async, context, TRUSTSTORE, false);
-          }
-        });
-      }).closeHandler(protonReceiver -> context.fail("receiver close")).open();
-    });
+        protonServer.updateSSLOptions(createServerOptionsByKeyStorePath(KEYSTORE_NEW), false,
+          context.asyncAssertSuccess(server -> {
+            if (isClientUsingNewTrustStore) {
+              // the connection is successfully connected using new truestStore
+              createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_NEW, true);
+            } else {
+              // the connection is fails to connected using old trustStore
+              createNewClientByTrustStorePath(client, async, context, TRUSTSTORE, false);
+            }
+          }));
+      })).closeHandler(protonReceiver -> context.fail("receiver close")).open();
+    }));
 
     async.awaitSuccess();
   }
 
   private void createNewClientByTrustStorePath(ProtonClient client, Async async, TestContext context, String trustStorePath, boolean expectSuccess) {
-    client.connect(createClientOptionsByTrustStorePath(trustStorePath), "localhost", protonServer.actualPort(), res -> {
-      // Expect connect to succeed
-      if (!expectSuccess) {
-        context.assertFalse(res.succeeded());
-        async.complete();
-        return;
-      }
-      context.assertTrue(res.succeeded());
-      ProtonConnection connection = res.result();
-      connection.open();
+    if (!expectSuccess) {
+      client.connect(createClientOptionsByTrustStorePath(trustStorePath), "localhost", protonServer.actualPort(),
+        context.asyncAssertFailure(connection -> async.complete()));
+      return;
+    }
 
-      ProtonReceiver receiver = connection.createReceiver("some-address");
+    client.connect(createClientOptionsByTrustStorePath(trustStorePath), "localhost", protonServer.actualPort(),
+      context.asyncAssertSuccess(connection -> {
+        connection.open();
 
-      receiver.openHandler(recvResult -> {
-        context.assertTrue(recvResult.succeeded());
-        LOG.trace("Client reciever open");
-        async.complete();
-      }).open();
-    });
+        ProtonReceiver receiver = connection.createReceiver("some-address");
+
+        receiver.openHandler(context.asyncAssertSuccess(rece -> {
+          LOG.trace("Client receiver open");
+          async.complete();
+        })).open();
+      }));
   }
 
   private ProtonClientOptions createClientOptionsByTrustStorePath(String trustStorePath) {
