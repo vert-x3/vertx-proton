@@ -60,8 +60,8 @@ public class ProtonClientSslTest {
   private static final String KEYSTORE = "src/test/resources/broker-pkcs12.keystore";
   private static final String WRONG_HOST_KEYSTORE = "src/test/resources/broker-wrong-host-pkcs12.keystore";
   private static final String TRUSTSTORE = "src/test/resources/client-pkcs12.truststore";
-  private static final String KEYSTORE_NEW = "src/test/resources/broker-pkcs12-new.keystore";
-  private static final String TRUSTSTORE_NEW = "src/test/resources/client-pkcs12-new.truststore";
+  private static final String KEYSTORE_UPDATED = "src/test/resources/broker-updated-pkcs12.keystore";
+  private static final String TRUSTSTORE_UPDATED = "src/test/resources/client-updated-pkcs12.truststore";
   private static final String KEYSTORE_CLIENT = "src/test/resources/client-pkcs12.keystore";
   private static final String OTHER_CA_TRUSTSTORE = "src/test/resources/other-ca-pkcs12.truststore";
   private static final String VERIFY_HTTPS = "HTTPS";
@@ -387,7 +387,7 @@ public class ProtonClientSslTest {
   }
 
   /**
-   * this test is here to cover update server SSL Options. Historical connections are not effected.
+   * This test is here to cover update server SSL Options. Historical connections are not affected.
    * New connections are successfully connected using the new trustStore.
    */
   @Test(timeout = 20000)
@@ -413,18 +413,22 @@ public class ProtonClientSslTest {
 
     ProtonClient client = ProtonClient.create(vertx);
     client.connect(clientOptions, "localhost", protonServer.actualPort(), context.asyncAssertSuccess(connection -> {
-      // Upexpect the connection disconnect when update server ssl options
-      connection.disconnectHandler(protonConnection -> context.fail("connection close")).open();
+      // Don't expect the connection disconnect when update server ssl options
+      connection.disconnectHandler(protonConnection -> {
+        if (!async.isCompleted()) {
+          context.fail("connection close");
+        }
+      }).open();
 
       ProtonReceiver receiver = connection.createReceiver("some-address");
 
       receiver.openHandler(context.asyncAssertSuccess(recv -> {
-        LOG.trace("Client reciever open");
-        protonServer.updateSSLOptions(createServerOptionsByKeyStorePath(KEYSTORE_NEW), false,
+        LOG.trace("Client receiver open");
+        protonServer.updateSSLOptions(createServerOptionsByKeyStorePath(KEYSTORE_UPDATED), false,
           context.asyncAssertSuccess(server -> {
             if (isClientUsingNewTrustStore) {
               // the connection is successfully connected using new truestStore
-              createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_NEW, true);
+              createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_UPDATED, true);
             } else {
               // the connection is fails to connected using old trustStore
               createNewClientByTrustStorePath(client, async, context, TRUSTSTORE, false);
