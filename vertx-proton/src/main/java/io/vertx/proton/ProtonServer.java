@@ -18,8 +18,9 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
+import io.vertx.core.net.ServerSSLOptions;
 import io.vertx.proton.impl.ProtonServerImpl;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -150,7 +151,7 @@ public interface ProtonServer {
    * @param force force the update when options are equals
    * @param handler the result handler
    */
-  void updateSSLOptions(ProtonServerOptions options, boolean force, Handler<AsyncResult<ProtonServer>> handler);
+  void updateSSLOptions(ServerSSLOptions options, boolean force, Handler<AsyncResult<ProtonServer>> handler);
 
   /**
    * Closes the server and any currently open connections. May not complete until after method has returned.

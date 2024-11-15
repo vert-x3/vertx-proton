@@ -26,6 +26,7 @@ import io.vertx.core.internal.logging.Logger;
 import io.vertx.core.internal.logging.LoggerFactory;
 import io.vertx.core.net.JdkSSLEngineOptions;
 import io.vertx.core.net.PfxOptions;
+import io.vertx.core.net.ServerSSLOptions;
 import io.vertx.core.spi.tls.SslContextFactory;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -404,7 +405,10 @@ public class ProtonClientSslTest {
     Async async = context.async();
 
     // Create a server that accept a connection and expects a client connection+session+receiver
-    ProtonServerOptions serverOptions = createServerOptionsByKeyStorePath(KEYSTORE);
+    ProtonServerOptions serverOptions = new ProtonServerOptions();
+    serverOptions.setSsl(true);
+    PfxOptions serverPfxOptions = new PfxOptions().setPath(KEYSTORE).setPassword(PASSWORD);
+    serverOptions.setKeyCertOptions(serverPfxOptions);
 
     protonServer = createServer(serverOptions, this::handleClientConnectionSessionReceiverOpen);
 
@@ -424,16 +428,18 @@ public class ProtonClientSslTest {
 
       receiver.openHandler(context.asyncAssertSuccess(recv -> {
         LOG.trace("Client receiver open");
-        protonServer.updateSSLOptions(createServerOptionsByKeyStorePath(KEYSTORE_UPDATED), false,
-          context.asyncAssertSuccess(server -> {
-            if (isClientUsingNewTrustStore) {
-              // the connection is successfully connected using new truestStore
-              createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_UPDATED, true);
-            } else {
-              // the connection is fails to connected using old trustStore
-              createNewClientByTrustStorePath(client, async, context, TRUSTSTORE, false);
-            }
-          }));
+        ServerSSLOptions serverSSLOptions = new ServerSSLOptions();
+        PfxOptions serverPfxOptionsUpdated = new PfxOptions().setPath(KEYSTORE_UPDATED).setPassword(PASSWORD);
+        serverSSLOptions.setKeyCertOptions(serverPfxOptionsUpdated);
+        protonServer.updateSSLOptions(serverSSLOptions, false, context.asyncAssertSuccess(server -> {
+          if (isClientUsingNewTrustStore) {
+            // the connection is successfully connected using new truestStore
+            createNewClientByTrustStorePath(client, async, context, TRUSTSTORE_UPDATED, true);
+          } else {
+            // the connection is fails to connected using old trustStore
+            createNewClientByTrustStorePath(client, async, context, TRUSTSTORE, false);
+          }
+        }));
       })).closeHandler(protonReceiver -> context.fail("receiver close")).open();
     }));
 
@@ -468,17 +474,9 @@ public class ProtonClientSslTest {
     return clientOptions;
   }
 
-  private ProtonServerOptions createServerOptionsByKeyStorePath(String keyStorePath) {
-    ProtonServerOptions serverOptions = new ProtonServerOptions();
-    serverOptions.setSsl(true);
-    PfxOptions serverPfxOptions = new PfxOptions().setPath(keyStorePath).setPassword(PASSWORD);
-    serverOptions.setKeyCertOptions(serverPfxOptions);
-    return serverOptions;
-  }
-
   private ProtonServer createServer(ProtonServerOptions serverOptions,
                                     Handler<ProtonConnection> serverConnHandler) throws InterruptedException,
-                                                                                 ExecutionException {
+    ExecutionException {
     ProtonServer server = ProtonServer.create(vertx, serverOptions);
 
     server.connectHandler(serverConnHandler);
