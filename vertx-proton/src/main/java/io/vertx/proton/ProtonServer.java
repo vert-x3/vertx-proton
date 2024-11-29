@@ -18,8 +18,9 @@ package io.vertx.proton;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
+import io.vertx.core.net.ServerSSLOptions;
 import io.vertx.proton.impl.ProtonServerImpl;
+import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 
 /**
  * @author <a href="http://tfox.org">Tim Fox</a>
@@ -142,6 +143,15 @@ public interface ProtonServer {
    * @return the server
    */
   ProtonServer listen();
+
+  /**
+   * Update the server with new SSL options, the update happens if the options object is valid and different from the existing options object.
+   *
+   * @param options the options to use
+   * @param force force the update when options are equals
+   * @param handler the result handler
+   */
+  void updateSSLOptions(ServerSSLOptions options, boolean force, Handler<AsyncResult<ProtonServer>> handler);
 
   /**
    * Closes the server and any currently open connections. May not complete until after method has returned.

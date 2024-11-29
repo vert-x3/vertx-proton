@@ -23,6 +23,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.internal.ContextInternal;
 import io.vertx.core.net.NetServer;
 import io.vertx.core.net.NetSocket;
+import io.vertx.core.net.ServerSSLOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
@@ -116,6 +117,18 @@ public class ProtonServerImpl implements ProtonServer {
   public ProtonServerImpl listen(int i, Handler<AsyncResult<ProtonServer>> handler) {
     server.listen(i).onComplete(convertHandler(handler));
     return this;
+  }
+
+  @Override
+  public void updateSSLOptions(ServerSSLOptions options, boolean force, Handler<AsyncResult<ProtonServer>> handler) {
+    server.updateSSLOptions(options, force).onComplete(result -> {
+        if (result.succeeded()) {
+          handler.handle(Future.succeededFuture(ProtonServerImpl.this));
+        } else {
+          handler.handle(Future.failedFuture(result.cause()));
+        }
+      }
+    );
   }
 
   @Override
