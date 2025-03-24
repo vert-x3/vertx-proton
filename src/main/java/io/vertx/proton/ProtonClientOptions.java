@@ -25,6 +25,8 @@ import io.vertx.codegen.annotations.DataObject;
 import io.vertx.codegen.json.annotations.JsonGen;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.JdkSSLEngineOptions;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.KeyCertOptions;
@@ -43,6 +45,8 @@ import io.vertx.core.net.TrustOptions;
 @DataObject
 @JsonGen(publicConverter = false)
 public class ProtonClientOptions extends NetClientOptions {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ProtonClientOptions.class);
 
   private Set<String> enabledSaslMechanisms = new LinkedHashSet<>();
   private int heartbeat;
@@ -301,7 +305,11 @@ public class ProtonClientOptions extends NetClientOptions {
 
   @Override
   public ProtonClientOptions setUseAlpn(boolean useAlpn) {
-    throw new UnsupportedOperationException();
+    if (useAlpn) {
+      LOG.warn("ALPN configuration is not supported, ignoring");
+    }
+
+    return this;
   }
 
   @Override
