@@ -87,4 +87,18 @@ public class ProtonClientOptionsTest {
     options.setSniServerName("another.example.com");
     assertEquals("another.example.com", options.getSniServerName());
   }
+
+  @Test
+  public void testSetUseAlpnNoops() {
+    ProtonClientOptions options = new ProtonClientOptions();
+    assertFalse("Alpn should be disabled by default", options.isUseAlpn());
+
+    // Check setting it false does nothing
+    options.setUseAlpn(false);
+    assertFalse("Alpn should still be disabled", options.isUseAlpn());
+
+    // Check setting it true is also a noop (logs a message saying so)
+    options.setUseAlpn(true);
+    assertFalse("Alpn should still be disabled", options.isUseAlpn());
+  }
 }
