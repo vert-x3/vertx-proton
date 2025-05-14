@@ -19,11 +19,11 @@
   <parent>
     <groupId>io.vertx</groupId>
     <artifactId>vertx-proton-aggregator</artifactId>
-    <version>5.0.0</version>
+    <version>5.0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>vertx-proton-it</artifactId>
-  <version>5.0.0</version>
+  <version>5.0.1-SNAPSHOT</version>
 
   <name>Vert.x Proton IT</name>
   <description>Specific ActiveMQ tests (ActiveMQ does have split packages)</description>
