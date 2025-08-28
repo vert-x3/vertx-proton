@@ -83,7 +83,7 @@ public class ProtonClientImpl implements ProtonClient {
         });
 
         ProtonSaslClientAuthenticatorImpl authenticator = new ProtonSaslClientAuthenticatorImpl(username, password,
-                options.getEnabledSaslMechanisms(), connectHandler);
+                options.getEnabledSaslMechanisms(), options.getAuthorizationId(), connectHandler);
 
         ProtonTransportOptions transportOptions = new ProtonTransportOptions();
         transportOptions.setHeartbeat(options.getHeartbeat());

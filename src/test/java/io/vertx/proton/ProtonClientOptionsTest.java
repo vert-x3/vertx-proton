@@ -100,4 +100,14 @@ public class ProtonClientOptionsTest {
     options.setUseAlpn(true);
     assertFalse("Alpn should still be disabled", options.isUseAlpn());
   }
+
+  @Test
+  public void testAuthorizationId() {
+    ProtonClientOptions options = new ProtonClientOptions();
+    assertNull("Authorization identity string should not be set by default", options.getAuthorizationId());
+    options.setAuthorizationId("impersonate_user");
+    assertEquals("impersonate_user", options.getAuthorizationId());
+    options.setAuthorizationId("another_user");
+    assertEquals("another_user", options.getAuthorizationId());
+  }
 }
