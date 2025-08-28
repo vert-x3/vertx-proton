@@ -15,6 +15,7 @@
 */
 package io.vertx.proton.sasl.impl;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 
 public class ProtonSaslExternalImpl extends ProtonSaslMechanismImpl {
@@ -23,7 +24,11 @@ public class ProtonSaslExternalImpl extends ProtonSaslMechanismImpl {
 
   @Override
   public byte[] getInitialResponse() {
-    return EMPTY;
+    final String authzId = this.getAuthorizationId();
+    if (authzId == null) {
+      return EMPTY;
+    }
+    return authzId.getBytes(StandardCharsets.UTF_8);
   }
 
   @Override

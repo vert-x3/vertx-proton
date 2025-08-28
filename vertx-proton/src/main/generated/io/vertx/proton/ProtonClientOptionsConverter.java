@@ -42,6 +42,11 @@ public class ProtonClientOptionsConverter {
             obj.setMaxFrameSize(((Number)member.getValue()).intValue());
           }
           break;
+        case "authorizationId":
+          if (member.getValue() instanceof String) {
+            obj.setAuthorizationId((String)member.getValue());
+          }
+          break;
       }
     }
   }
@@ -64,5 +69,8 @@ public class ProtonClientOptionsConverter {
     }
     json.put("heartbeat", obj.getHeartbeat());
     json.put("maxFrameSize", obj.getMaxFrameSize());
+    if (obj.getAuthorizationId() != null) {
+      json.put("authorizationId", obj.getAuthorizationId());
+    }
   }
 }

@@ -23,6 +23,7 @@ public abstract class ProtonSaslMechanismImpl implements ProtonSaslMechanism {
 
   private String username;
   private String password;
+  private String authorizationId;
 
   @Override
   public int compareTo(ProtonSaslMechanism other) {
@@ -56,6 +57,17 @@ public abstract class ProtonSaslMechanismImpl implements ProtonSaslMechanism {
   @Override
   public String getPassword() {
     return this.password;
+  }
+
+  @Override
+  public ProtonSaslMechanism setAuthorizationId(String authorizationId) {
+    this.authorizationId = authorizationId;
+    return this;
+  }
+
+  @Override
+  public String getAuthorizationId() {
+    return authorizationId;
   }
 
   @Override
