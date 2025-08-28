@@ -2,8 +2,6 @@ package io.vertx.proton;
 
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.JsonArray;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Converter and mapper for {@link io.vertx.proton.ProtonClientOptions}.
@@ -42,6 +40,11 @@ public class ProtonClientOptionsConverter {
             obj.setMaxFrameSize(((Number)member.getValue()).intValue());
           }
           break;
+        case "authorizationId":
+          if (member.getValue() instanceof String) {
+            obj.setAuthorizationId((String)member.getValue());
+          }
+          break;
       }
     }
   }
@@ -64,5 +67,8 @@ public class ProtonClientOptionsConverter {
     }
     json.put("heartbeat", obj.getHeartbeat());
     json.put("maxFrameSize", obj.getMaxFrameSize());
+    if (obj.getAuthorizationId() != null) {
+      json.put("authorizationId", obj.getAuthorizationId());
+    }
   }
 }

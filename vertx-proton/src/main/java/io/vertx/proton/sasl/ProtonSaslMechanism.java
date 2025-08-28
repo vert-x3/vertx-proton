@@ -107,6 +107,21 @@ public interface ProtonSaslMechanism extends Comparable<ProtonSaslMechanism> {
   String getPassword();
 
   /**
+   * Sets the authorization identity string for this Mechanism.
+   *
+   * @param authorizationId authorization identity string to use in the SASL authentication exchange.
+   * @return the mechanism.
+   */
+  ProtonSaslMechanism setAuthorizationId(String authorizationId);
+
+  /**
+   * Returns the configured authorization identity string for this Mechanism.
+   *
+   * @return the currently set authorization identity string for this Mechanism.
+   */
+  String getAuthorizationId();
+
+  /**
    * Checks whether a given mechanism is suitable for use in light of the available credentials.
    *
    * @param username
