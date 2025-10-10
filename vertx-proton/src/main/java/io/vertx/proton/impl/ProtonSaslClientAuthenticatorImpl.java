@@ -47,6 +47,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
   private final String password;
   private ProtonSaslMechanism mechanism;
   private Set<String> mechanismsRestriction;
+  private String authorizationId;
   private Handler<AsyncResult<ProtonConnection>> handler;
   private NetSocket socket;
   private ProtonConnection connection;
@@ -62,6 +63,9 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    * @param allowedSaslMechanisms
    *          The possible mechanism(s) to which the client should restrict its mechanism selection to if offered by the
    *          server, or null/empty if no restriction.
+   * @param authorizationId
+   *          The authorization identity string presented during the SASL authentication exchange, or null if there is
+   *          none.
    * @param handler
    *          The handler to convey the result of the SASL process to.
    *          The async result will succeed if the SASL handshake completed successfully, it will fail with
@@ -77,11 +81,12 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
    *          any other reason.</li>
    *          </ul>
    */
-  public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms, Handler<AsyncResult<ProtonConnection>> handler) {
+  public ProtonSaslClientAuthenticatorImpl(String username, String password, Set<String> allowedSaslMechanisms, String authorizationId, Handler<AsyncResult<ProtonConnection>> handler) {
     this.handler = handler;
     this.username = username;
     this.password = password;
     this.mechanismsRestriction = allowedSaslMechanisms;
+    this.authorizationId = authorizationId;
   }
 
   @Override
@@ -152,6 +157,7 @@ public class ProtonSaslClientAuthenticatorImpl implements ProtonSaslAuthenticato
       if (mechanism != null) {
         mechanism.setUsername(username);
         mechanism.setPassword(password);
+        mechanism.setAuthorizationId(authorizationId);
 
         sasl.setMechanisms(mechanism.getName());
         byte[] response = mechanism.getInitialResponse();

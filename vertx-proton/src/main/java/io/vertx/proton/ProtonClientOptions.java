@@ -53,6 +53,7 @@ public class ProtonClientOptions extends NetClientOptions {
   private int maxFrameSize;
   private String virtualHost;
   private String sniServerName;
+  private String authorizationId;
 
   public ProtonClientOptions() {
     super();
@@ -71,6 +72,7 @@ public class ProtonClientOptions extends NetClientOptions {
     this.maxFrameSize = other.maxFrameSize;
     this.virtualHost = other.virtualHost;
     this.sniServerName = other.sniServerName;
+    this.authorizationId = other.authorizationId;
   }
 
   /**
@@ -229,6 +231,7 @@ public class ProtonClientOptions extends NetClientOptions {
     result = prime * result + this.maxFrameSize;
     result = prime * result + (this.virtualHost != null ? this.virtualHost.hashCode() : 0);
     result = prime * result + (this.sniServerName != null ? this.sniServerName.hashCode() : 0);
+    result = prime * result + (this.authorizationId != null ? this.authorizationId.hashCode() : 0);
 
     return result;
   }
@@ -261,6 +264,9 @@ public class ProtonClientOptions extends NetClientOptions {
       return false;
     }
     if (!Objects.equals(this.sniServerName, other.sniServerName)) {
+      return false;
+    }
+    if (!Objects.equals(this.authorizationId, other.authorizationId)) {
       return false;
     }
 
@@ -478,5 +484,28 @@ public class ProtonClientOptions extends NetClientOptions {
    */
   public int getMaxFrameSize() {
     return maxFrameSize;
+  }
+
+  /**
+   * Sets the SASL authorization identity string.
+   *
+   * If not set, the client doesn't send any authorization identity string during the SASL authentication exchange, and
+   * the server uses the identity associated with the client's credentials.
+   *
+   * @param authorizationId authorization identity string to use in the SASL authentication exchange
+   * @return  current ProtonClientOptions instance
+   */
+  public ProtonClientOptions setAuthorizationId(String authorizationId) {
+    this.authorizationId = authorizationId;
+    return this;
+  }
+
+  /**
+   * Get the SASL authorization identity string set by {@link #setAuthorizationId(String)}.
+   *
+   * @return  the authorization identity string
+   */
+  public String getAuthorizationId() {
+    return this.authorizationId;
   }
 }

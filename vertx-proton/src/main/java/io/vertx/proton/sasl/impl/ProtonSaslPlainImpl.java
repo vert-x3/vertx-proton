@@ -35,8 +35,13 @@ public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
   @Override
   public byte[] getInitialResponse() {
 
+    String authzId = getAuthorizationId();
     String username = getUsername();
     String password = getPassword();
+
+    if (authzId == null) {
+      authzId = "";
+    }
 
     if (username == null) {
       username = "";
@@ -46,11 +51,14 @@ public class ProtonSaslPlainImpl extends ProtonSaslMechanismImpl {
       password = "";
     }
 
+    byte[] authzIdBytes = authzId.getBytes(StandardCharsets.UTF_8);
     byte[] usernameBytes = username.getBytes(StandardCharsets.UTF_8);
     byte[] passwordBytes = password.getBytes(StandardCharsets.UTF_8);
-    byte[] data = new byte[usernameBytes.length + passwordBytes.length + 2];
-    System.arraycopy(usernameBytes, 0, data, 1, usernameBytes.length);
-    System.arraycopy(passwordBytes, 0, data, 2 + usernameBytes.length, passwordBytes.length);
+
+    byte[] data = new byte[authzIdBytes.length + usernameBytes.length + passwordBytes.length + 2];
+    System.arraycopy(authzIdBytes, 0, data, 0, authzIdBytes.length);
+    System.arraycopy(usernameBytes, 0, data, 1 + authzIdBytes.length, usernameBytes.length);
+    System.arraycopy(passwordBytes, 0, data, 2 + authzIdBytes.length + usernameBytes.length, passwordBytes.length);
     return data;
   }
 
