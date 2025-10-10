@@ -15,6 +15,8 @@
 */
 package io.vertx.proton;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.SSLSession;
@@ -52,6 +54,10 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
   private static final String TRUSTSTORE = "src/test/resources/client-pkcs12.truststore";
   private static final String KEYSTORE_CLIENT = "src/test/resources/client-pkcs12.keystore";
   private static final String STORE_PASSWORD = "password";
+
+  private static final String ANONYMOUS = "ANONYMOUS";
+  private static final String PLAIN = "PLAIN";
+  private static final String EXTERNAL  = "EXTERNAL";
 
   private Vertx vertx;
   private ProtonServer protonServer;
@@ -168,15 +174,30 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
 
   @Test(timeout = 20000)
   public void testConnectWithSslWithClientCertSelectsOfferedExternalSaslMech(TestContext context) throws Exception {
-    doExternalMechTestImpl(context, true);
+    doMechanismTestImpl(context, true, null, null, null, EXTERNAL, new byte[0]);
+  }
+
+  @Test(timeout = 20000)
+  public void testConnectWithSslWithClientCertSelectsOfferedExternalSaslMechAndIncludesAuthzID(TestContext context) throws Exception {
+    String myAuthzID = "myAuthzID";
+    doMechanismTestImpl(context, true, myAuthzID, null, null, EXTERNAL, myAuthzID.getBytes(StandardCharsets.UTF_8));
   }
 
   @Test(timeout = 20000)
   public void testConnectWithSslWithoutClientCertIgnoresOfferedExternalSaslMech(TestContext context) throws Exception {
-    doExternalMechTestImpl(context, false);
+    doMechanismTestImpl(context, false, null, null, null, ANONYMOUS, new byte[0]);
   }
 
-  private void doExternalMechTestImpl(TestContext context, boolean supplyClientCert) throws Exception {
+  @Test(timeout = 20000)
+  public void testConnectWithSslWithoutClientCertSelectsOfferedPlainSaslMechAndIncludesAuthzID(TestContext context) throws Exception {
+    String myAuthzID = "myAuthzID";
+    byte[] expectedInitialResponse = (myAuthzID + '\0' + USERNAME_GUEST + '\0' + PASSWORD_GUEST).getBytes(StandardCharsets.UTF_8);
+
+    doMechanismTestImpl(context, false, myAuthzID, USERNAME_GUEST, PASSWORD_GUEST, PLAIN, expectedInitialResponse);
+  }
+
+  private void doMechanismTestImpl(TestContext context, boolean supplyClientCert, String authzID, String user, String pass,
+                                   String expectedMech, byte[] expectedInitialResponse) throws Exception {
     stopBroker();
     Async async = context.async();
 
@@ -189,7 +210,7 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     PfxOptions pfxOptions = new PfxOptions().setPath(TRUSTSTORE).setPassword(STORE_PASSWORD);
     serverOptions.setPfxTrustOptions(pfxOptions);
 
-    TestExternalAuthenticator authenticator = new TestExternalAuthenticator("EXTERNAL", "PLAIN", "ANONYMOUS");
+    TestAuthenticator authenticator = new TestAuthenticator(EXTERNAL, PLAIN, ANONYMOUS);
 
     protonServer = createTestServer(serverOptions, authenticator);
 
@@ -203,8 +224,12 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
       clientOptions.setPfxKeyCertOptions(clientKeyPfxOptions);
     }
 
+    if (authzID != null) {
+       clientOptions.setAuthorizationId(authzID);
+    }
+
     ProtonClient client = ProtonClient.create(vertx);
-    client.connect(clientOptions, "localhost", protonServer.actualPort(), res -> {
+    client.connect(clientOptions, "localhost", protonServer.actualPort(), user, pass, res -> {
       // Expect connect to succeed
       context.assertTrue(res.succeeded());
       async.complete();
@@ -213,17 +238,21 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     async.awaitSuccess();
 
     if(supplyClientCert) {
-      context.assertEquals("EXTERNAL", authenticator.getChosenMech());
+      context.assertEquals(EXTERNAL, authenticator.getChosenMech());
       SSLSession sslSession = authenticator.getClientSocket().sslSession();
       context.assertNotNull(sslSession.getPeerPrincipal());
-    } else {
-      context.assertEquals("ANONYMOUS", authenticator.getChosenMech());
     }
+
+    context.assertEquals(expectedMech, authenticator.getChosenMech());
+
+    byte[] initialResponse = authenticator.getInitialResponse();
+    context.assertNotNull(initialResponse, "Expected an initial response");
+    context.assertTrue(Arrays.equals(expectedInitialResponse, initialResponse),
+        "Initial response not as expected (Got: " + Arrays.toString(initialResponse) + ") (Expected: " + Arrays.toString(expectedInitialResponse) + ")");
   }
 
   private ProtonServer createTestServer(ProtonServerOptions serverOptions,
-      TestExternalAuthenticator authenticator) throws InterruptedException,
-                                                                                 ExecutionException {
+                                        TestAuthenticator authenticator) throws InterruptedException, ExecutionException {
     ProtonServer server = ProtonServer.create(vertx, serverOptions);
     server.connectHandler(serverConnection -> {
       serverConnection.closeHandler(x -> {
@@ -245,14 +274,15 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
     return server;
   }
 
-  private static final class TestExternalAuthenticator implements ProtonSaslAuthenticator {
+  private static final class TestAuthenticator implements ProtonSaslAuthenticator {
     private Sasl sasl;
     private String[] offeredMechs;
     private String chosenMech = null;
-    boolean succeeded = false;
-    NetSocket socket;
+    private boolean succeeded = false;
+    private NetSocket socket;
+    private byte[] initialResponse;
 
-    public TestExternalAuthenticator(String... offeredMechs){
+    public TestAuthenticator(String... offeredMechs){
       this.offeredMechs = offeredMechs;
     }
 
@@ -272,7 +302,7 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
       if (remoteMechanisms.length > 0) {
         chosenMech = remoteMechanisms[0];
 
-        byte[] initialResponse = new byte[sasl.pending()];
+        initialResponse = new byte[sasl.pending()];
         sasl.recv(initialResponse, 0, initialResponse.length);
 
         sasl.done(SaslOutcome.PN_SASL_OK);
@@ -295,6 +325,10 @@ public class ProtonClientSaslTest extends ActiveMQTestBase {
 
     public NetSocket getClientSocket() {
       return socket;
+    }
+
+    public byte[] getInitialResponse() {
+      return initialResponse;
     }
   }
 }
