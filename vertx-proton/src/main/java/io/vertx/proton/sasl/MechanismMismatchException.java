@@ -29,7 +29,7 @@ public class MechanismMismatchException extends SaslException {
 
   /**
    * Creates an exception with a detail message.
-   * 
+   *
    * @param detail A message providing details about the cause
    *               of the problem.
    */
@@ -39,7 +39,7 @@ public class MechanismMismatchException extends SaslException {
 
   /**
    * Creates an exception with a detail message for offered mechanisms.
-   * 
+   *
    * @param detail A message providing details about the cause
    *               of the problem.
    * @param mechanisms The names of the SASL mechanisms offered by the server.
@@ -51,7 +51,7 @@ public class MechanismMismatchException extends SaslException {
 
   /**
    * Gets the names of the SASL mechanisms offered by the server.
-   * 
+   *
    * @return The mechanisms.
    */
   public String[] getOfferedMechanisms() {

@@ -15,7 +15,6 @@
 */
 package io.vertx.proton;
 
-import java.lang.IllegalStateException;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

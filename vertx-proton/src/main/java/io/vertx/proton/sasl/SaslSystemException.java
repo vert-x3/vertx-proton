@@ -30,10 +30,10 @@ public class SaslSystemException extends SaslException {
 
   /**
    * Creates an exception indicating a system error.
-   * 
+   *
    * @param permanent {@code true} if the error is permanent and requires
    *                  (manual) intervention.
-   * 
+   *
    */
   public SaslSystemException(boolean permanent) {
     this(permanent, null);
@@ -41,7 +41,7 @@ public class SaslSystemException extends SaslException {
 
   /**
    * Creates an exception indicating a system error with a detail message.
-   * 
+   *
    * @param permanent {@code true} if the error is permanent and requires
    *                  (manual) intervention.
    * @param detail A message providing details about the cause
@@ -54,7 +54,7 @@ public class SaslSystemException extends SaslException {
 
   /**
    * Checks if the condition that caused this exception is of a permanent nature.
-   * 
+   *
    * @return {@code true} if the error condition is permanent.
    */
   public final boolean isPermanent() {
