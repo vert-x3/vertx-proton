@@ -18,6 +18,8 @@ package io.vertx.proton.impl;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.qpid.proton.message.MessageDecodeOptions;
+
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -88,8 +90,13 @@ public class ProtonClientImpl implements ProtonClient {
         ProtonTransportOptions transportOptions = new ProtonTransportOptions();
         transportOptions.setHeartbeat(options.getHeartbeat());
         transportOptions.setMaxFrameSize(options.getMaxFrameSize());
+        transportOptions.setMaxTransfersPerDelivery(options.getMaxTransfersPerDelivery());
 
-        conn.bindClient(netClient, res.result(), authenticator, transportOptions);
+        MessageDecodeOptions messageDecodeOptions = new MessageDecodeOptions();
+        messageDecodeOptions.setMaxDecodeDepth(options.getMessageMaxDecodeDepth() == 0 ? ProtonConnectionImpl.DEFAULT_MESSAGE_MAX_DECODE_DEPTH : options.getMessageMaxDecodeDepth());
+        messageDecodeOptions.setZeroWidthArrayElementLimit(options.getMessageZeroWidthArrayElementLimit());
+
+        conn.bindClient(netClient, res.result(), authenticator, transportOptions, messageDecodeOptions);
 
         // Need to flush here to get the SASL process going, or it will wait until calls on the connection are processed
         // later (e.g open()).

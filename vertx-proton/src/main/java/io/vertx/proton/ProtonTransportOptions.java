@@ -28,6 +28,7 @@ public class ProtonTransportOptions {
 
   private int heartbeat;
   private int maxFrameSize;
+  private int maxTransfersPerDelivery;
 
   public ProtonTransportOptions() {
   }
@@ -109,6 +110,7 @@ public class ProtonTransportOptions {
     int result = 1;
     result = prime * result + heartbeat;
     result = prime * result + maxFrameSize;
+    result = prime * result + maxTransfersPerDelivery;
     return result;
   }
 
@@ -129,7 +131,32 @@ public class ProtonTransportOptions {
     if (this.maxFrameSize != other.maxFrameSize) {
       return false;
     }
+    if (this.maxTransfersPerDelivery != other.maxTransfersPerDelivery) {
+      return false;
+    }
 
     return true;
+  }
+
+  /**
+   * Sets the maximum number of transfer frames for an incoming delivery.
+   * If more transfer frames are received, the connection is disconnected.
+   * If this property is not set explicitly, a reasonable default value is used.
+   *
+   * @param maxTransfersPerDelivery max transfers per delivery
+   * @return This instance for setter chaining.
+   */
+  public ProtonTransportOptions setMaxTransfersPerDelivery(int maxTransfersPerDelivery) {
+    this.maxTransfersPerDelivery = maxTransfersPerDelivery;
+    return this;
+  }
+
+  /**
+   * Gets the maximum number of transfer frames for an incoming delivery.
+   *
+   * @return max transfers per delivery
+   */
+  public int getMaxTransfersPerDelivery() {
+    return this.maxTransfersPerDelivery;
   }
 }
