@@ -30,6 +30,11 @@ public class ProtonTransportOptionsConverter {
             obj.setMaxFrameSize(((Number)member.getValue()).intValue());
           }
           break;
+        case "maxTransfersPerDelivery":
+          if (member.getValue() instanceof Number) {
+            obj.setMaxTransfersPerDelivery(((Number)member.getValue()).intValue());
+          }
+          break;
       }
     }
   }
@@ -41,5 +46,6 @@ public class ProtonTransportOptionsConverter {
    static void toJson(ProtonTransportOptions obj, java.util.Map<String, Object> json) {
     json.put("heartbeat", obj.getHeartbeat());
     json.put("maxFrameSize", obj.getMaxFrameSize());
+    json.put("maxTransfersPerDelivery", obj.getMaxTransfersPerDelivery());
   }
 }

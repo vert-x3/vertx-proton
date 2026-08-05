@@ -15,8 +15,6 @@
 */
 package io.vertx.proton;
 
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Handler;
 import io.vertx.core.Promise;
 import io.vertx.core.impl.logging.Logger;
 import io.vertx.core.impl.logging.LoggerFactory;
@@ -36,7 +34,6 @@ import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.messaging.Modified;
-import org.apache.qpid.proton.amqp.messaging.Section;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.AmqpError;
 import org.apache.qpid.proton.amqp.transport.DeliveryState;
@@ -50,9 +47,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -60,6 +59,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.vertx.proton.TestSupport.createServer;
+import static io.vertx.proton.TestSupport.getMessageBody;
+import static io.vertx.proton.TestSupport.validateMessage;
+import static io.vertx.proton.TestSupport.validateMessageArray;
+import static io.vertx.proton.TestSupport.prepareMessageWithDecodeDepth;
+import static io.vertx.proton.TestSupport.prepareMessageWithZeroWidthArrayElements;
 import static io.vertx.proton.ProtonHelper.message;
 
 @RunWith(VertxUnitRunner.class)
@@ -95,7 +100,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.sessionOpenHandler(session -> session.open());
 
         serverConnection.receiverOpenHandler(serverReceiver -> {
@@ -409,7 +414,7 @@ public class ProtonClientTest extends MockServerTestBase {
     ProtonServer protonServer = null;
     try {
       protonServer = createServer(
-          (serverConnection) -> processConnectionAnonymousSenderSpecifiesLinkTarget(context, async, serverConnection));
+          vertx, (serverConnection) -> processConnectionAnonymousSenderSpecifiesLinkTarget(context, async, serverConnection));
 
       ProtonClient client = ProtonClient.create(vertx);
       client.connect("localhost", protonServer.actualPort(), res -> {
@@ -475,7 +480,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(result -> {
           serverConnection.open();
         });
@@ -927,7 +932,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer(serverConnection -> {
+      protonServer = createServer(vertx, serverConnection -> {
         Promise<ProtonSession> sessionPromise = Promise.<ProtonSession> promise();
         // Expect a session to open, when the sender is created by the client
         serverConnection.sessionOpenHandler(serverSession -> {
@@ -1014,7 +1019,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(result -> {
           serverConnection.open();
         });
@@ -1150,7 +1155,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(x -> {
           if (setProperties) {
             serverConnection.setProperties(serverGivenProps);
@@ -1257,7 +1262,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(x -> {
 
           serverConnection.setDesiredCapabilities(serverDesired);
@@ -1339,7 +1344,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(result -> {
           serverConnection.open();
         });
@@ -1468,7 +1473,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(result -> {
           serverConnection.open();
         });
@@ -1601,7 +1606,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(result -> {
           serverConnection.open();
         });
@@ -1671,7 +1676,7 @@ public class ProtonClientTest extends MockServerTestBase {
 
     ProtonServer protonServer = null;
     try {
-      protonServer = createServer((serverConnection) -> {
+      protonServer = createServer(vertx, (serverConnection) -> {
         serverConnection.openHandler(result -> {
           serverConnection.open();
         });
@@ -1760,34 +1765,400 @@ public class ProtonClientTest extends MockServerTestBase {
     }
   }
 
-  private ProtonServer createServer(Handler<ProtonConnection> serverConnHandler) throws InterruptedException,
-                                                                                 ExecutionException {
-    ProtonServer server = ProtonServer.create(vertx);
+  @Test(timeout = 20000)
+  public void testZeroWidthArrayElementsWithDefaultLimit(TestContext context) throws Exception {
+    ProtonClientOptions options = new ProtonClientOptions();
 
-    server.connectHandler(serverConnHandler);
-
-    FutureHandler<ProtonServer, AsyncResult<ProtonServer>> handler = FutureHandler.asyncResult();
-    server.listen(0, handler);
-    handler.get();
-
-    return server;
+    doZeroWidthArrayElementsWithLimitTestImpl(context, options, 1, true);
   }
 
-  private void validateMessage(TestContext context, int count, Object expected, Message msg) {
-    Object actual = getMessageBody(context, msg);
-    if (LOG.isTraceEnabled()) {
-      LOG.trace("Got msg " + count + ", body: " + actual);
+  @Test(timeout = 20000)
+  public void testZeroWidthArrayElementsWithLimitSetPermissive(TestContext context) throws Exception {
+    // As above, but options set to allow it to succeed
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setMessageZeroWidthArrayElementLimit(1);
+
+    doZeroWidthArrayElementsWithLimitTestImpl(context, options, 1, false);
+  }
+
+  @Test(timeout = 20000)
+  public void testZeroWidthArrayElementsWithLimitSetPermissive2(TestContext context) throws Exception {
+    // Similar but a larger array
+    int zeroWidthArrayElementCount = 100;
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setMessageZeroWidthArrayElementLimit(zeroWidthArrayElementCount);
+
+    doZeroWidthArrayElementsWithLimitTestImpl(context, options, zeroWidthArrayElementCount, false);
+  }
+
+  @Test(timeout = 20000)
+  public void testZeroWidthArrayElementsWithLimitSetRestricted(TestContext context) throws Exception {
+    // Similar but with options set to block it
+    int zeroWidthArrayElementCount = 99;
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setMessageZeroWidthArrayElementLimit(zeroWidthArrayElementCount);
+
+    doZeroWidthArrayElementsWithLimitTestImpl(context, options, zeroWidthArrayElementCount + 1, true);
+  }
+
+  private void doZeroWidthArrayElementsWithLimitTestImpl(TestContext context, ProtonClientOptions options,
+                                                         int elementCount, boolean expectDecodeFailure) throws Exception {
+    server.close();
+
+    Async serverAsync = context.async();
+    Async clientAsync = context.async();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer(vertx, (serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+        serverConnection.sessionOpenHandler(session -> {
+          session.open();
+        });
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          serverSender.open();
+
+          AtomicInteger count = new AtomicInteger();
+          serverSender.sendQueueDrainHandler(s -> {
+            int msg = count.incrementAndGet();
+
+            switch (msg) {
+              case 1:
+                context.assertEquals(1000, s.getCredit(), "Unexpected initial credit level when send handler fired for round 1");
+
+                MessageImpl message1 = prepareMessageWithZeroWidthArrayElements(context, 0);
+                serverSender.send(message1, del -> {
+                  context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 1 after update");
+                });
+                break;
+              case 2:
+                MessageImpl message2 = prepareMessageWithZeroWidthArrayElements(context, elementCount);
+                serverSender.send(message2, del -> {
+                  DeliveryState state = del.getRemoteState();
+                  if(expectDecodeFailure) {
+                    context.assertTrue(state instanceof Modified, "Unexpected state for delivery 2 after update");
+                    context.assertTrue(((Modified)state).getDeliveryFailed(), "Expected true");
+                    context.assertTrue(((Modified)state).getUndeliverableHere(), "Expected true");
+                  } else {
+                    context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 2 after update");
+                  }
+                });
+                break;
+              case 3:
+                MessageImpl message3 = prepareMessageWithZeroWidthArrayElements(context, 0);
+                serverSender.send(message3, del -> {
+                  context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 3 after update");
+                  // We've sent 3 messages, consumer should receive 2 and fail 1, or get all 3, but always restore credit for all.
+                  // Verify credit is fully replenished to initial 1000 in the end.
+                  vertx.setTimer(500, x -> {
+                    context.assertEquals(1000, s.getCredit(), "Unexpected credit level after messages processed");
+                    serverAsync.complete();
+                  });
+                });
+                break;
+            }
+          });
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect(options, "localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.open();
+        AtomicInteger counter = new AtomicInteger(0);
+        ProtonReceiver receiver = connection.createReceiver("address");
+
+        receiver.handler((d, m) -> {
+          int count = counter.incrementAndGet();
+          switch (count) {
+            case 1:
+              validateMessageArray(context, 1, new boolean[0], m);
+              break;
+            case 2:
+              if(expectDecodeFailure) {
+                validateMessageArray(context, 3, new boolean[0], m);
+                clientAsync.complete();
+              } else {
+                boolean[] expected = new boolean[elementCount];
+                Arrays.fill(expected, true);
+
+                validateMessageArray(context, 2, expected, m);
+              }
+              break;
+            case 3:
+              if(expectDecodeFailure) {
+                context.fail("should not get third message");
+              } else {
+                validateMessageArray(context, 3, new boolean[0], m);
+                clientAsync.complete();
+              }
+              break;
+          }
+        }).open();
+      });
+
+      serverAsync.awaitSuccess();
+      clientAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
     }
-
-    context.assertEquals(expected, actual, "Unexpected message body");
   }
 
-  private Object getMessageBody(TestContext context, Message msg) {
-    Section body = msg.getBody();
+  @Test(timeout = 20000)
+  public void testDecodeDepthWithDefaultLimitAllowed(TestContext context) throws Exception {
+    ProtonClientOptions options = new ProtonClientOptions();
 
-    context.assertNotNull(body);
-    context.assertTrue(body instanceof AmqpValue);
+    doDecodeDepthWithLimitTestImpl(context, options, 32, false);
+  }
 
-    return ((AmqpValue) body).getValue();
+  @Test(timeout = 20000)
+  public void testDecodeDepthWithDefaultLimit(TestContext context) throws Exception {
+    ProtonClientOptions options = new ProtonClientOptions();
+
+    doDecodeDepthWithLimitTestImpl(context, options, 33, true);
+  }
+
+  @Test(timeout = 20000)
+  public void testDecodeDepthWithLimitSetPermissive(TestContext context) throws Exception {
+    // As above, but options set to allow it to succeed
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setMessageMaxDecodeDepth(33);
+
+    doDecodeDepthWithLimitTestImpl(context, options, 33, false);
+  }
+
+  @Test(timeout = 20000)
+  public void testDecodeDepthWithLimitSetRestricted(TestContext context) throws Exception {
+    // Lower value with options set to block it
+    int depth = 2;
+    ProtonClientOptions options = new ProtonClientOptions();
+    options.setMessageMaxDecodeDepth(depth);
+
+    doDecodeDepthWithLimitTestImpl(context, options, depth + 1, true);
+  }
+
+  private void doDecodeDepthWithLimitTestImpl(TestContext context, ProtonClientOptions options,
+                                              int depth, boolean expectDecodeFailure) throws Exception {
+    server.close();
+
+    Async serverAsync = context.async();
+    Async clientAsync = context.async();
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer(vertx, (serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+        serverConnection.sessionOpenHandler(session -> {
+          session.open();
+        });
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          serverSender.open();
+
+          AtomicInteger count = new AtomicInteger();
+          serverSender.sendQueueDrainHandler(s -> {
+            int msg = count.incrementAndGet();
+
+            switch (msg) {
+              case 1:
+                context.assertEquals(1000, s.getCredit(), "Unexpected initial credit level when send handler fired for round 1");
+
+                Message message1 = prepareMessageWithDecodeDepth(context, 1);
+                serverSender.send(message1, del -> {
+                  context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 1 after update");
+                });
+                break;
+              case 2:
+                Message message2 = prepareMessageWithDecodeDepth(context, depth);
+                serverSender.send(message2, del -> {
+                  DeliveryState state = del.getRemoteState();
+                  if(expectDecodeFailure) {
+                    context.assertTrue(state instanceof Modified, "Unexpected state for delivery 2 after update");
+                    context.assertTrue(((Modified)state).getDeliveryFailed(), "Expected true");
+                    context.assertTrue(((Modified)state).getUndeliverableHere(), "Expected true");
+                  } else {
+                    context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 2 after update");
+                  }
+                });
+                break;
+              case 3:
+                Message message3 = prepareMessageWithDecodeDepth(context, 1);
+                serverSender.send(message3, del -> {
+                  context.assertTrue(del.getRemoteState() instanceof Accepted, "Unexpected state for delivery 3 after update");
+                  // We've sent 3 messages, consumer should receive 2 and fail 1, or get all 3, but always restore credit for all.
+                  // Verify credit is fully replenished to initial 1000 in the end.
+                  vertx.setTimer(500, x -> {
+                    context.assertEquals(1000, s.getCredit(), "Unexpected credit level after messages processed");
+                    serverAsync.complete();
+                  });
+                });
+                break;
+            }
+          });
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      client.connect(options, "localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.open();
+        AtomicInteger counter = new AtomicInteger(0);
+        ProtonReceiver receiver = connection.createReceiver("address");
+
+        receiver.handler((d, m) -> {
+          int count = counter.incrementAndGet();
+          switch (count) {
+            case 1:
+              validateMessage(context, 1, new ArrayList<Object>(), m);
+              break;
+            case 2:
+              if(expectDecodeFailure) {
+                validateMessage(context, 3, new ArrayList<Object>(), m);
+                clientAsync.complete();
+              } else {
+                List<Object> expected = TestSupport.prepareNestedLists(depth);
+
+                validateMessage(context, 2, expected, m);
+              }
+              break;
+            case 3:
+              if(expectDecodeFailure) {
+                context.fail("should not get third message");
+              } else {
+                validateMessage(context, 3, new ArrayList<Object>(), m);
+                clientAsync.complete();
+              }
+              break;
+          }
+        }).open();
+      });
+
+      serverAsync.awaitSuccess();
+      clientAsync.awaitSuccess();
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
+  }
+
+  @Test(timeout = 20000)
+  public void testExceedingMaxTransfersPerDelivery(TestContext context) throws Exception {
+    server.close();
+    final int maxFrameSize = 10000;
+    final int dataPayloadSize = maxFrameSize + 100;
+    Async serverSenderOpenAsync = context.async();
+    Async serverSenderCreditCheck = context.async();
+    Async clientReceiverOpenAsync = context.async();
+    Async serverConnectionDisconnectCheck = context.async();
+    Async serverConnectionCloseCheck = context.async();
+    AtomicBoolean messageHandlerFired = new AtomicBoolean(false);
+
+    ProtonServer protonServer = null;
+    try {
+      protonServer = createServer(vertx, (serverConnection) -> {
+        serverConnection.openHandler(result -> {
+          serverConnection.open();
+        });
+
+        serverConnection.closeHandler(connectionResult -> {
+          serverConnectionCloseCheck.complete();
+
+          context.assertTrue(connectionResult.failed());
+          ErrorCondition condition = serverConnection.getRemoteCondition();
+
+          context.assertNotNull(condition);
+          String description = condition.getDescription();
+          context.assertNotNull(description);
+          context.assertTrue(description.contains("Max transfers per delivery limit exceeded"), "Unexpected description: " + description);
+        });
+
+        serverConnection.disconnectHandler(connection -> {
+          serverConnectionDisconnectCheck.complete();
+        });
+
+        serverConnection.sessionOpenHandler(session -> {
+          session.open();
+        });
+
+        serverConnection.senderOpenHandler(serverSender -> {
+          serverSender.sendQueueDrainHandler(ss -> {
+            if(!serverSenderCreditCheck.isCompleted()) {
+              context.assertTrue(serverSender.getCredit() > 0  , "Unexpectedly low credit: " + serverSender.getCredit());
+              serverSenderCreditCheck.complete();
+
+              //Send message
+              Message message = Message.Factory.create();
+              byte[] payload = new byte[dataPayloadSize];
+              for (int i = 0; i < payload.length; i++) {
+                payload[i] = (byte) (i % 256);
+              }
+              message.setBody(new Data(new Binary(payload)));
+
+              serverSender.send(message);
+            }
+          });
+
+          LOG.trace("Server sender opened");
+          serverSender.open();
+          serverSenderOpenAsync.complete();
+        });
+      });
+
+      // ===== Client Handling =====
+
+      ProtonClient client = ProtonClient.create(vertx);
+      ProtonClientOptions options = new ProtonClientOptions();
+      options.setMaxFrameSize(maxFrameSize);
+      options.setMaxTransfersPerDelivery(1);
+
+      client.connect(options, "localhost", protonServer.actualPort(), res -> {
+        context.assertTrue(res.succeeded());
+
+        ProtonConnection connection = res.result();
+        connection.openHandler(x -> {
+          LOG.trace("Client connection opened");
+          final ProtonReceiver receiver = connection.createReceiver("some-address");
+
+          receiver.openHandler(y -> {
+            LOG.trace("Client link opened");
+
+            clientReceiverOpenAsync.complete();
+
+            receiver.handler((delivery, message) -> {
+              messageHandlerFired.set(true);
+            });
+          });
+          receiver.open();
+
+        }).open();
+      });
+      serverSenderOpenAsync.awaitSuccess();
+      clientReceiverOpenAsync.awaitSuccess();
+      serverSenderCreditCheck.awaitSuccess();
+      serverConnectionCloseCheck.awaitSuccess();
+      serverConnectionDisconnectCheck.awaitSuccess();
+
+      context.assertFalse(messageHandlerFired.get(), "message handler should not have fired");
+    } finally {
+      if (protonServer != null) {
+        protonServer.close();
+      }
+    }
   }
 }

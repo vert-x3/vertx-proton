@@ -43,6 +43,21 @@ public class ProtonClientOptionsConverter {
             obj.setMaxFrameSize(((Number)member.getValue()).intValue());
           }
           break;
+        case "maxTransfersPerDelivery":
+          if (member.getValue() instanceof Number) {
+            obj.setMaxTransfersPerDelivery(((Number)member.getValue()).intValue());
+          }
+          break;
+        case "messageMaxDecodeDepth":
+          if (member.getValue() instanceof Number) {
+            obj.setMessageMaxDecodeDepth(((Number)member.getValue()).intValue());
+          }
+          break;
+        case "messageZeroWidthArrayElementLimit":
+          if (member.getValue() instanceof Number) {
+            obj.setMessageZeroWidthArrayElementLimit(((Number)member.getValue()).intValue());
+          }
+          break;
         case "sniServerName":
           if (member.getValue() instanceof String) {
             obj.setSniServerName((String)member.getValue());
@@ -72,6 +87,9 @@ public class ProtonClientOptionsConverter {
     }
     json.put("heartbeat", obj.getHeartbeat());
     json.put("maxFrameSize", obj.getMaxFrameSize());
+    json.put("maxTransfersPerDelivery", obj.getMaxTransfersPerDelivery());
+    json.put("messageMaxDecodeDepth", obj.getMessageMaxDecodeDepth());
+    json.put("messageZeroWidthArrayElementLimit", obj.getMessageZeroWidthArrayElementLimit());
     if (obj.getSniServerName() != null) {
       json.put("sniServerName", obj.getSniServerName());
     }

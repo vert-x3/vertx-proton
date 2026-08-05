@@ -46,6 +46,7 @@ import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.MessageDecodeOptions;
 import org.apache.qpid.proton.message.impl.MessageImpl;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -70,7 +71,7 @@ public class ProtonReceiverImplTest {
     Session sess = conn.session();
     Receiver r = sess.receiver("name");
 
-    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r, new MessageDecodeOptions());
 
     Record attachments = receiver.attachments();
     assertNotNull("Expected attachments but got null", attachments);
@@ -91,7 +92,7 @@ public class ProtonReceiverImplTest {
     Session sess = conn.session();
     Receiver r = sess.receiver("name");
 
-    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r, new MessageDecodeOptions());
 
     try {
       receiver.drain(0, h-> {});
@@ -108,7 +109,7 @@ public class ProtonReceiverImplTest {
     Session sess = conn.session();
     Receiver r = sess.receiver("name");
 
-    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r, new MessageDecodeOptions());
 
     receiver.setPrefetch(0);
     try {
@@ -122,7 +123,7 @@ public class ProtonReceiverImplTest {
   @Test
   public void testDrainWithExistingDrainOutstandingThrowsISE() {
     ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null, null);
-    conn.bindClient(null, Mockito.mock(NetSocketInternal.class), null, new ProtonTransportOptions());
+    conn.bindClient(null, Mockito.mock(NetSocketInternal.class), null, new ProtonTransportOptions(), new MessageDecodeOptions());
     conn.fireDisconnect();
     ProtonReceiver receiver = conn.createReceiver("address");
 
@@ -146,7 +147,7 @@ public class ProtonReceiverImplTest {
   @Test
   public void testFlowWithExistingDrainOutstandingThrowsISE() {
     ProtonConnectionImpl conn = new ProtonConnectionImpl(null, null, null);
-    conn.bindClient(null, Mockito.mock(NetSocketInternal.class), null, new ProtonTransportOptions());
+    conn.bindClient(null, Mockito.mock(NetSocketInternal.class), null, new ProtonTransportOptions(), new MessageDecodeOptions());
     conn.fireDisconnect();
     ProtonReceiver receiver = conn.createReceiver("address");
 
@@ -195,11 +196,11 @@ public class ProtonReceiverImplTest {
     when(r.getLocalState()).thenReturn(EndpointState.ACTIVE);
     when(r.getSession()).thenReturn(session);
     when(r.getMaxMessageSize()).thenReturn(new UnsignedLong(maxMessageSize));
-    ProtonReceiverImpl recImpl = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl recImpl = new ProtonReceiverImpl(r, new MessageDecodeOptions());
     when(r.getContext()).thenReturn(recImpl);
 
     ProtonMessageHandler messageHandler = mock(ProtonMessageHandler.class);
-    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r, new MessageDecodeOptions());
     receiver.handler(messageHandler);
 
     byte[] encodedMessage = createEncodedMessage(700);
@@ -260,7 +261,7 @@ public class ProtonReceiverImplTest {
     when(r.getLocalState()).thenReturn(EndpointState.ACTIVE);
     when(r.getSession()).thenReturn(session);
     when(r.getMaxMessageSize()).thenReturn(new UnsignedLong(maxMessageSize));
-    ProtonReceiverImpl recImpl = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl recImpl = new ProtonReceiverImpl(r, new MessageDecodeOptions());
     when(r.getContext()).thenReturn(recImpl);
 
     ProtonMessageHandler messageHandler = mock(ProtonMessageHandler.class);
@@ -273,7 +274,7 @@ public class ProtonReceiverImplTest {
       return null;
     }).when(maxMessageSizeExceededHandler).handle(any(ProtonReceiver.class));
 
-    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r, new MessageDecodeOptions());
     receiver.handler(messageHandler);
     receiver.maxMessageSizeExceededHandler(maxMessageSizeExceededHandler);
 
@@ -346,12 +347,12 @@ public class ProtonReceiverImplTest {
     when(r.getLocalState()).thenReturn(EndpointState.ACTIVE);
     when(r.getSession()).thenReturn(session);
     when(r.getMaxMessageSize()).thenReturn(new UnsignedLong(maxMessageSize));
-    ProtonReceiverImpl recImpl = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl recImpl = new ProtonReceiverImpl(r, new MessageDecodeOptions());
     when(r.getContext()).thenReturn(recImpl);
 
     ProtonMessageHandler messageHandler = mock(ProtonMessageHandler.class);
     Handler<ProtonReceiver> maxMessageSizeExceededHandler = mock(Handler.class);
-    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r);
+    ProtonReceiverImpl receiver = new ProtonReceiverImpl(r, new MessageDecodeOptions());
     receiver.handler(messageHandler);
     receiver.maxMessageSizeExceededHandler(maxMessageSizeExceededHandler);
 

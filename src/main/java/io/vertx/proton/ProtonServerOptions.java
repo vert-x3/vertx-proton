@@ -43,6 +43,9 @@ public class ProtonServerOptions extends NetServerOptions {
 
   private int heartbeat;
   private int maxFrameSize;
+  private int maxTransfersPerDelivery;
+  private int maxDecodeDepth;
+  private int zeroWidthArrayElementLimit;
 
   public ProtonServerOptions() {
   }
@@ -56,6 +59,9 @@ public class ProtonServerOptions extends NetServerOptions {
     super(other);
     this.heartbeat = other.heartbeat;
     this.maxFrameSize = other.maxFrameSize;
+    this.maxTransfersPerDelivery = other.maxTransfersPerDelivery;
+    this.maxDecodeDepth = other.maxDecodeDepth;
+    this.zeroWidthArrayElementLimit = other.zeroWidthArrayElementLimit;
   }
 
   /**
@@ -225,6 +231,9 @@ public class ProtonServerOptions extends NetServerOptions {
     int result = super.hashCode();
     result = prime * result + this.heartbeat;
     result = prime * result + this.maxFrameSize;
+    result = prime * result + this.maxTransfersPerDelivery;
+    result = prime * result + this.maxDecodeDepth;
+    result = prime * result + this.zeroWidthArrayElementLimit;
 
     return result;
   }
@@ -248,6 +257,15 @@ public class ProtonServerOptions extends NetServerOptions {
       return false;
     }
     if (this.maxFrameSize != other.maxFrameSize) {
+      return false;
+    }
+    if (this.maxTransfersPerDelivery != other.maxTransfersPerDelivery) {
+      return false;
+    }
+    if (this.maxDecodeDepth != other.maxDecodeDepth) {
+      return false;
+    }
+    if (this.zeroWidthArrayElementLimit != other.zeroWidthArrayElementLimit) {
       return false;
     }
 
@@ -404,5 +422,79 @@ public class ProtonServerOptions extends NetServerOptions {
    */
   public int getMaxFrameSize() {
     return maxFrameSize;
+  }
+
+  /**
+   * Sets the maximum number of transfer frames for an incoming delivery.
+   * If more transfer frames are received, the connection is disconnected.
+   * If this property is not set explicitly, a reasonable default value is used.
+   *
+   * @param maxTransfersPerDelivery max transfers per delivery
+   * @return current ProtonServerOptions instance
+   */
+  public ProtonServerOptions setMaxTransfersPerDelivery(int maxTransfersPerDelivery) {
+    this.maxTransfersPerDelivery = maxTransfersPerDelivery;
+    return this;
+  }
+
+  /**
+   * Gets the maximum number of transfer frames for an incoming delivery.
+   *
+   * @return max transfers per delivery
+   */
+  public int getMaxTransfersPerDelivery() {
+    return this.maxTransfersPerDelivery;
+  }
+
+  /**
+   * Configures the maximum decode depth allowed before error when decoding Maps, Lists,
+   * Arrays, and certain related DescribedTypes from an encoded payload.
+   * If not set a reasonable default is used.
+   *
+   * @param zeroWidthElementLimit The configured max zero-width elements allowed.
+   *
+   * @return current ProtonServerOptions instance
+   */
+  public ProtonServerOptions setMessageMaxDecodeDepth(int maxDecodeDepth) {
+    this.maxDecodeDepth = maxDecodeDepth;
+    return this;
+  }
+
+  /**
+   * Gets the configured maximum decode depth allowed before error when decoding Maps, Lists,
+   * Arrays, and certain related DescribedTypes from an encoded payload.
+   * If not set a reasonable default is used.
+   *
+   * @return the maximum depth limit before error for Maps, Lists, Arrays and related DescribedTypes.
+   */
+  public int getMessageMaxDecodeDepth() {
+    return maxDecodeDepth;
+  }
+
+  /**
+   * Configures the maximum number of array elements allowed while decoding arrays
+   * of zero-width elements (ulong0, uint0, list0, boolean-true, boolean-false, null)
+   * before a decode exception.
+   * Default is 0, meaning only the empty array is permitted.
+   *
+   * @param zeroWidthArrayElementLimit The configured max zero-width elements allowed.
+   *
+   * @return current ProtonServerOptions instance
+   */
+  public ProtonServerOptions setMessageZeroWidthArrayElementLimit(int zeroWidthArrayElementLimit) {
+    this.zeroWidthArrayElementLimit = zeroWidthArrayElementLimit;
+    return this;
+  }
+
+  /**
+   * Gets the configured maximum number of elements that can be decoded from an array
+   * encoded with the zero-width elements (ulong0, uint0, list0, boolean-true,
+   * boolean-false, null).
+   * Default is 0, meaning only the empty array is permitted.
+   *
+   * @return the max number of zero-width array elements allowed.
+   */
+  public int getMessageZeroWidthArrayElementLimit() {
+    return zeroWidthArrayElementLimit;
   }
 }

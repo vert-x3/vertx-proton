@@ -42,6 +42,7 @@ import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Record;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.message.MessageDecodeOptions;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +62,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
   private static final Logger LOG = LoggerFactory.getLogger(ProtonConnectionImpl.class);
 
   public static final Symbol ANONYMOUS_RELAY = Symbol.valueOf("ANONYMOUS-RELAY");
+  static final int DEFAULT_MESSAGE_MAX_DECODE_DEPTH = 32;
 
   private final Connection connection = Proton.connection();
   private final Vertx vertx;
@@ -93,6 +95,8 @@ public class ProtonConnectionImpl implements ProtonConnection {
   };
   private boolean anonymousRelaySupported;
   private ProtonSession defaultSession;
+
+  private MessageDecodeOptions messageDecodeOptions;
 
   ProtonConnectionImpl(Vertx vertx, String hostname, ContextInternal connCtx) {
     this.vertx = vertx;
@@ -389,12 +393,14 @@ public class ProtonConnectionImpl implements ProtonConnection {
     }
   }
 
-  void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator, ProtonTransportOptions transportOptions) {
+  void bindClient(NetClient client, NetSocket socket, ProtonSaslClientAuthenticatorImpl authenticator, ProtonTransportOptions transportOptions, MessageDecodeOptions messageDecodeOptions) {
     transport = new ProtonTransport(connection, vertx, client, socket, authenticator, transportOptions);
+    this.messageDecodeOptions = messageDecodeOptions;
   }
 
-  void bindServer(NetSocket socket, ProtonSaslAuthenticator authenticator, ProtonTransportOptions transportOptions) {
+  void bindServer(NetSocket socket, ProtonSaslAuthenticator authenticator, ProtonTransportOptions transportOptions, MessageDecodeOptions messageDecodeOptions) {
     transport = new ProtonTransport(connection, vertx, null, socket, authenticator, transportOptions);
+    this.messageDecodeOptions = messageDecodeOptions;
   }
 
   void fireRemoteSessionOpen(Session session) {
@@ -410,7 +416,7 @@ public class ProtonConnectionImpl implements ProtonConnection {
       }
     } else {
       if (receiverOpenHandler != null) {
-        receiverOpenHandler.handle(new ProtonReceiverImpl((Receiver) link));
+        receiverOpenHandler.handle(new ProtonReceiverImpl((Receiver) link, messageDecodeOptions));
       }
     }
   }
@@ -421,5 +427,9 @@ public class ProtonConnectionImpl implements ProtonConnection {
 
   public ContextInternal getContext() {
     return connCtx;
+  }
+
+  MessageDecodeOptions getMessageDecodeOptions() {
+    return messageDecodeOptions;
   }
 }

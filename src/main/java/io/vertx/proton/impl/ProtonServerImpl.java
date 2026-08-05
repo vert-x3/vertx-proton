@@ -31,6 +31,7 @@ import io.vertx.proton.sasl.ProtonSaslAuthenticator;
 import io.vertx.proton.sasl.ProtonSaslAuthenticatorFactory;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.message.MessageDecodeOptions;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -165,6 +166,11 @@ public class ProtonServerImpl implements ProtonServer {
       ProtonTransportOptions transportOptions = new ProtonTransportOptions();
       transportOptions.setHeartbeat(this.options.getHeartbeat());
       transportOptions.setMaxFrameSize(this.options.getMaxFrameSize());
+      transportOptions.setMaxTransfersPerDelivery(this.options.getMaxTransfersPerDelivery());
+
+      MessageDecodeOptions messageDecodeOptions = new MessageDecodeOptions();
+      messageDecodeOptions.setMaxDecodeDepth(options.getMessageMaxDecodeDepth() == 0 ? ProtonConnectionImpl.DEFAULT_MESSAGE_MAX_DECODE_DEPTH : options.getMessageMaxDecodeDepth());
+      messageDecodeOptions.setZeroWidthArrayElementLimit(options.getMessageZeroWidthArrayElementLimit());
 
       connection.bindServer(netSocket, new ProtonSaslAuthenticator() {
 
@@ -204,7 +210,7 @@ public class ProtonServerImpl implements ProtonServer {
           return authenticator.succeeded();
         }
 
-      }, transportOptions);
+      }, transportOptions, messageDecodeOptions);
     });
     return this;
   }

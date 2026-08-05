@@ -186,7 +186,7 @@ public class ProtonSessionImpl implements ProtonSession {
     receiver.setSource(source);
     receiver.setTarget(target);
 
-    ProtonReceiverImpl r = new ProtonReceiverImpl(receiver);
+    ProtonReceiverImpl r = new ProtonReceiverImpl(receiver, getConnectionImpl().getMessageDecodeOptions());
     r.openHandler((result) -> {
       LOG.trace("Receiver open completed");
     });

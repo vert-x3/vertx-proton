@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 class ProtonTransport extends BaseHandler {
   private static final Logger LOG = LoggerFactory.getLogger(ProtonTransport.class);
   private static final int DEFAULT_MAX_FRAME_SIZE = 32 * 1024; // 32kb
+  private static final int DEFAULT_MAX_TRANSFERS_PER_DELIVERY = 65535;
 
   private final Connection connection;
   private final Vertx vertx;
@@ -77,6 +78,9 @@ class ProtonTransport extends BaseHandler {
       authenticator.init(this.socket, (ProtonConnection) this.connection.getContext(), transport);
     }
     this.authenticator = authenticator;
+    int maxTransfersPerDelivery = options.getMaxTransfersPerDelivery() == 0 ? DEFAULT_MAX_TRANSFERS_PER_DELIVERY : options.getMaxTransfersPerDelivery();
+    transport.setMaxTransfersPerDelivery(maxTransfersPerDelivery);
+
     transport.bind(connection);
     connection.collect(collector);
     socket.endHandler(this::handleSocketEnd);
