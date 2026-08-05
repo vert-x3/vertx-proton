@@ -31,4 +31,34 @@ public class ProtonServerOptionsTest {
     options.setHeartbeat(2000);
     assertNotEquals(options.getHeartbeat(), 1000);
   }
+
+  @Test
+  public void testMaxTransfersPerDelivery() {
+    ProtonServerOptions options = new ProtonServerOptions();
+    assertEquals("MaxTransfersPerDelivery option should not be populated by default", 0 , options.getMaxTransfersPerDelivery());
+    options.setMaxTransfersPerDelivery(1000);
+    assertEquals(1000 , options.getMaxTransfersPerDelivery());
+    options.setMaxTransfersPerDelivery(2000);
+    assertEquals(2000 , options.getMaxTransfersPerDelivery());
+  }
+
+  @Test
+  public void testMessageMaxDecodeDepth() {
+    ProtonServerOptions options = new ProtonServerOptions();
+    assertEquals("MaxTransfersPerDelivery option should not be populated by default", 0 , options.getMessageMaxDecodeDepth());
+    options.setMessageMaxDecodeDepth(100);
+    assertEquals(100 , options.getMessageMaxDecodeDepth());
+    options.setMessageMaxDecodeDepth(200);
+    assertEquals(200 , options.getMessageMaxDecodeDepth());
+  }
+
+  @Test
+  public void testMessageZeroWidthArrayElementLimit() {
+    ProtonServerOptions options = new ProtonServerOptions();
+    assertEquals("MessageZeroWidthArrayElementLimit option should not be populated by default", 0 , options.getMessageZeroWidthArrayElementLimit());
+    options.setMessageZeroWidthArrayElementLimit(1000);
+    assertEquals(1000 , options.getMessageZeroWidthArrayElementLimit());
+    options.setMessageZeroWidthArrayElementLimit(2000);
+    assertEquals(2000 , options.getMessageZeroWidthArrayElementLimit());
+  }
 }

@@ -45,6 +45,21 @@ public class ProtonClientOptionsConverter {
             obj.setAuthorizationId((String)member.getValue());
           }
           break;
+        case "maxTransfersPerDelivery":
+          if (member.getValue() instanceof Number) {
+            obj.setMaxTransfersPerDelivery(((Number)member.getValue()).intValue());
+          }
+          break;
+        case "messageMaxDecodeDepth":
+          if (member.getValue() instanceof Number) {
+            obj.setMessageMaxDecodeDepth(((Number)member.getValue()).intValue());
+          }
+          break;
+        case "messageZeroWidthArrayElementLimit":
+          if (member.getValue() instanceof Number) {
+            obj.setMessageZeroWidthArrayElementLimit(((Number)member.getValue()).intValue());
+          }
+          break;
       }
     }
   }
@@ -70,5 +85,8 @@ public class ProtonClientOptionsConverter {
     if (obj.getAuthorizationId() != null) {
       json.put("authorizationId", obj.getAuthorizationId());
     }
+    json.put("maxTransfersPerDelivery", obj.getMaxTransfersPerDelivery());
+    json.put("messageMaxDecodeDepth", obj.getMessageMaxDecodeDepth());
+    json.put("messageZeroWidthArrayElementLimit", obj.getMessageZeroWidthArrayElementLimit());
   }
 }

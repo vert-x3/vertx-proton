@@ -34,6 +34,7 @@ import org.apache.qpid.proton.codec.ReadableBuffer;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Session;
+import org.apache.qpid.proton.message.MessageDecodeOptions;
 import org.apache.qpid.proton.message.impl.MessageImpl;
 
 import static io.vertx.proton.ProtonHelper.accepted;
@@ -55,13 +56,15 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
   private long windowFullThreshhold;
   private Handler<ProtonReceiver> maxMessageSizeExceededHandler;
   private boolean maxMessageSizeExceeded;
+  private MessageDecodeOptions msgDecodeOptions;
 
-  public ProtonReceiverImpl(Receiver receiver) {
+  public ProtonReceiverImpl(Receiver receiver, MessageDecodeOptions msgDecodeOptions) {
     super(receiver);
     session = receiver.getSession();
     sessionIncomingCapacity = session.getIncomingCapacity();
     maxFrameSize = session.getConnection().getTransport().getMaxFrameSize();
     windowFullThreshhold = sessionIncomingCapacity - maxFrameSize;
+    this.msgDecodeOptions = msgDecodeOptions;
   }
 
   @Override
@@ -225,7 +228,7 @@ public class ProtonReceiverImpl extends ProtonLinkImpl<ProtonReceiver> implement
       MessageImpl msg = (MessageImpl) Proton.message();
       ProtonDeliveryImpl delImpl = new ProtonDeliveryImpl(delivery);
       try {
-        msg.decode(data);
+        msg.decode(data, msgDecodeOptions);
       } catch (Throwable t) {
         LOG.debug("Unable to decode message, undeliverable", t);
 
