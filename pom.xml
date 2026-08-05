@@ -38,7 +38,7 @@
   <properties>
     <jar.manifest>${project.basedir}/src/main/resources/META-INF/MANIFEST.MF</jar.manifest>
     <!-- Dependency versions -->
-    <proton.version>0.34.1</proton.version>
+    <proton.version>0.35.0</proton.version>
 
     <!-- Test dependency versions -->
     <junit.version>4.13.2</junit.version>
